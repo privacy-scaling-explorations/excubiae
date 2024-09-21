@@ -36,7 +36,8 @@
         "typescript": "^5.5.0"
     },
     "scripts": {
-        "build": "yarn build:docs && yarn build:website",
+        "build": "yarn build:docs && yarn build:website && yarn build:packages",
+        "build:packages": "yarn workspaces foreach -Apt --no-private run build",
         "build:docs": "yarn workspace excubiae-docs build",
         "build:website": "yarn workspace excubiae-website build",
         "compile:contracts": "yarn workspace excubiae-contracts compile",
@@ -44,12 +45,15 @@
         "test:coverage": "yarn test:contracts-coverage",
         "test:contracts": "yarn workspace excubiae-contracts test",
         "test:contracts-coverage": "yarn workspace excubiae-contracts test:coverage",
-        "prepare": "husky",
         "format": "prettier -c . && yarn workspace excubiae-docs format",
         "format:write": "prettier -w . && yarn workspace excubiae-docs format:write",
         "lint": "eslint . && yarn workspace excubiae-contracts lint",
         "lint:fix": "eslint . --fix && yarn workspace excubiae-contracts lint:fix",
-        "clean": "rimraf node_modules",
+        "version:bump": "scripts/version.ts ${0}",
+        "version:publish": "scripts/publish.ts",
+        "version:release": "changelogithub",
+        "clean": "scripts/clean-apps.ts && scripts/clean-packages.ts && rimraf node_modules",
+        "remove:stable-version-field": "scripts/remove-stable-version-field.ts && yarn format:write",
         "precommit": "lint-staged",
         "postinstall": "husky && git config --local core.editor cat"
     }
