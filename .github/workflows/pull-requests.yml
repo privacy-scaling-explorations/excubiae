@@ -51,7 +51,7 @@ jobs:
 
             - if: steps.changed-files.outputs.to_format_any_changed == 'true'
               name: Format
-              run: yarn run prettier --check --ignore-unknown ${{ steps.changed-files.outputs.to_format_all_changed_files }}
+              run: yarn run prettier --check --ignore-unknown --no-error-on-unmatched-pattern ${{ steps.changed-files.outputs.to_format_all_changed_files }}
 
             - if: steps.changed-files.outputs.to_lint_any_changed == 'true'
               name: Run Eslint
