@@ -10,7 +10,7 @@
         "test:coverage": "hardhat coverage",
         "typechain": "hardhat typechain",
         "lint": "solhint 'contracts/**/*.sol'",
-        "lint:fix": "solhint 'contracts/**/*.sol' --fix"
+        "lint:fix": "solhint 'contracts/**/*.sol' --fix --noPrompt"
     },
     "devDependencies": {
         "@nomicfoundation/hardhat-chai-matchers": "^2.0.0",
