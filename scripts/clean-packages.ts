@@ -3,7 +3,19 @@ import { readdirSync, rmSync } from "fs"
 
 const folderName = "packages"
 
-const gitIgnored = ["node_modules", "dist", "build", "artifacts", "typechain-types", "cache"]
+const gitIgnored = [
+    "node_modules",
+    "dist",
+    "build",
+    "artifacts",
+    "typechain-types",
+    "cache",
+    "cache_forge",
+    "docs",
+    "out",
+    "coverage.json",
+    "lib"
+]
 
 async function main() {
     const folders = readdirSync(folderName, { withFileTypes: true })

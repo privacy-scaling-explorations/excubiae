@@ -1,0 +1,6 @@
+[profile.default]
+src = 'contracts/src'
+out = 'out'
+libs = ['node_modules']
+test = 'contracts/test'
+cache_path  = 'cache_forge'

@@ -13,6 +13,11 @@ artifacts
 cache
 typechain-types
 
+# foundry
+cache_forge
+out
+docs
+
 # production
 dist
 build

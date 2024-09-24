@@ -37,7 +37,7 @@
         "remark-mdx": "^3.0.1",
         "remark-preset-lint-consistent": "^6.0.0",
         "remark-preset-lint-recommended": "^7.0.0",
-        "typescript": "~5.5.0"
+        "typescript": "5.3"
     },
     "browserslist": {
         "production": [

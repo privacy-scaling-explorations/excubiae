@@ -67,7 +67,10 @@ describe("Lock", () => {
                 await time.increaseTo(unlockTime)
 
                 // We use lock.connect() to send a transaction from another account
-                await expect(lock.connect(otherAccount).withdraw()).to.be.revertedWith("You aren't the owner")
+                await expect(lock.connect(otherAccount).withdraw()).to.be.revertedWithCustomError(
+                    lock,
+                    "OwnableUnauthorizedAccount"
+                )
             })
 
             it("Shouldn't fail if the unlockTime has arrived and the owner calls it", async () => {

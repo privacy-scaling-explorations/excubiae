@@ -10,7 +10,7 @@ async function main() {
     // Apply the versions
     execSync("yarn version apply --all", { stdio: "inherit" })
 
-    await import("./remove-stable-version-field")
+    await import("./remove-stable-version-field.js")
 
     execSync("yarn format:write")
     execSync(`NO_HOOK=1 git commit -am 'chore: v${version}'`)

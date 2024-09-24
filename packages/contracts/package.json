@@ -1,20 +1,30 @@
 {
     "name": "excubiae-contracts",
-    "packageManager": "yarn@4.5.0",
+    "private": true,
+    "installConfig": {
+        "hoistingLimits": "dependencies"
+    },
     "scripts": {
-        "start": "hardhat node",
-        "compile": "hardhat compile",
+        "start:hardhat": "hardhat node",
+        "start:anvil": "anvil",
+        "compile": "yarn compile:hardhat && yarn compile:forge",
+        "compile:hardhat": "hardhat compile",
+        "compile:forge": "forge compile",
         "deploy": "hardhat deploy",
-        "test": "hardhat test",
-        "test:report-gas": "REPORT_GAS=true hardhat test",
-        "test:coverage": "hardhat coverage",
+        "test": "yarn test:hardhat && yarn test:forge",
+        "test:hardhat": "hardhat test",
+        "test:forge": "forge test",
+        "test:report-gas": "REPORT_GAS=true yarn test && forge test --gas-report",
+        "test:coverage": "hardhat coverage && forge coverage",
         "typechain": "hardhat typechain",
+        "format:forge": "forge fmt",
         "lint": "solhint 'contracts/**/*.sol'",
         "lint:fix": "solhint 'contracts/**/*.sol' --fix --noPrompt"
     },
     "devDependencies": {
         "@nomicfoundation/hardhat-chai-matchers": "^2.0.0",
         "@nomicfoundation/hardhat-ethers": "^3.0.0",
+        "@nomicfoundation/hardhat-foundry": "^1.1.2",
         "@nomicfoundation/hardhat-ignition": "^0.15.5",
         "@nomicfoundation/hardhat-ignition-ethers": "^0.15.0",
         "@nomicfoundation/hardhat-network-helpers": "^1.0.0",
@@ -25,16 +35,19 @@
         "@typechain/hardhat": "^9.0.0",
         "@types/chai": "^4.2.0",
         "@types/mocha": ">=9.1.0",
+        "@types/node": "^22.6.1",
         "chai": "^4.2.0",
         "ethers": "^6.4.0",
+        "forge-std": "github:foundry-rs/forge-std#v1.9.2",
         "hardhat": "^2.22.11",
         "hardhat-gas-reporter": "^1.0.8",
-        "prettier-plugin-solidity": "^1.4.1",
         "solhint": "^5.0.3",
-        "solhint-plugin-prettier": "^0.1.0",
         "solidity-coverage": "^0.8.1",
         "ts-node": "^10.9.2",
         "typechain": "^8.3.0",
-        "typescript": "^5.5.0"
+        "typescript": "5.3"
+    },
+    "dependencies": {
+        "@openzeppelin/contracts": "^5.0.2"
     }
 }
