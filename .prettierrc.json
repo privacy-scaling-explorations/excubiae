@@ -2,5 +2,7 @@
     "semi": false,
     "arrowParens": "always",
     "trailingComma": "none",
-    "plugins": ["prettier-plugin-solidity"]
+    "plugins": ["prettier-plugin-solidity"],
+    "printWidth": 120,
+    "tabWidth": 4
 }

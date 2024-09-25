@@ -1,23 +1,31 @@
-name: pull-requests
+name: main
 
 on:
+    push:
+        branches:
+            - main
     pull_request:
+
+concurrency:
+    group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+    cancel-in-progress: true
 
 jobs:
     style:
         runs-on: ubuntu-latest
 
         steps:
-            - uses: actions/checkout@v4
+            - name: Checkout
+              uses: actions/checkout@v4
 
-            - name: Install Node.js
+            - name: Setup Node
               uses: actions/setup-node@v4
               with:
                   node-version: 20
                   cache: yarn
 
-            - name: "Install Foundry"
-              uses: "foundry-rs/foundry-toolchain@v1"
+            - name: Install Foundry
+              uses: foundry-rs/foundry-toolchain@v1
 
             - name: Install dependencies
               run: yarn
@@ -31,6 +39,9 @@ jobs:
                         - packages/contracts/**/*.{js,json,ts,sol}
                       docs:
                         - apps/docs/**/*
+                      packages:
+                        - packages/**/*.{js,json,ts}
+                        - '!packages/{contracts}/**/*'
                       to_format:
                         - '**/*.{cjs,js,json,jsx,md,mdx,sol,ts,tsx,yaml,yml}'
                       to_lint:
@@ -48,7 +59,7 @@ jobs:
                   yarn workspace excubiae-docs build
                   yarn workspace excubiae-docs format
 
-            - if: steps.changed-files.outputs.libraries_any_changed == 'true'
+            - if: steps.changed-files.outputs.packages_any_changed == 'true'
               name: Build packages
               run: yarn build:packages
 
@@ -64,16 +75,17 @@ jobs:
         runs-on: ubuntu-latest
 
         steps:
-            - uses: actions/checkout@v4
+            - name: Checkout
+              uses: actions/checkout@v4
 
-            - name: Install Node.js
+            - name: Setup Node
               uses: actions/setup-node@v4
               with:
                   node-version: 20
                   cache: yarn
 
-            - name: "Install Foundry"
-              uses: "foundry-rs/foundry-toolchain@v1"
+            - name: Install Foundry
+              uses: foundry-rs/foundry-toolchain@v1
 
             - name: Install dependencies
               run: yarn
@@ -85,9 +97,6 @@ jobs:
                   files_yaml: |
                       contracts:
                         - packages/contracts/**/*.{js,json,ts,sol}
-                      libraries:
-                        - packages/**/*.{js,json,ts}
-                        - '!packages/{circuits,contracts}/**/*'
 
             - if: steps.changed-files.outputs.contracts_any_changed == 'true'
               name: Build and Test contracts
