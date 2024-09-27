@@ -1,0 +1,32 @@
+[profile.default]
+  # core
+  libs = ['node_modules']
+  cache_path = 'cache_forge'
+  test = 'contracts/test'
+  src = 'contracts/src'
+  out = 'out'
+  script = "contracts/scripts"
+
+  # sol
+  auto_detect_solc = false
+  fuzz = { runs = 1_000 }
+  gas_reports = ["*"]
+  optimizer = true
+  optimizer_runs = 200_000
+  solc = "0.8.27"
+
+[rpc_endpoints]
+  sepolia = "https://rpc2.sepolia.org"
+
+[etherscan]
+  sepolia = { key = "${ETHERSCAN_API_KEY}" }
+
+[fmt]
+  bracket_spacing = true
+  int_types = "long"
+  line_length = 120
+  multiline_func_header = "all"
+  number_underscore = "thousands"
+  quote_style = "double"
+  tab_width = 4
+  wrap_comments = true

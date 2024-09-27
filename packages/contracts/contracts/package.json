@@ -1,0 +1,30 @@
+{
+    "name": "@excubiae/contracts",
+    "description": "Excubiae contracts.",
+    "version": "0.0.0",
+    "license": "MIT",
+    "files": [
+        "*.sol",
+        "**/*.sol"
+    ],
+    "keywords": [
+        "blockchain",
+        "ethereum",
+        "hardhat",
+        "smart-contracts",
+        "excubiae",
+        "solidity",
+        "gatekeepers",
+        "access-control"
+    ],
+    "repository": "git@github.com:privacy-scaling-explorations/excubiae.git",
+    "homepage": "https://github.com/privacy-scaling-explorations/excubiae/tree/main/packages/contracts",
+    "bugs": "https://github.com/privacy-scaling-explorations/excubiae/issues",
+    "publishConfig": {
+        "access": "public"
+    },
+    "packageManager": "yarn@4.5.0",
+    "dependencies": {
+        "@openzeppelin/contracts": "^5.0.2"
+    }
+}
