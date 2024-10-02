@@ -1,16 +1,17 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: MIT
 pragma solidity >=0.8.25 <0.9.0;
 
 import {Test} from "forge-std/src/Test.sol";
 import {FreeForAllExcubia} from "../src/extensions/FreeForAllExcubia.sol";
+import {FreeForAllExcubiaTestWrapper} from "./wrappers/FreeForAllExcubiaTestWrapper.sol";
 
 contract FreeForAllExcubiaTest is Test {
     FreeForAllExcubia internal freeForAllExcubia;
+    FreeForAllExcubiaTestWrapper internal freeForAllExcubiaTW;
 
-    address public owner = vm.addr(0x1);
+    address public deployer = vm.addr(0x1);
     address public gate = vm.addr(0x2);
-    address public passerbyA = vm.addr(0x3);
-    address public passerbyB = vm.addr(0x4);
+    address public passerby = vm.addr(0x3);
 
     event GateSet(address indexed gate);
     event GatePassed(address indexed passerby, address indexed gate);
@@ -23,125 +24,214 @@ contract FreeForAllExcubiaTest is Test {
     error AlreadyPassed();
 
     function setUp() public virtual {
-        vm.prank(owner);
+        vm.startPrank(deployer);
+
         freeForAllExcubia = new FreeForAllExcubia();
+
+        freeForAllExcubiaTW = new FreeForAllExcubiaTestWrapper();
+        freeForAllExcubiaTW.setGate(gate);
+
+        vm.stopPrank();
     }
 
-    /**
-     * setGate()
-     */
-    function testGateOnlyOwner() external {
-        vm.prank(address(0));
+    function testInternalCheck() public view {
+        freeForAllExcubiaTW.exposed_check(passerby, "");
+    }
+
+    function testInternalPass() public {
+        vm.expectEmit(true, true, false, false);
+        emit GatePassed(passerby, gate);
+
+        freeForAllExcubiaTW.exposed_pass(passerby, "");
+
+        assertTrue(freeForAllExcubiaTW.passedPassersby(passerby));
+    }
+
+    function testFuzz_InternalCheck(address randomPasserby, bytes calldata randomData) public view {
+        freeForAllExcubiaTW.exposed_check(randomPasserby, randomData);
+    }
+
+    function testFuzz_InternalPass(address randomPasserby, bytes calldata randomData) public {
+        vm.expectEmit(true, true, false, false);
+        emit GatePassed(randomPasserby, gate);
+
+        freeForAllExcubiaTW.exposed_pass(randomPasserby, randomData);
+
+        assertTrue(freeForAllExcubiaTW.passedPassersby(randomPasserby));
+        vm.expectRevert(AlreadyPassed.selector);
+        freeForAllExcubiaTW.exposed_pass(randomPasserby, randomData);
+    }
+
+    function test_RevertWhen_SetGateCallerIsNotOwner() external {
         vm.expectRevert(abi.encodeWithSelector(OwnableUnauthorizedAccount.selector, address(0)));
+        vm.prank(address(0));
         freeForAllExcubia.setGate(gate);
     }
 
-    function testGateZeroAddress() external {
-        vm.prank(owner);
+    function test_RevertWhen_SetGateWithZeroAddress() external {
         vm.expectRevert(ZeroAddress.selector);
+        vm.prank(deployer);
         freeForAllExcubia.setGate(address(0));
     }
 
-    function testSetGate() external {
-        vm.expectEmit(true, true, true, true);
+    function test_SetGate() external {
+        vm.expectEmit(true, true, false, false);
         emit GateSet(gate);
 
-        vm.prank(owner);
+        vm.prank(deployer);
         freeForAllExcubia.setGate(gate);
-
-        assertEq(freeForAllExcubia.gate(), gate);
     }
 
-    function testGateAlreadySet() external {
-        vm.prank(owner);
+    function test_RevertIf_GateAlreadySet() external {
+        vm.startPrank(deployer);
         freeForAllExcubia.setGate(gate);
 
-        vm.prank(owner);
         vm.expectRevert(GateAlreadySet.selector);
         freeForAllExcubia.setGate(gate);
+
+        vm.stopPrank();
     }
 
-    function testTrait() external view {
+    function testFuzz_SetGateWhateverAddress(address theGate) public {
+        vm.assume(theGate != address(0));
+
+        vm.prank(deployer);
+        freeForAllExcubia.setGate(theGate);
+
+        assertEq(freeForAllExcubia.gate(), theGate);
+        assert(freeForAllExcubia.gate() != address(0));
+        assertEq(freeForAllExcubia.owner(), deployer);
+    }
+
+    function testFuzz_RevertWhen_SetGateWithWhateverNotOwner(address notOwner) public {
+        vm.assume(notOwner != deployer);
+
+        vm.prank(notOwner);
+        vm.expectRevert(abi.encodeWithSelector(OwnableUnauthorizedAccount.selector, address(notOwner)));
+        freeForAllExcubia.setGate(gate);
+
+        assertEq(freeForAllExcubia.gate(), address(0));
+        assertEq(freeForAllExcubia.owner(), deployer);
+    }
+
+    function test_TraitMatch() external view {
         assertEq(freeForAllExcubia.trait(), "FreeForAll");
     }
 
-    /**
-     * pass() & implicitly _check()
-     */
-    function testPassNotGate() external {
-        vm.prank(passerbyA);
+    function test_RevertIf_PassWhenGateNotSet() external {
+        vm.prank(gate);
         vm.expectRevert(GateOnly.selector);
-        freeForAllExcubia.pass(passerbyA, "");
+        freeForAllExcubia.pass(passerby, "");
+
+        assertEq(freeForAllExcubia.gate(), address(0));
     }
 
-    function testPass() external {
-        vm.prank(owner);
+    function test_RevertIf_PassWhenNotGate() external {
+        vm.prank(deployer);
         freeForAllExcubia.setGate(gate);
 
-        vm.expectEmit(true, true, true, true);
-        emit GatePassed(passerbyA, gate);
+        vm.expectRevert(GateOnly.selector);
+        freeForAllExcubia.pass(passerby, "");
 
-        vm.prank(gate);
-        freeForAllExcubia.pass(passerbyA, "");
-
-        assertTrue(freeForAllExcubia.passedPassersby(passerbyA));
+        assert(freeForAllExcubia.gate() != address(0));
     }
 
-    function testNotPassTwice() external {
-        vm.prank(owner);
+    function test_PassTheGate() external {
+        vm.prank(deployer);
         freeForAllExcubia.setGate(gate);
 
-        assertEq(gate, freeForAllExcubia.gate());
-        vm.prank(gate);
-        freeForAllExcubia.pass(passerbyA, "");
-
-        assertTrue(freeForAllExcubia.passedPassersby(passerbyA));
+        vm.expectEmit(true, true, false, false);
+        emit GatePassed(passerby, gate);
 
         vm.prank(gate);
+        freeForAllExcubia.pass(passerby, "0x");
+
+        assertTrue(freeForAllExcubia.passedPassersby(passerby));
+    }
+
+    function test_RevertIf_PasserbyPassTwice() external {
+        vm.prank(deployer);
+        freeForAllExcubia.setGate(gate);
+
+        vm.startPrank(gate);
+        freeForAllExcubia.pass(passerby, "0x");
+
         vm.expectRevert(AlreadyPassed.selector);
-        freeForAllExcubia.pass(passerbyA, "");
+        freeForAllExcubia.pass(passerby, "0x");
+
+        vm.stopPrank();
     }
 
-    function testPassAnotherPasserby() external {
-        vm.prank(owner);
+    function testFuzz_PassAndCheck(address thePasserby, bytes calldata data) public {
+        vm.prank(deployer);
         freeForAllExcubia.setGate(gate);
 
-        vm.expectEmit(true, true, true, true);
-        emit GatePassed(passerbyA, gate);
-
         vm.prank(gate);
-        freeForAllExcubia.pass(passerbyA, "");
+        freeForAllExcubia.pass(thePasserby, data);
 
-        vm.expectEmit(true, true, true, true);
-        emit GatePassed(passerbyB, gate);
-
-        vm.prank(gate);
-        freeForAllExcubia.pass(passerbyB, "");
-
-        assertTrue(freeForAllExcubia.passedPassersby(passerbyB));
+        assertTrue(freeForAllExcubia.passedPassersby(thePasserby));
+        assertEq(freeForAllExcubia.trait(), "FreeForAll");
     }
 
-    /**
-     * Fuzz Tests
-     */
-    function testFuzzSetGate(address _gate) external {
-        vm.assume(_gate != address(0));
-        vm.prank(owner);
-        freeForAllExcubia.setGate(_gate);
-        assertEq(freeForAllExcubia.gate(), _gate);
+    function testFuzz_RevertWhen_PassTwice(address thePasserby) public {
+        vm.prank(deployer);
+        freeForAllExcubia.setGate(gate);
+
+        vm.startPrank(gate);
+        freeForAllExcubia.pass(thePasserby, "0x");
+
+        vm.expectRevert(AlreadyPassed.selector);
+        freeForAllExcubia.pass(thePasserby, "0x");
+
+        vm.stopPrank();
+
+        assertTrue(freeForAllExcubia.passedPassersby(thePasserby));
+        assertEq(freeForAllExcubia.trait(), "FreeForAll");
     }
 
-    function testFuzzPass(address _gate, address _passerby) external {
-        vm.assume(_gate != address(0) && _passerby != address(0));
-        vm.prank(owner);
-        freeForAllExcubia.setGate(_gate);
+    function testFuzz_CheckFunction(address thePasserby, bytes calldata data) public {
+        vm.prank(deployer);
+        freeForAllExcubia.setGate(gate);
 
-        vm.expectEmit(true, true, true, true);
-        emit GatePassed(_passerby, _gate);
+        freeForAllExcubia.check(thePasserby, data);
 
-        vm.prank(_gate);
-        freeForAllExcubia.pass(_passerby, "");
+        vm.prank(gate);
+        freeForAllExcubia.pass(thePasserby, data);
 
-        assertTrue(freeForAllExcubia.passedPassersby(_passerby));
+        freeForAllExcubia.check(thePasserby, data);
+    }
+
+    function invariant_GateNeverZeroAfterSet() public view {
+        if (freeForAllExcubia.gate() != address(0)) {
+            assert(freeForAllExcubia.gate() != address(0));
+        }
+    }
+
+    function invariant_TraitAlwaysFreeForAll() public view {
+        assertEq(freeForAllExcubia.trait(), "FreeForAll");
+    }
+
+    function testGas_Pass() public {
+        vm.prank(deployer);
+        freeForAllExcubia.setGate(gate);
+
+        vm.prank(gate);
+        uint256 gasBefore = gasleft();
+
+        freeForAllExcubia.pass(passerby, "0x");
+
+        uint256 gasAfter = gasleft();
+        uint256 gasUsed = gasBefore - gasAfter;
+        assert(gasUsed < 30000);
+    }
+
+    function test_GatePassesSelf() public {
+        vm.prank(deployer);
+        freeForAllExcubia.setGate(gate);
+
+        vm.prank(gate);
+        freeForAllExcubia.pass(gate, "0x");
+
+        assertTrue(freeForAllExcubia.passedPassersby(gate));
     }
 }
