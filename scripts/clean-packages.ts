@@ -14,7 +14,8 @@ const gitIgnored = [
     "docs",
     "out",
     "coverage.json",
-    "lib"
+    "lib",
+    "lcov.info"
 ]
 
 async function main() {
