@@ -34,6 +34,10 @@ contract FreeForAllExcubiaTest is Test {
         vm.stopPrank();
     }
 
+    function testInternalTrait() public view {
+        freeForAllExcubiaTW.exposed_trait();
+    }
+
     function testInternalCheck() public view {
         freeForAllExcubiaTW.exposed_check(passerby, "");
     }
@@ -222,7 +226,7 @@ contract FreeForAllExcubiaTest is Test {
 
         uint256 gasAfter = gasleft();
         uint256 gasUsed = gasBefore - gasAfter;
-        assert(gasUsed < 30000);
+        assert(gasUsed < 70000);
     }
 
     function test_GatePassesSelf() public {

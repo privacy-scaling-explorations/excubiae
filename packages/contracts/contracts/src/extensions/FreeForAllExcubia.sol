@@ -15,7 +15,9 @@ contract FreeForAllExcubia is Excubia {
     mapping(address => bool) public passedPassersby;
 
     /// @notice The trait of the Excubia contract.
-    function trait() external pure override returns (string memory) {
+    function _trait() internal pure override returns (string memory) {
+        super._trait();
+
         return "FreeForAll";
     }
 

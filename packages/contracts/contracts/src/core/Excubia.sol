@@ -22,7 +22,9 @@ abstract contract Excubia is IExcubia, Ownable(msg.sender) {
     }
 
     /// @inheritdoc IExcubia
-    function trait() external pure virtual returns (string memory) {}
+    function trait() external pure virtual returns (string memory) {
+        return _trait();
+    }
 
     /// @inheritdoc IExcubia
     function setGate(address _gate) public virtual onlyOwner {
@@ -43,6 +45,11 @@ abstract contract Excubia is IExcubia, Ownable(msg.sender) {
     function check(address passerby, bytes calldata data) external view {
         _check(passerby, data);
     }
+
+    /// @notice Internal function to define the trait of the Excubia contract.
+    /// @dev maintain consistency across _pass & _check definitions.
+    /// @return The specific trait of the Excubia contract (e.g., SemaphoreExcubia has trait `Semaphore`).
+    function _trait() internal pure virtual returns (string memory) {}
 
     /// @notice Internal function to enforce the custom gate passing logic.
     /// @dev Calls the `_check` internal logic and emits the relative event if successful.
