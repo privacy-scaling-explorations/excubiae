@@ -226,7 +226,7 @@ contract FreeForAllExcubiaTest is Test {
 
         uint256 gasAfter = gasleft();
         uint256 gasUsed = gasBefore - gasAfter;
-        assert(gasUsed < 70000);
+        assert(gasUsed < 70_000);
     }
 
     function test_GatePassesSelf() public {

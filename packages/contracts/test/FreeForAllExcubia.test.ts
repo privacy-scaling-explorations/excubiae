@@ -1,50 +1,62 @@
 import { expect } from "chai"
 import { ethers } from "hardhat"
 import { Signer, ZeroAddress, ZeroHash } from "ethers"
+import { loadFixture } from "@nomicfoundation/hardhat-toolbox/network-helpers"
 import { FreeForAllExcubia, FreeForAllExcubia__factory } from "../typechain-types"
 
 describe("FreeForAllExcubia", () => {
-    let FreeForAllExcubiaContract: FreeForAllExcubia__factory
-    let freeForAllExcubia: FreeForAllExcubia
+    async function deployFreeForAllExcubiaFixture() {
+        const [signer, gate, notOwner]: Signer[] = await ethers.getSigners()
+        const signerAddress: string = await signer.getAddress()
+        const gateAddress: string = await gate.getAddress()
+        const notOwnerAddress: string = await gate.getAddress()
 
-    let signer: Signer
-    let signerAddress: string
+        const FreeForAllExcubiaContract: FreeForAllExcubia__factory =
+            await ethers.getContractFactory("FreeForAllExcubia")
+        const freeForAllExcubia: FreeForAllExcubia = await FreeForAllExcubiaContract.deploy()
 
-    let gate: Signer
-    let gateAddress: string
-
-    before(async () => {
-        ;[signer, gate] = await ethers.getSigners()
-        signerAddress = await signer.getAddress()
-        gateAddress = await gate.getAddress()
-
-        FreeForAllExcubiaContract = await ethers.getContractFactory("FreeForAllExcubia")
-        freeForAllExcubia = await FreeForAllExcubiaContract.deploy()
-    })
+        // Fixtures can return anything you consider useful for your tests
+        return {
+            FreeForAllExcubiaContract,
+            freeForAllExcubia,
+            signer,
+            gate,
+            notOwner,
+            signerAddress,
+            gateAddress,
+            notOwnerAddress
+        }
+    }
 
     describe("constructor()", () => {
         it("Should deploy the FreeForAllExcubia contract correctly", async () => {
+            const { freeForAllExcubia } = await loadFixture(deployFreeForAllExcubiaFixture)
+
             expect(freeForAllExcubia).to.not.eq(undefined)
         })
     })
 
     describe("trait()", () => {
         it("should return the trait of the Excubia contract", async () => {
+            const { freeForAllExcubia } = await loadFixture(deployFreeForAllExcubiaFixture)
+
             expect(await freeForAllExcubia.trait()).to.be.equal("FreeForAll")
         })
     })
 
     describe("setGate()", () => {
         it("should fail to set the gate when the caller is not the owner", async () => {
-            const [, notOwnerSigner] = await ethers.getSigners()
+            const { freeForAllExcubia, notOwner, gateAddress } = await loadFixture(deployFreeForAllExcubiaFixture)
 
-            await expect(freeForAllExcubia.connect(notOwnerSigner).setGate(gateAddress)).to.be.revertedWithCustomError(
+            await expect(freeForAllExcubia.connect(notOwner).setGate(gateAddress)).to.be.revertedWithCustomError(
                 freeForAllExcubia,
                 "OwnableUnauthorizedAccount"
             )
         })
 
         it("should fail to set the gate when the gate address is zero", async () => {
+            const { freeForAllExcubia } = await loadFixture(deployFreeForAllExcubiaFixture)
+
             await expect(freeForAllExcubia.setGate(ZeroAddress)).to.be.revertedWithCustomError(
                 freeForAllExcubia,
                 "ZeroAddress"
@@ -52,6 +64,9 @@ describe("FreeForAllExcubia", () => {
         })
 
         it("Should set the gate contract address correctly", async () => {
+            const { FreeForAllExcubiaContract, freeForAllExcubia, gateAddress } =
+                await loadFixture(deployFreeForAllExcubiaFixture)
+
             const tx = await freeForAllExcubia.setGate(gateAddress)
             const receipt = await tx.wait()
             const event = FreeForAllExcubiaContract.interface.parseLog(
@@ -68,6 +83,10 @@ describe("FreeForAllExcubia", () => {
         })
 
         it("Should fail to set the gate if already set", async () => {
+            const { freeForAllExcubia, gateAddress } = await loadFixture(deployFreeForAllExcubiaFixture)
+
+            await freeForAllExcubia.setGate(gateAddress)
+
             await expect(freeForAllExcubia.setGate(gateAddress)).to.be.revertedWithCustomError(
                 freeForAllExcubia,
                 "GateAlreadySet"
@@ -77,6 +96,8 @@ describe("FreeForAllExcubia", () => {
 
     describe("check()", () => {
         it("should check", async () => {
+            const { freeForAllExcubia, signerAddress } = await loadFixture(deployFreeForAllExcubiaFixture)
+
             // `data` parameter value can be whatever (e.g., ZeroHash default).
             await expect(freeForAllExcubia.check(signerAddress, ZeroHash)).to.not.be.reverted
 
@@ -88,6 +109,11 @@ describe("FreeForAllExcubia", () => {
 
     describe("pass()", () => {
         it("should throw when the callee is not the gate", async () => {
+            const { freeForAllExcubia, signer, signerAddress, gateAddress } =
+                await loadFixture(deployFreeForAllExcubiaFixture)
+
+            await freeForAllExcubia.setGate(gateAddress)
+
             await expect(
                 // `data` parameter value can be whatever (e.g., ZeroHash default).
                 freeForAllExcubia.connect(signer).pass(signerAddress, ZeroHash)
@@ -95,6 +121,11 @@ describe("FreeForAllExcubia", () => {
         })
 
         it("should pass", async () => {
+            const { FreeForAllExcubiaContract, freeForAllExcubia, gate, signerAddress, gateAddress } =
+                await loadFixture(deployFreeForAllExcubiaFixture)
+
+            await freeForAllExcubia.setGate(gateAddress)
+
             // `data` parameter value can be whatever (e.g., ZeroHash default).
             const tx = await freeForAllExcubia.connect(gate).pass(signerAddress, ZeroHash)
             const receipt = await tx.wait()
@@ -115,6 +146,13 @@ describe("FreeForAllExcubia", () => {
         })
 
         it("should prevent to pass twice", async () => {
+            const { freeForAllExcubia, gate, signerAddress, gateAddress } =
+                await loadFixture(deployFreeForAllExcubiaFixture)
+
+            await freeForAllExcubia.setGate(gateAddress)
+
+            await freeForAllExcubia.connect(gate).pass(signerAddress, ZeroHash)
+
             await expect(
                 // `data` parameter value can be whatever (e.g., ZeroHash default).
                 freeForAllExcubia.connect(gate).pass(signerAddress, ZeroHash)
