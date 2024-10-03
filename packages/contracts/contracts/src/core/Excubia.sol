@@ -1,21 +1,21 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.27;
+pragma solidity 0.8.27;
 
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {IExcubia} from "./IExcubia.sol";
 
 /// @title Excubia.
-/// @notice Abstract base contract which can be extended to implement a specific excubia.
+/// @notice Abstract base contract which can be extended to implement a specific `Excubia`.
 /// @dev Inherit from this contract and implement the `_pass` & `_check` methods to define
 /// your custom gatekeeping logic.
 abstract contract Excubia is IExcubia, Ownable(msg.sender) {
-    /// @notice The excubia-protected contract address.
+    /// @notice The Excubia-protected contract address.
     /// @dev The gate can be any contract address that requires a prior check to enable logic.
     /// For example, the gate is a Semaphore group that requires the passerby
     /// to meet certain criteria before joining.
     address public gate;
 
-    /// @dev Modifier to restrict function calls to only from the gate address.
+    /// @dev Modifier to restrict function calls to only from the `gate` address.
     modifier onlyGate() {
         if (msg.sender != gate) revert GateOnly();
         _;
@@ -47,13 +47,13 @@ abstract contract Excubia is IExcubia, Ownable(msg.sender) {
     }
 
     /// @notice Internal function to define the trait of the Excubia contract.
-    /// @dev maintain consistency across _pass & _check definitions.
-    /// @return The specific trait of the Excubia contract (e.g., SemaphoreExcubia has trait `Semaphore`).
+    /// @dev maintain consistency across `_pass` & `_check` definitions.
+    /// @return The specific trait of the Excubia contract (e.g., SemaphoreExcubia has trait Semaphore).
     function _trait() internal pure virtual returns (string memory) {}
 
-    /// @notice Internal function to enforce the custom gate passing logic.
+    /// @notice Internal function to enforce the custom `gate` passing logic.
     /// @dev Calls the `_check` internal logic and emits the relative event if successful.
-    /// @param passerby The address of the entity attempting to pass the gate.
+    /// @param passerby The address of the entity attempting to pass the `gate`.
     /// @param data Additional data required for the check (e.g., encoded token identifier).
     function _pass(address passerby, bytes calldata data) internal virtual {
         _check(passerby, data);
@@ -61,9 +61,9 @@ abstract contract Excubia is IExcubia, Ownable(msg.sender) {
         emit GatePassed(passerby, gate);
     }
 
-    /// @notice Internal function to define the custom gate protection logic.
-    /// @dev Custom logic to determine if the passerby can pass the gate.
-    /// @param passerby The address of the entity attempting to pass the gate.
+    /// @notice Internal function to define the custom `gate` protection logic.
+    /// @dev Custom logic to determine if the passerby can pass the `gate`.
+    /// @param passerby The address of the entity attempting to pass the `gate`.
     /// @param data Additional data that may be required for the check.
     function _check(address passerby, bytes calldata data) internal view virtual {}
 }
