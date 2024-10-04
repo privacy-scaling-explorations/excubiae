@@ -39,7 +39,7 @@
     "scripts": {
         "build": "yarn build:docs && yarn build:website && yarn build:packages",
         "build:packages": "yarn workspaces foreach -Apt --no-private run build",
-        "build:docs": "yarn workspace excubiae-docs build",
+        "build:docs": "yarn workspace excubiae-docs build && yarn workspace excubiae-contracts docs:forge",
         "build:website": "yarn workspace excubiae-website build",
         "compile:contracts": "yarn workspace excubiae-contracts compile",
         "test": "yarn test:contracts",

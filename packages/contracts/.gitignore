@@ -17,6 +17,7 @@ node_modules
 # solidity-coverage files
 /coverage
 /coverage.json
+lcov.info
 
 # Hardhat Ignition
 ignition/deployments/chain-*
