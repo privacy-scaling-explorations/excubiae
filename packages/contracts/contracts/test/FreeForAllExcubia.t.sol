@@ -3,11 +3,15 @@ pragma solidity 0.8.27;
 
 import {Test} from "forge-std/src/Test.sol";
 import {FreeForAllExcubia} from "../src/extensions/FreeForAllExcubia.sol";
+import {FreeForAllChecker} from "../src/extensions/FreeForAllChecker.sol";
 import {FreeForAllExcubiaHarness} from "./wrappers/FreeForAllExcubiaHarness.sol";
+import {FreeForAllCheckerHarness} from "./wrappers/FreeForAllCheckerHarness.sol";
 
 contract FreeForAllExcubiaTest is Test {
     FreeForAllExcubia internal freeForAllExcubia;
+    FreeForAllChecker internal freeForAllChecker;
     FreeForAllExcubiaHarness internal freeForAllExcubiaHarness;
+    FreeForAllCheckerHarness internal freeForAllCheckerHarness;
 
     address public deployer = vm.addr(0x1);
     address public gate = vm.addr(0x2);
@@ -26,10 +30,13 @@ contract FreeForAllExcubiaTest is Test {
     function setUp() public virtual {
         vm.startPrank(deployer);
 
-        freeForAllExcubia = new FreeForAllExcubia();
+        freeForAllChecker = new FreeForAllChecker();
+        freeForAllExcubia = new FreeForAllExcubia(address(freeForAllChecker));
 
-        freeForAllExcubiaHarness = new FreeForAllExcubiaHarness();
+        freeForAllExcubiaHarness = new FreeForAllExcubiaHarness(address(freeForAllChecker));
         freeForAllExcubiaHarness.setGate(gate);
+
+        freeForAllCheckerHarness = new FreeForAllCheckerHarness();
 
         vm.stopPrank();
     }
@@ -218,7 +225,7 @@ contract FreeForAllExcubiaTest is Test {
     }
 
     function test_check_Internal() public view {
-        freeForAllExcubiaHarness.exposed__check(passerby, "");
+        freeForAllCheckerHarness.exposed__check(passerby, "");
     }
 
     function testFuzz_check_Addresses(address thePasserby, bytes calldata data) public {
@@ -234,6 +241,6 @@ contract FreeForAllExcubiaTest is Test {
     }
 
     function testFuzz_check_Internal(address randomPasserby, bytes calldata randomData) public view {
-        freeForAllExcubiaHarness.exposed__check(randomPasserby, randomData);
+        freeForAllCheckerHarness.exposed__check(randomPasserby, randomData);
     }
 }

@@ -2,7 +2,12 @@ import { expect } from "chai"
 import { ethers } from "hardhat"
 import { Signer, ZeroAddress, ZeroHash } from "ethers"
 import { loadFixture } from "@nomicfoundation/hardhat-toolbox/network-helpers"
-import { FreeForAllExcubia, FreeForAllExcubia__factory } from "../typechain-types"
+import {
+    FreeForAllExcubia,
+    FreeForAllExcubia__factory,
+    FreeForAllChecker,
+    FreeForAllChecker__factory
+} from "../typechain-types"
 
 describe("FreeForAllExcubia", () => {
     async function deployFreeForAllExcubiaFixture() {
@@ -11,9 +16,15 @@ describe("FreeForAllExcubia", () => {
         const gateAddress: string = await gate.getAddress()
         const notOwnerAddress: string = await gate.getAddress()
 
+        const FreeForAllCheckerContract: FreeForAllChecker__factory =
+            await ethers.getContractFactory("FreeForAllChecker")
+        const freeForAllChecker: FreeForAllChecker = await FreeForAllCheckerContract.deploy()
+
         const FreeForAllExcubiaContract: FreeForAllExcubia__factory =
             await ethers.getContractFactory("FreeForAllExcubia")
-        const freeForAllExcubia: FreeForAllExcubia = await FreeForAllExcubiaContract.deploy()
+        const freeForAllExcubia: FreeForAllExcubia = await FreeForAllExcubiaContract.deploy(
+            await freeForAllChecker.getAddress()
+        )
 
         // Fixtures can return anything you consider useful for your tests
         return {

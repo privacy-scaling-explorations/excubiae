@@ -41,11 +41,6 @@ abstract contract Excubia is IExcubia, Ownable(msg.sender) {
         _pass(passerby, data);
     }
 
-    /// @inheritdoc IExcubia
-    function check(address passerby, bytes calldata data) external view {
-        _check(passerby, data);
-    }
-
     /// @notice Internal function to define the trait of the Excubia contract.
     /// @dev maintain consistency across `_pass` & `_check` definitions.
     /// @return The specific trait of the Excubia contract (e.g., SemaphoreExcubia has trait Semaphore).
@@ -56,14 +51,6 @@ abstract contract Excubia is IExcubia, Ownable(msg.sender) {
     /// @param passerby The address of the entity attempting to pass the `gate`.
     /// @param data Additional data required for the check (e.g., encoded token identifier).
     function _pass(address passerby, bytes calldata data) internal virtual {
-        _check(passerby, data);
-
         emit GatePassed(passerby, gate);
     }
-
-    /// @notice Internal function to define the custom `gate` protection logic.
-    /// @dev Custom logic to determine if the passerby can pass the `gate`.
-    /// @param passerby The address of the entity attempting to pass the `gate`.
-    /// @param data Additional data that may be required for the check.
-    function _check(address passerby, bytes calldata data) internal view virtual {}
 }

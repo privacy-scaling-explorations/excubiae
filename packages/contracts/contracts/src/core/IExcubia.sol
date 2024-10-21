@@ -42,9 +42,4 @@ interface IExcubia {
     /// @param passerby The address of the entity attempting to pass the `gate`.
     /// @param data Additional data required for the check (e.g., encoded token identifier).
     function pass(address passerby, bytes calldata data) external;
-
-    /// @dev Defines the custom `gate` protection logic.
-    /// @param passerby The address of the entity attempting to pass the `gate`.
-    /// @param data Additional data that may be required for the check.
-    function check(address passerby, bytes calldata data) external view;
 }
