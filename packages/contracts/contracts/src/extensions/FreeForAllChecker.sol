@@ -5,16 +5,25 @@ import {Checker} from "../core/Checker.sol";
 
 /// @title FreeForAll Checker Contract.
 /// @notice This contract extends the `Checker` contract to implement the checks & allow free access through the `gate`.
-/// @dev The contract overrides the `_check` function to always return true.
 contract FreeForAllChecker is Checker {
     /// @notice Constructor for the FreeForAllChecker contract.
     constructor() {}
 
-    /// @notice Internal function to handle the `gate` protection logic.
-    /// @dev This function always returns true, signaling that any `passerby` is able to pass the `gate`.
-    /// @param passerby The address of the entity attempting to pass the `gate`.
-    /// @param data Additional data required for the check (e.g., encoded attestation ID).
-    function _check(address passerby, bytes calldata data) internal view override {
-        super._check(passerby, data);
+    /// @notice Check if the passerby can pass the pre-check.
+    /// @param passerby The address of the entity attempting to pass the pre-check.
+    function _checkPre(address passerby, bytes memory data) internal view override {
+        // Always allow passing the pre-check
+    }
+
+    /// @notice Check if the passerby can pass the main check.
+    /// @param passerby The address of the entity attempting to pass the main check.
+    function _checkMain(address passerby, bytes memory data) internal view override {
+        // Always allow passing the main check
+    }
+
+    /// @notice Check if the passerby can pass the post-check.
+    /// @param passerby The address of the entity attempting to pass the post-check.
+    function _checkPost(address passerby, bytes memory data) internal view override {
+        // Always allow passing the post-check
     }
 }

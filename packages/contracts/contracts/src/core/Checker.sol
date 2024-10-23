@@ -6,15 +6,42 @@ import {IChecker} from "./IChecker.sol";
 
 /// @title Checker.
 /// @notice Abstract base contract which can be extended to implement specific criteria.
-abstract contract Checker is IChecker, Ownable(msg.sender) {
-    /// @inheritdoc IChecker
-    function check(address passerby, bytes calldata data) external view {
-        _check(passerby, data);
+contract Checker is IChecker, Ownable(msg.sender) {
+    // Enum to represent types of checks
+    enum CheckType {
+        PreCheck,
+        MainCheck,
+        PostCheck
     }
 
-    /// @notice Internal function to define the custom `gate` protection logic.
-    /// @dev Custom logic to determine if the passerby can pass the `gate`.
-    /// @param passerby The address of the entity attempting to pass the `gate`.
-    /// @param data Additional data that may be required for the check.
-    function _check(address passerby, bytes calldata data) internal view virtual {}
+    /// @notice Check if the passerby can pass the pre-check.
+    /// @param passerby The address of the entity attempting to pass the pre-check.
+    function checkPre(address passerby, bytes memory data) external view {
+        _checkPre(passerby, data);
+    }
+
+    /// @notice Check if the passerby can pass the main check.
+    /// @param passerby The address of the entity attempting to pass the main check.
+    function checkMain(address passerby, bytes memory data) external view {
+        _checkMain(passerby, data);
+    }
+
+    /// @notice Check if the passerby can pass the post-check.
+    /// @param passerby The address of the entity attempting to pass the post-check.
+    function checkPost(address passerby, bytes memory data) external view {
+        _checkPost(passerby, data);
+    }
+
+    // Internal methods for actual check logic
+    function _checkPre(address passerby, bytes memory data) internal view virtual {
+        // Implement pre-check logic here
+    }
+
+    function _checkMain(address passerby, bytes memory data) internal view virtual {
+        // Implement main check logic here
+    }
+
+    function _checkPost(address passerby, bytes memory data) internal view virtual {
+        // Implement post-check logic here
+    }
 }

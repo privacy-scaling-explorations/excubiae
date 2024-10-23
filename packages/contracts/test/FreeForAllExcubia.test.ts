@@ -23,13 +23,18 @@ describe("FreeForAllExcubia", () => {
         const FreeForAllExcubiaContract: FreeForAllExcubia__factory =
             await ethers.getContractFactory("FreeForAllExcubia")
         const freeForAllExcubia: FreeForAllExcubia = await FreeForAllExcubiaContract.deploy(
-            await freeForAllChecker.getAddress()
+            await freeForAllChecker.getAddress(),
+            true,
+            true,
+            true
         )
 
         // Fixtures can return anything you consider useful for your tests
         return {
             FreeForAllExcubiaContract,
             freeForAllExcubia,
+            FreeForAllCheckerContract,
+            freeForAllChecker,
             signer,
             gate,
             notOwner,
@@ -107,14 +112,15 @@ describe("FreeForAllExcubia", () => {
 
     describe("check()", () => {
         it("should check", async () => {
-            const { freeForAllExcubia, signerAddress } = await loadFixture(deployFreeForAllExcubiaFixture)
+            const { freeForAllExcubia, freeForAllChecker, signerAddress } =
+                await loadFixture(deployFreeForAllExcubiaFixture)
 
             // `data` parameter value can be whatever (e.g., ZeroHash default).
-            await expect(freeForAllExcubia.check(signerAddress, ZeroHash)).to.not.be.reverted
+            await expect(freeForAllChecker.checkMain(signerAddress, ZeroHash)).to.not.be.reverted
 
             // check does NOT change the state of the contract (see pass()).
             // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-            expect(await freeForAllExcubia.passedPassersby(signerAddress)).to.be.false
+            expect(await freeForAllExcubia.executionStatus(signerAddress)).to.be.eq(0)
         })
     })
 
@@ -127,7 +133,7 @@ describe("FreeForAllExcubia", () => {
 
             await expect(
                 // `data` parameter value can be whatever (e.g., ZeroHash default).
-                freeForAllExcubia.connect(signer).pass(signerAddress, ZeroHash)
+                freeForAllExcubia.connect(signer).passMainCheck(signerAddress, ZeroHash)
             ).to.be.revertedWithCustomError(freeForAllExcubia, "GateOnly")
         })
 
@@ -138,36 +144,50 @@ describe("FreeForAllExcubia", () => {
             await freeForAllExcubia.setGate(gateAddress)
 
             // `data` parameter value can be whatever (e.g., ZeroHash default).
-            const tx = await freeForAllExcubia.connect(gate).pass(signerAddress, ZeroHash)
+            const tx = await freeForAllExcubia.connect(gate).passMainCheck(signerAddress, ZeroHash)
             const receipt = await tx.wait()
             const event = FreeForAllExcubiaContract.interface.parseLog(
                 receipt?.logs[0] as unknown as { topics: string[]; data: string }
             ) as unknown as {
                 args: {
                     passerby: string
-                    gate: string
+                    data: string
                 }
             }
 
             expect(receipt?.status).to.eq(1)
             expect(event.args.passerby).to.eq(signerAddress)
-            expect(event.args.gate).to.eq(gateAddress)
+            expect(event.args.data).to.eq(ZeroHash)
             // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-            expect(await freeForAllExcubia.passedPassersby(signerAddress)).to.be.true
+            expect(await freeForAllExcubia.executionStatus(signerAddress)).to.be.eq(2)
         })
 
-        it("should prevent to pass twice", async () => {
-            const { freeForAllExcubia, gate, signerAddress, gateAddress } =
+        it("should pass twice", async () => {
+            const { FreeForAllExcubiaContract, freeForAllExcubia, gate, signerAddress, gateAddress } =
                 await loadFixture(deployFreeForAllExcubiaFixture)
 
             await freeForAllExcubia.setGate(gateAddress)
 
-            await freeForAllExcubia.connect(gate).pass(signerAddress, ZeroHash)
+            // 1st pass
+            await freeForAllExcubia.connect(gate).passMainCheck(signerAddress, ZeroHash)
 
-            await expect(
-                // `data` parameter value can be whatever (e.g., ZeroHash default).
-                freeForAllExcubia.connect(gate).pass(signerAddress, ZeroHash)
-            ).to.be.revertedWithCustomError(freeForAllExcubia, "AlreadyPassed")
+            // 2nd pass
+            const tx = await freeForAllExcubia.connect(gate).passMainCheck(signerAddress, ZeroHash)
+            const receipt = await tx.wait()
+            const event = FreeForAllExcubiaContract.interface.parseLog(
+                receipt?.logs[0] as unknown as { topics: string[]; data: string }
+            ) as unknown as {
+                args: {
+                    passerby: string
+                    data: string
+                }
+            }
+
+            expect(receipt?.status).to.eq(1)
+            expect(event.args.passerby).to.eq(signerAddress)
+            expect(event.args.data).to.eq(ZeroHash)
+            // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+            expect(await freeForAllExcubia.executionStatus(signerAddress)).to.be.eq(2)
         })
     })
 })

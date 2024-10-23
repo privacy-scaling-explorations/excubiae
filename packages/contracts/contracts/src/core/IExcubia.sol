@@ -4,10 +4,7 @@ pragma solidity 0.8.27;
 /// @title IExcubia.
 /// @notice Excubia contract interface.
 interface IExcubia {
-    /// @notice Event emitted when someone passes the `gate` check.
-    /// @param passerby The address of those who have successfully passed the check.
-    /// @param gate The address of the excubia-protected contract address.
-    event GatePassed(address indexed passerby, address indexed gate);
+    event GatePassed(address indexed passerby, bytes data);
 
     /// @notice Event emitted when the `gate` address is set.
     /// @param gate The address of the contract set as the `gate`.
@@ -37,9 +34,7 @@ interface IExcubia {
     /// @param _gate The address of the contract to be set as the gate.
     function setGate(address _gate) external;
 
-    /// @notice Enforces the custom `gate` passing logic.
-    /// @dev Must call the `check` to handle the logic of checking passerby for specific `gate`.
-    /// @param passerby The address of the entity attempting to pass the `gate`.
-    /// @param data Additional data required for the check (e.g., encoded token identifier).
-    function pass(address passerby, bytes calldata data) external;
+    function passPreCheck(address passerby, bytes calldata data) external;
+    function passMainCheck(address passerby, bytes calldata data) external;
+    function passPostCheck(address passerby, bytes calldata data) external;
 }
