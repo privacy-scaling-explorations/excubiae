@@ -126,7 +126,7 @@ contract FreeForAllExcubiaTest is Test {
         freeForAllExcubia.setGate(gate);
 
         vm.prank(gate);
-        freeForAllExcubia.passMainCheck(gate, "0x");
+        freeForAllExcubia.passCheck(gate, "0x", 1);
     }
 
     function testGas_pass() public {
@@ -136,7 +136,7 @@ contract FreeForAllExcubiaTest is Test {
         vm.prank(gate);
         uint256 gasBefore = gasleft();
 
-        freeForAllExcubia.passMainCheck(passerby, "0x");
+        freeForAllExcubia.passCheck(passerby, "0x", 1);
 
         uint256 gasAfter = gasleft();
         uint256 gasUsed = gasBefore - gasAfter;
@@ -146,7 +146,7 @@ contract FreeForAllExcubiaTest is Test {
     function test_pass_RevertWhen_GateNotSet() external {
         vm.prank(gate);
         vm.expectRevert(GateOnly.selector);
-        freeForAllExcubia.passMainCheck(passerby, "");
+        freeForAllExcubia.passCheck(passerby, "0x", 1);
 
         assertEq(freeForAllExcubia.gate(), address(0));
     }
@@ -156,7 +156,7 @@ contract FreeForAllExcubiaTest is Test {
         freeForAllExcubia.setGate(gate);
 
         vm.expectRevert(GateOnly.selector);
-        freeForAllExcubia.passMainCheck(passerby, "");
+        freeForAllExcubia.passCheck(passerby, "0x", 1);
 
         assert(freeForAllExcubia.gate() != address(0));
     }
@@ -166,7 +166,7 @@ contract FreeForAllExcubiaTest is Test {
         freeForAllExcubia.setGate(gate);
 
         vm.prank(gate);
-        freeForAllExcubia.passMainCheck(thePasserby, data);
+        freeForAllExcubia.passCheck(thePasserby, data, 1);
 
         assertEq(freeForAllExcubia.trait(), "FreeForAll");
     }

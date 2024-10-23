@@ -63,49 +63,36 @@ abstract contract Excubia is IExcubia, Ownable(msg.sender) {
     /// @return The specific trait of the Excubia contract (e.g., SemaphoreExcubia has trait Semaphore).
     function _trait() internal pure virtual returns (string memory) {}
 
-    /// @notice Pass the pre-check.
-    /// @param passerby The address of the entity attempting to pass the pre-check.
-    function passPreCheck(address passerby, bytes calldata data) external onlyGate {
-        if ((configFlags & SKIP_PRE_CHECK) != 0) revert("Pre-check skipped");
-        checker.checkPre(passerby, data); // Call pre-check
-        executionStatuses[passerby].preExecuted = true; // Update status to PreExecuted
-        emit GatePassed(passerby, data); // Emit event for passing the gate
+    function passCheck(address passerby, bytes calldata data, uint8 checkType) external virtual onlyGate {
+        _passCheck(passerby, data, checkType);
     }
 
-    /// @notice Pass the main check.
-    /// @param passerby The address of the entity attempting to pass the main check.
+    /// @notice Pass a check (pre, main, or post).
+    /// @param passerby The address of the entity attempting to pass the check.
     /// @param data Additional data required for the check (e.g., encoded token identifier).
-    function passMainCheck(address passerby, bytes calldata data) external onlyGate {
-        ExecutionStatus storage status = executionStatuses[passerby];
-        if ((configFlags & ALLOW_MULTIPLE_MAIN_CHECK) == 0) {
-            require(!status.mainExecuted, "Already passed main check");
+    /// @param checkType The type of check to perform (0: pre, 1: main, 2: post).
+    function _passCheck(address passerby, bytes calldata data, uint8 checkType) internal onlyGate {
+        if (checkType == 0) {
+            // Pre-check
+            if ((configFlags & SKIP_PRE_CHECK) != 0) revert("Pre-check skipped");
+            checker.checkPre(passerby, data);
+            executionStatuses[passerby].preExecuted = true;
+        } else if (checkType == 1) {
+            // Main check
+            ExecutionStatus storage status = executionStatuses[passerby];
+            if ((configFlags & ALLOW_MULTIPLE_MAIN_CHECK) == 0) {
+                require(!status.mainExecuted, "Already passed main check");
+            }
+            checker.checkMain(passerby, data);
+            status.mainExecuted = true;
+        } else if (checkType == 2) {
+            // Post-check
+            if ((configFlags & SKIP_POST_CHECK) != 0) revert("Post-check skipped");
+            checker.checkPost(passerby, data);
+            executionStatuses[passerby].postExecuted = true;
+        } else {
+            revert("Invalid check type");
         }
-        checker.checkMain(passerby, data); // Call main check
-        status.mainExecuted = true; // Update status to CheckExecuted
-        emit GatePassed(passerby, data); // Emit event for passing the gate
-    }
-
-    /// @notice Pass the post-check.
-    /// @param passerby The address of the entity attempting to pass the post-check.
-    function passPostCheck(address passerby, bytes calldata data) external onlyGate {
-        if ((configFlags & SKIP_POST_CHECK) != 0) revert("Post-check skipped");
-        checker.checkPost(passerby, data); // Call post-check
-        executionStatuses[passerby].postExecuted = true; // Update status to PostExecuted
-        emit GatePassed(passerby, data); // Emit event for passing the gate
-    }
-
-    /// @dev Helper function to check if the pre-check should be skipped.
-    function skipPreCheck() internal view returns (bool) {
-        return (configFlags & SKIP_PRE_CHECK) != 0;
-    }
-
-    /// @dev Helper function to check if the post-check should be skipped.
-    function skipPostCheck() internal view returns (bool) {
-        return (configFlags & SKIP_POST_CHECK) != 0;
-    }
-
-    /// @dev Helper function to check if multiple main checks are allowed.
-    function allowMultipleMainCheckPasses() internal view returns (bool) {
-        return (configFlags & ALLOW_MULTIPLE_MAIN_CHECK) != 0;
+        emit GatePassed(passerby, data);
     }
 }

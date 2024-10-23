@@ -12,4 +12,8 @@ contract FreeForAllExcubiaHarness is FreeForAllExcubia {
     function exposed__trait() public pure {
         _trait();
     }
+
+    function exposed__passCheck(address passerby, bytes calldata data, uint8 checkType) public {
+        _passCheck(passerby, data, checkType);
+    }
 }

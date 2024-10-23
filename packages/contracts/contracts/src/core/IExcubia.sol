@@ -34,7 +34,5 @@ interface IExcubia {
     /// @param _gate The address of the contract to be set as the gate.
     function setGate(address _gate) external;
 
-    function passPreCheck(address passerby, bytes calldata data) external;
-    function passMainCheck(address passerby, bytes calldata data) external;
-    function passPostCheck(address passerby, bytes calldata data) external;
+    function passCheck(address passerby, bytes calldata data, uint8 checkType) external;
 }

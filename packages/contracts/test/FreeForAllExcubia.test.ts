@@ -130,7 +130,7 @@ describe("FreeForAllExcubia", () => {
 
             await expect(
                 // `data` parameter value can be whatever (e.g., ZeroHash default).
-                freeForAllExcubia.connect(signer).passMainCheck(signerAddress, ZeroHash)
+                freeForAllExcubia.connect(signer).passCheck(signerAddress, ZeroHash, 1)
             ).to.be.revertedWithCustomError(freeForAllExcubia, "GateOnly")
         })
 
@@ -141,7 +141,7 @@ describe("FreeForAllExcubia", () => {
             await freeForAllExcubia.setGate(gateAddress)
 
             // `data` parameter value can be whatever (e.g., ZeroHash default).
-            const tx = await freeForAllExcubia.connect(gate).passMainCheck(signerAddress, ZeroHash)
+            const tx = await freeForAllExcubia.connect(gate).passCheck(signerAddress, ZeroHash, 1)
             const receipt = await tx.wait()
             const event = FreeForAllExcubiaContract.interface.parseLog(
                 receipt?.logs[0] as unknown as { topics: string[]; data: string }
@@ -166,10 +166,10 @@ describe("FreeForAllExcubia", () => {
             await freeForAllExcubia.setGate(gateAddress)
 
             // 1st pass
-            await freeForAllExcubia.connect(gate).passMainCheck(signerAddress, ZeroHash)
+            await freeForAllExcubia.connect(gate).passCheck(signerAddress, ZeroHash, 1)
 
             // 2nd pass
-            const tx = await freeForAllExcubia.connect(gate).passMainCheck(signerAddress, ZeroHash)
+            const tx = await freeForAllExcubia.connect(gate).passCheck(signerAddress, ZeroHash, 1)
             const receipt = await tx.wait()
             const event = FreeForAllExcubiaContract.interface.parseLog(
                 receipt?.logs[0] as unknown as { topics: string[]; data: string }

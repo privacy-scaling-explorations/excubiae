@@ -33,15 +33,9 @@ contract Checker is IChecker, Ownable(msg.sender) {
     }
 
     // Internal methods for actual check logic
-    function _checkPre(address passerby, bytes memory data) internal view virtual {
-        // Implement pre-check logic here
-    }
+    function _checkPre(address passerby, bytes memory data) internal view virtual {}
 
-    function _checkMain(address passerby, bytes memory data) internal view virtual {
-        // Implement main check logic here
-    }
+    function _checkMain(address passerby, bytes memory data) internal view virtual {}
 
-    function _checkPost(address passerby, bytes memory data) internal view virtual {
-        // Implement post-check logic here
-    }
+    function _checkPost(address passerby, bytes memory data) internal view virtual {}
 }
