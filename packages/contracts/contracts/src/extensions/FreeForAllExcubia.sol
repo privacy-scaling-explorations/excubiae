@@ -11,12 +11,7 @@ import {FreeForAllChecker} from "./FreeForAllChecker.sol";
 /// @dev The contract overrides the `_check` function to always return true.
 contract FreeForAllExcubia is Excubia {
     /// @notice Constructor for the FreeForAllExcubia contract.
-    constructor(
-        Checker _freeForAllChecker,
-        bool _skipPreCheck,
-        bool _skipPostCheck,
-        bool _allowMultipleMainCheckPasses
-    ) Excubia(_freeForAllChecker, true, true, true) {}
+    constructor(Checker _freeForAllChecker, uint8 _configFlags) Excubia(_freeForAllChecker, 7) {}
 
     /// @notice The trait of the `Excubia` contract.
     function _trait() internal pure override returns (string memory) {

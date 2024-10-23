@@ -7,12 +7,7 @@ import {FreeForAllChecker} from "../../src/extensions/FreeForAllChecker.sol";
 
 contract FreeForAllExcubiaHarness is FreeForAllExcubia {
     /// @notice Constructor for the FreeForAllExcubia contract.
-    constructor(
-        Checker _freeForAllChecker,
-        bool _skipPreCheck,
-        bool _skipPostCheck,
-        bool _allowMultipleMainCheckPasses
-    ) FreeForAllExcubia(_freeForAllChecker, _skipPreCheck, _skipPostCheck, _allowMultipleMainCheckPasses) {}
+    constructor(Checker _freeForAllChecker, uint8 _configFlags) FreeForAllExcubia(_freeForAllChecker, _configFlags) {}
 
     function exposed__trait() public pure {
         _trait();

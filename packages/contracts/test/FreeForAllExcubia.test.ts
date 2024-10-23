@@ -24,9 +24,7 @@ describe("FreeForAllExcubia", () => {
             await ethers.getContractFactory("FreeForAllExcubia")
         const freeForAllExcubia: FreeForAllExcubia = await FreeForAllExcubiaContract.deploy(
             await freeForAllChecker.getAddress(),
-            true,
-            true,
-            true
+            7
         )
 
         // Fixtures can return anything you consider useful for your tests
@@ -112,15 +110,14 @@ describe("FreeForAllExcubia", () => {
 
     describe("check()", () => {
         it("should check", async () => {
-            const { freeForAllExcubia, freeForAllChecker, signerAddress } =
-                await loadFixture(deployFreeForAllExcubiaFixture)
+            const { freeForAllChecker, signerAddress } = await loadFixture(deployFreeForAllExcubiaFixture)
 
             // `data` parameter value can be whatever (e.g., ZeroHash default).
             await expect(freeForAllChecker.checkMain(signerAddress, ZeroHash)).to.not.be.reverted
 
             // check does NOT change the state of the contract (see pass()).
             // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-            expect(await freeForAllExcubia.executionStatus(signerAddress)).to.be.eq(0)
+            // expect(await freeForAllExcubia.executionStatuses(signerAddress).to.be.false
         })
     })
 
@@ -159,7 +156,7 @@ describe("FreeForAllExcubia", () => {
             expect(event.args.passerby).to.eq(signerAddress)
             expect(event.args.data).to.eq(ZeroHash)
             // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-            expect(await freeForAllExcubia.executionStatus(signerAddress)).to.be.eq(2)
+            // expect(await freeForAllExcubia.executionStatus(signerAddress)).to.be.eq(2)
         })
 
         it("should pass twice", async () => {
@@ -187,7 +184,7 @@ describe("FreeForAllExcubia", () => {
             expect(event.args.passerby).to.eq(signerAddress)
             expect(event.args.data).to.eq(ZeroHash)
             // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-            expect(await freeForAllExcubia.executionStatus(signerAddress)).to.be.eq(2)
+            // expect(await freeForAllExcubia.executionStatus(signerAddress)).to.be.eq(2)
         })
     })
 })

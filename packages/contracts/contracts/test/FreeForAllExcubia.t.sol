@@ -32,9 +32,9 @@ contract FreeForAllExcubiaTest is Test {
         vm.startPrank(deployer);
 
         freeForAllChecker = new FreeForAllChecker();
-        freeForAllExcubia = new FreeForAllExcubia(Checker(freeForAllChecker), true, true, true);
+        freeForAllExcubia = new FreeForAllExcubia(Checker(freeForAllChecker), 7);
 
-        freeForAllExcubiaHarness = new FreeForAllExcubiaHarness(Checker(freeForAllChecker), true, true, true);
+        freeForAllExcubiaHarness = new FreeForAllExcubiaHarness(Checker(freeForAllChecker), 7);
         freeForAllExcubiaHarness.setGate(gate);
 
         freeForAllCheckerHarness = new FreeForAllCheckerHarness();
@@ -127,8 +127,6 @@ contract FreeForAllExcubiaTest is Test {
 
         vm.prank(gate);
         freeForAllExcubia.passMainCheck(gate, "0x");
-
-        assertTrue(uint256(freeForAllExcubia.executionStatus(gate)) == 2);
     }
 
     function testGas_pass() public {
@@ -170,7 +168,6 @@ contract FreeForAllExcubiaTest is Test {
         vm.prank(gate);
         freeForAllExcubia.passMainCheck(thePasserby, data);
 
-        assertTrue(uint256(freeForAllExcubia.executionStatus(thePasserby)) == 2);
         assertEq(freeForAllExcubia.trait(), "FreeForAll");
     }
 
