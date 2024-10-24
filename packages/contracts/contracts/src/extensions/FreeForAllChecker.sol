@@ -17,7 +17,7 @@ contract FreeForAllChecker is Checker {
 
     /// @notice Check if the passerby can pass the main check.
     /// @param passerby The address of the entity attempting to pass the main check.
-    function _checkMain(address passerby, bytes memory data) internal view override {
+    function _checkContinue(address passerby, bytes memory data) internal view override {
         // Always allow passing the main check
     }
 

@@ -9,8 +9,8 @@ contract FreeForAllCheckerHarness is FreeForAllChecker {
         _checkPre(passerby, data);
     }
 
-    function exposed__checkMain(address passerby, bytes memory data) public view {
-        _checkMain(passerby, data);
+    function exposed__checkContinue(address passerby, bytes memory data) public view {
+        _checkContinue(passerby, data);
     }
 
     function exposed__checkPost(address passerby, bytes memory data) public view {

@@ -173,13 +173,13 @@ contract FreeForAllExcubiaTest is Test {
 
     function test_check_Internal() public view {
         freeForAllCheckerHarness.exposed__checkPre(passerby, "0x");
-        freeForAllCheckerHarness.exposed__checkMain(passerby, "0x");
+        freeForAllCheckerHarness.exposed__checkContinue(passerby, "0x");
         freeForAllCheckerHarness.exposed__checkPost(passerby, "0x");
     }
 
     function testFuzz_check_Internal(address randomPasserby, bytes calldata randomData) public view {
         freeForAllCheckerHarness.exposed__checkPre(randomPasserby, randomData);
-        freeForAllCheckerHarness.exposed__checkMain(randomPasserby, randomData);
+        freeForAllCheckerHarness.exposed__checkContinue(randomPasserby, randomData);
         freeForAllCheckerHarness.exposed__checkPost(randomPasserby, randomData);
     }
 }

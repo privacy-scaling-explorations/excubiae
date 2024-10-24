@@ -113,7 +113,7 @@ describe("FreeForAllExcubia", () => {
             const { freeForAllChecker, signerAddress } = await loadFixture(deployFreeForAllExcubiaFixture)
 
             // `data` parameter value can be whatever (e.g., ZeroHash default).
-            await expect(freeForAllChecker.checkMain(signerAddress, ZeroHash)).to.not.be.reverted
+            await expect(freeForAllChecker.checkContinue(signerAddress, ZeroHash)).to.not.be.reverted
 
             // check does NOT change the state of the contract (see pass()).
             // eslint-disable-next-line @typescript-eslint/no-unused-expressions
