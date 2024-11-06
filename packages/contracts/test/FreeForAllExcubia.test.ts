@@ -2,7 +2,12 @@ import { expect } from "chai"
 import { ethers } from "hardhat"
 import { Signer, ZeroAddress, ZeroHash } from "ethers"
 import { loadFixture } from "@nomicfoundation/hardhat-toolbox/network-helpers"
-import { FreeForAllExcubia, FreeForAllExcubia__factory } from "../typechain-types"
+import {
+    FreeForAllExcubia,
+    FreeForAllExcubia__factory,
+    FreeForAllChecker,
+    FreeForAllChecker__factory
+} from "../typechain-types"
 
 describe("FreeForAllExcubia", () => {
     async function deployFreeForAllExcubiaFixture() {
@@ -13,12 +18,19 @@ describe("FreeForAllExcubia", () => {
 
         const FreeForAllExcubiaContract: FreeForAllExcubia__factory =
             await ethers.getContractFactory("FreeForAllExcubia")
-        const freeForAllExcubia: FreeForAllExcubia = await FreeForAllExcubiaContract.deploy()
+        const FreeForAllCheckerContract: FreeForAllChecker__factory =
+            await ethers.getContractFactory("FreeForAllChecker")
+        const freeForAllChecker: FreeForAllChecker = await FreeForAllCheckerContract.deploy()
+        const freeForAllExcubia: FreeForAllExcubia = await FreeForAllExcubiaContract.deploy(
+            await freeForAllChecker.getAddress()
+        )
 
         // Fixtures can return anything you consider useful for your tests
         return {
             FreeForAllExcubiaContract,
+            FreeForAllCheckerContract,
             freeForAllExcubia,
+            freeForAllChecker,
             signer,
             gate,
             notOwner,
@@ -96,14 +108,15 @@ describe("FreeForAllExcubia", () => {
 
     describe("check()", () => {
         it("should check", async () => {
-            const { freeForAllExcubia, signerAddress } = await loadFixture(deployFreeForAllExcubiaFixture)
+            const { freeForAllChecker, freeForAllExcubia, signerAddress } =
+                await loadFixture(deployFreeForAllExcubiaFixture)
 
             // `data` parameter value can be whatever (e.g., ZeroHash default).
-            await expect(freeForAllExcubia.check(signerAddress, ZeroHash)).to.not.be.reverted
+            await expect(freeForAllChecker.check(signerAddress, ZeroHash)).to.not.be.reverted
 
             // check does NOT change the state of the contract (see pass()).
             // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-            expect(await freeForAllExcubia.passedPassersby(signerAddress)).to.be.false
+            expect(await freeForAllExcubia.isPassed(signerAddress)).to.be.false
         })
     })
 
@@ -142,7 +155,7 @@ describe("FreeForAllExcubia", () => {
             expect(event.args.passerby).to.eq(signerAddress)
             expect(event.args.gate).to.eq(gateAddress)
             // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-            expect(await freeForAllExcubia.passedPassersby(signerAddress)).to.be.true
+            expect(await freeForAllExcubia.isPassed(signerAddress)).to.be.true
         })
 
         it("should prevent to pass twice", async () => {
