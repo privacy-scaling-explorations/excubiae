@@ -32,11 +32,12 @@ abstract contract BaseExcubia is Excubia, IBaseExcubia {
     /// @param passerby The address attempting to pass the gate.
     /// @param data Additional data required for the check.
     function _pass(address passerby, bytes calldata data) internal {
-        BASE_CHECKER.check(passerby, data);
+        bool checked = BASE_CHECKER.check(passerby, data);
 
         if (isPassed[msg.sender][passerby]) revert AlreadyPassed();
+        if (!checked) revert CheckNotPassed();
 
-        isPassed[msg.sender][passerby] = true;
+        isPassed[msg.sender][passerby] = checked;
 
         emit GatePassed(passerby, gate, data);
     }

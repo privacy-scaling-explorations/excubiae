@@ -38,36 +38,38 @@ abstract contract AdvancedChecker is IAdvancedChecker {
     /// @param passerby The address to be checked.
     /// @param data The data associated with the check.
     /// @param checkType The type of check to perform (PRE, MAIN, POST).
-    function check(address passerby, bytes memory data, Check checkType) external view override {
-        _check(passerby, data, checkType);
+    function check(address passerby, bytes memory data, Check checkType) external view override returns (bool checked) {
+        return _check(passerby, data, checkType);
     }
 
     /// @notice Internal method to orchestrate the validation process based on the specified check type.
     /// @param passerby The address to be checked.
     /// @param data The data associated with the check.
     /// @param checkType The type of check to perform (PRE, MAIN, POST).
-    function _check(address passerby, bytes memory data, Check checkType) internal view {
+    function _check(address passerby, bytes memory data, Check checkType) internal view returns (bool checked) {
         if (!skipPre && checkType == Check.PRE) {
-            _checkPre(passerby, data);
+            return _checkPre(passerby, data);
         } else if (!skipPost && checkType == Check.POST) {
-            _checkPost(passerby, data);
+            return _checkPost(passerby, data);
         } else if (checkType == Check.MAIN) {
-            _checkMain(passerby, data);
+            return _checkMain(passerby, data);
         }
+
+        return false;
     }
 
     /// @notice Internal method for performing pre-condition checks.
     /// @param passerby The address to be checked.
     /// @param data The data associated with the check.
-    function _checkPre(address passerby, bytes memory data) internal view virtual {}
+    function _checkPre(address passerby, bytes memory data) internal view virtual returns (bool checked) {}
 
     /// @notice Internal method for performing main checks.
     /// @param passerby The address to be checked.
     /// @param data The data associated with the check.
-    function _checkMain(address passerby, bytes memory data) internal view virtual;
+    function _checkMain(address passerby, bytes memory data) internal view virtual returns (bool checked) {}
 
     /// @notice Internal method for performing post-condition checks.
     /// @param passerby The address to be checked.
     /// @param data The data associated with the check.
-    function _checkPost(address passerby, bytes memory data) internal view virtual {}
+    function _checkPost(address passerby, bytes memory data) internal view virtual returns (bool checked) {}
 }

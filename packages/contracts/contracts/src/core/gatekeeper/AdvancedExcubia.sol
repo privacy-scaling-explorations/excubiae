@@ -34,7 +34,9 @@ abstract contract AdvancedExcubia is IAdvancedExcubia, Excubia {
     /// @param data Additional data required for the check.
     /// @param checkType The type of check being performed (PRE, MAIN, POST).
     function _pass(address passerby, bytes calldata data, Check checkType) internal {
-        ADVANCED_CHECKER.check(passerby, data, checkType);
+        bool checked = ADVANCED_CHECKER.check(passerby, data, checkType);
+
+        if (!checked) revert CheckNotPassed();
 
         if (checkType == Check.PRE) {
             if (ADVANCED_CHECKER.skipPre()) revert PreCheckSkipped();

@@ -11,6 +11,9 @@ interface IExcubia {
     /// @notice Error thrown when an address equal to zero is given.
     error ZeroAddress();
 
+    /// @notice Error thrown when a passerby do not satisfy the checks.
+    error CheckNotPassed();
+
     /// @notice Error thrown when the `gate` address is not set.
     error GateNotSet();
 

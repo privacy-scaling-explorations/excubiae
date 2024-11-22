@@ -12,12 +12,12 @@ abstract contract BaseChecker is IBaseChecker {
     /// @notice Checks the validity of the provided data for a given address.
     /// @param passerby The address to be checked.
     /// @param data The data associated with the check.
-    function check(address passerby, bytes memory data) external view override {
-        _check(passerby, data);
+    function check(address passerby, bytes memory data) external view override returns (bool checked) {
+        return _check(passerby, data);
     }
 
     /// @notice Internal method to perform the actual check logic.
     /// @param passerby The address to be checked.
     /// @param data The data associated with the check.
-    function _check(address passerby, bytes memory data) internal view virtual;
+    function _check(address passerby, bytes memory data) internal view virtual returns (bool checked);
 }

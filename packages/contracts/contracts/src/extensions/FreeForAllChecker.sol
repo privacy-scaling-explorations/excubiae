@@ -12,5 +12,7 @@ contract FreeForAllChecker is BaseChecker {
     /// @param passerby The address to be checked.
     /// @param data The data associated with the check.
     /// @dev This method is intentionally left empty to allow all passerby addresses to pass without any checks.
-    function _check(address passerby, bytes memory data) internal view override {}
+    function _check(address passerby, bytes memory data) internal view override returns (bool checked) {
+        return true;
+    }
 }

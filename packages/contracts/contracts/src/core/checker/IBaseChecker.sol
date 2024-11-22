@@ -6,6 +6,6 @@ pragma solidity 0.8.27;
 interface IBaseChecker {
     /// @dev Defines the custom `gate` protection logic.
     /// @param passerby The address of the entity attempting to pass the `gate`.
-    /// @param data Additional data that may be required for the check.
-    function check(address passerby, bytes calldata data) external view;
+    /// @return checked A boolean that resolves to true when the passerby satisfies the checks; otherwise false.
+    function check(address passerby, bytes calldata data) external view returns (bool checked);
 }
