@@ -12,7 +12,7 @@ abstract contract AdvancedExcubia is IAdvancedExcubia, Excubia {
     AdvancedChecker public immutable ADVANCED_CHECKER;
 
     /// @dev Tracks the check status of each address.
-    mapping(address => CheckStatus) public isPassed;
+    mapping(address => mapping(address => CheckStatus)) public isPassed;
 
     /// @notice Constructor to initialize the AdvancedChecker contract.
     /// @param _advancedChecker The address of the AdvancedChecker contract.
@@ -38,15 +38,16 @@ abstract contract AdvancedExcubia is IAdvancedExcubia, Excubia {
 
         if (checkType == Check.PRE) {
             if (ADVANCED_CHECKER.skipPre()) revert PreCheckSkipped();
-            else if (isPassed[passerby].pre) revert AlreadyPassed();
-            else isPassed[passerby].pre = true;
+            else if (isPassed[msg.sender][passerby].pre) revert AlreadyPassed();
+            else isPassed[msg.sender][passerby].pre = true;
         } else if (checkType == Check.POST) {
             if (ADVANCED_CHECKER.skipPost()) revert PostCheckSkipped();
-            else if (isPassed[passerby].post) revert AlreadyPassed();
-            else isPassed[passerby].post = true;
+            else if (isPassed[msg.sender][passerby].post) revert AlreadyPassed();
+            else isPassed[msg.sender][passerby].post = true;
         } else if (checkType == Check.MAIN) {
-            if (!ADVANCED_CHECKER.allowMultipleMain() && isPassed[passerby].main > 0) revert MainCheckAlreadyEnforced();
-            else isPassed[passerby].main += 1;
+            if (!ADVANCED_CHECKER.allowMultipleMain() && isPassed[msg.sender][passerby].main > 0)
+                revert MainCheckAlreadyEnforced();
+            else isPassed[msg.sender][passerby].main += 1;
         }
 
         emit GatePassed(passerby, gate, data, checkType);

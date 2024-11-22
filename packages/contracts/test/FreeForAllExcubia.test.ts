@@ -108,7 +108,7 @@ describe("FreeForAllExcubia", () => {
 
     describe("check()", () => {
         it("should check", async () => {
-            const { freeForAllChecker, freeForAllExcubia, signerAddress } =
+            const { freeForAllChecker, freeForAllExcubia, signerAddress, gateAddress } =
                 await loadFixture(deployFreeForAllExcubiaFixture)
 
             // `data` parameter value can be whatever (e.g., ZeroHash default).
@@ -116,7 +116,7 @@ describe("FreeForAllExcubia", () => {
 
             // check does NOT change the state of the contract (see pass()).
             // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-            expect(await freeForAllExcubia.isPassed(signerAddress)).to.be.false
+            expect(await freeForAllExcubia.isPassed(gateAddress, signerAddress)).to.be.false
         })
     })
 
@@ -155,7 +155,7 @@ describe("FreeForAllExcubia", () => {
             expect(event.args.passerby).to.eq(signerAddress)
             expect(event.args.gate).to.eq(gateAddress)
             // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-            expect(await freeForAllExcubia.isPassed(signerAddress)).to.be.true
+            expect(await freeForAllExcubia.isPassed(gateAddress, signerAddress)).to.be.true
         })
 
         it("should prevent to pass twice", async () => {

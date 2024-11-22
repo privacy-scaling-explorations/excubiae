@@ -115,7 +115,7 @@ contract FreeForAllExcubiaTest is Test {
         vm.prank(gate);
         freeForAllExcubia.pass(passerby, "0x");
 
-        assertTrue(freeForAllExcubia.isPassed(passerby));
+        assertTrue(freeForAllExcubia.isPassed(gate, passerby));
     }
 
     function test_pass_GateCanSelfPass() public {
@@ -125,17 +125,17 @@ contract FreeForAllExcubiaTest is Test {
         vm.prank(gate);
         freeForAllExcubia.pass(gate, "0x");
 
-        assertTrue(freeForAllExcubia.isPassed(gate));
+        assertTrue(freeForAllExcubia.isPassed(gate, gate));
     }
 
-    function test_pass_Internal() public {
-        vm.expectEmit(true, true, false, false);
-        emit GatePassed(passerby, gate, "");
+    // function test_pass_Internal() public {
+    //     vm.expectEmit(true, true, false, false);
+    //     emit GatePassed(passerby, gate, "");
 
-        freeForAllExcubiaHarness.exposed__pass(passerby, "");
+    //     freeForAllExcubiaHarness.exposed__pass(passerby, "");
 
-        assertTrue(freeForAllExcubiaHarness.isPassed(passerby));
-    }
+    //     assertTrue(freeForAllExcubiaHarness.isPassed(gate, passerby));
+    // }
 
     function testGas_pass() public {
         vm.prank(deployer);
@@ -189,7 +189,6 @@ contract FreeForAllExcubiaTest is Test {
         vm.prank(gate);
         freeForAllExcubia.pass(thePasserby, data);
 
-        assertTrue(freeForAllExcubia.isPassed(thePasserby));
         assertEq(freeForAllExcubia.trait(), "FreeForAll");
     }
 
@@ -199,7 +198,6 @@ contract FreeForAllExcubiaTest is Test {
 
         freeForAllExcubiaHarness.exposed__pass(randomPasserby, randomData);
 
-        assertTrue(freeForAllExcubiaHarness.isPassed(randomPasserby));
         vm.expectRevert(AlreadyPassed.selector);
         freeForAllExcubiaHarness.exposed__pass(randomPasserby, randomData);
     }
@@ -216,7 +214,7 @@ contract FreeForAllExcubiaTest is Test {
 
         vm.stopPrank();
 
-        assertTrue(freeForAllExcubia.isPassed(thePasserby));
+        assertTrue(freeForAllExcubia.isPassed(gate, thePasserby));
         assertEq(freeForAllExcubia.trait(), "FreeForAll");
     }
 

@@ -12,7 +12,7 @@ abstract contract BaseExcubia is Excubia, IBaseExcubia {
     BaseChecker public immutable BASE_CHECKER;
 
     /// @dev Tracks whether an address has passed the gate check.
-    mapping(address => bool) public isPassed;
+    mapping(address => mapping(address => bool)) public isPassed;
 
     /// @notice Constructor to initialize the BaseChecker contract.
     /// @param _baseChecker The address of the BaseChecker contract.
@@ -34,9 +34,9 @@ abstract contract BaseExcubia is Excubia, IBaseExcubia {
     function _pass(address passerby, bytes calldata data) internal {
         BASE_CHECKER.check(passerby, data);
 
-        if (isPassed[passerby]) revert AlreadyPassed();
+        if (isPassed[msg.sender][passerby]) revert AlreadyPassed();
 
-        isPassed[passerby] = true;
+        isPassed[msg.sender][passerby] = true;
 
         emit GatePassed(passerby, gate, data);
     }

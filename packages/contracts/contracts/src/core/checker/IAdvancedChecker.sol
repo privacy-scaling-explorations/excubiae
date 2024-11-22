@@ -19,6 +19,5 @@ interface IAdvancedChecker {
     /// @param passerby The address of the entity attempting to pass the `gate`.
     /// @param data Additional data that may be required for the check.
     /// @param checkType The type of check to be enforced (e.g., PRE, MAIN, POST).
-    function check(address passerby, bytes calldata data, Check checkType) external view; // Function to check if the
-    // passerby can pass the gate with a specific check type.
+    function check(address passerby, bytes calldata data, Check checkType) external view;
 }
