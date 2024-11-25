@@ -15,10 +15,10 @@ enum Check {
 /// @title IAdvancedChecker.
 /// @notice AdvancedChecker contract interface.
 interface IAdvancedChecker {
-    /// @dev Defines the custom `gate` protection logic.
-    /// @param passerby The address of the entity attempting to pass the `gate`.
-    /// @param data Additional data that may be required for the check.
+    /// @dev Defines the custom `target` protection logic.
+    /// @param subject The address of the entity attempting to interact with the `target`.
+    /// @param evidence Additional data that may be required for the check.
     /// @param checkType The type of check to be enforced (e.g., PRE, MAIN, POST).
-    /// @return checked A boolean that resolves to true when the passerby satisfies the checks; otherwise false.
-    function check(address passerby, bytes calldata data, Check checkType) external view returns (bool checked);
+    /// @return checked A boolean that resolves to true when the subject satisfies the checks; otherwise false.
+    function check(address subject, bytes calldata evidence, Check checkType) external view returns (bool checked);
 }

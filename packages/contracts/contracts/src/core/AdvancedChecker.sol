@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.27;
 
-import {IAdvancedChecker, Check} from "./IAdvancedChecker.sol";
+import {IAdvancedChecker, Check} from "./interfaces/IAdvancedChecker.sol";
 
 struct CheckStatus {
     bool pre;
@@ -34,42 +34,46 @@ abstract contract AdvancedChecker is IAdvancedChecker {
         allowMultipleMain = _allowMultipleMain;
     }
 
-    /// @notice Public method to check the validity of the provided data for a given address and check type.
-    /// @param passerby The address to be checked.
-    /// @param data The data associated with the check.
+    /// @notice Public method to check the validity of the provided evidence for a given address and check type.
+    /// @param subject The address to be checked.
+    /// @param evidence The evidence associated with the check.
     /// @param checkType The type of check to perform (PRE, MAIN, POST).
-    function check(address passerby, bytes memory data, Check checkType) external view override returns (bool checked) {
-        return _check(passerby, data, checkType);
+    function check(
+        address subject,
+        bytes memory evidence,
+        Check checkType
+    ) external view override returns (bool checked) {
+        return _check(subject, evidence, checkType);
     }
 
     /// @notice Internal method to orchestrate the validation process based on the specified check type.
-    /// @param passerby The address to be checked.
-    /// @param data The data associated with the check.
+    /// @param subject The address to be checked.
+    /// @param evidence The evidence associated with the check.
     /// @param checkType The type of check to perform (PRE, MAIN, POST).
-    function _check(address passerby, bytes memory data, Check checkType) internal view returns (bool checked) {
+    function _check(address subject, bytes memory evidence, Check checkType) internal view returns (bool checked) {
         if (!skipPre && checkType == Check.PRE) {
-            return _checkPre(passerby, data);
+            return _checkPre(subject, evidence);
         } else if (!skipPost && checkType == Check.POST) {
-            return _checkPost(passerby, data);
+            return _checkPost(subject, evidence);
         } else if (checkType == Check.MAIN) {
-            return _checkMain(passerby, data);
+            return _checkMain(subject, evidence);
         }
 
         return false;
     }
 
     /// @notice Internal method for performing pre-condition checks.
-    /// @param passerby The address to be checked.
-    /// @param data The data associated with the check.
-    function _checkPre(address passerby, bytes memory data) internal view virtual returns (bool checked) {}
+    /// @param subject The address to be checked.
+    /// @param evidence The evidence associated with the check.
+    function _checkPre(address subject, bytes memory evidence) internal view virtual returns (bool checked) {}
 
     /// @notice Internal method for performing main checks.
-    /// @param passerby The address to be checked.
-    /// @param data The data associated with the check.
-    function _checkMain(address passerby, bytes memory data) internal view virtual returns (bool checked) {}
+    /// @param subject The address to be checked.
+    /// @param evidence The evidence associated with the check.
+    function _checkMain(address subject, bytes memory evidence) internal view virtual returns (bool checked) {}
 
     /// @notice Internal method for performing post-condition checks.
-    /// @param passerby The address to be checked.
-    /// @param data The data associated with the check.
-    function _checkPost(address passerby, bytes memory data) internal view virtual returns (bool checked) {}
+    /// @param subject The address to be checked.
+    /// @param evidence The evidence associated with the check.
+    function _checkPost(address subject, bytes memory evidence) internal view virtual returns (bool checked) {}
 }
