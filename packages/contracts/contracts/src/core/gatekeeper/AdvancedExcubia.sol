@@ -47,9 +47,11 @@ abstract contract AdvancedExcubia is IAdvancedExcubia, Excubia {
             else if (isPassed[msg.sender][passerby].post) revert AlreadyPassed();
             else isPassed[msg.sender][passerby].post = true;
         } else if (checkType == Check.MAIN) {
-            if (!ADVANCED_CHECKER.allowMultipleMain() && isPassed[msg.sender][passerby].main > 0)
+            if (!ADVANCED_CHECKER.allowMultipleMain() && isPassed[msg.sender][passerby].main > 0) {
                 revert MainCheckAlreadyEnforced();
-            else isPassed[msg.sender][passerby].main += 1;
+            } else {
+                isPassed[msg.sender][passerby].main += 1;
+            }
         }
 
         emit GatePassed(passerby, gate, data, checkType);
