@@ -5,7 +5,9 @@
     "license": "MIT",
     "files": [
         "*.sol",
-        "**/*.sol"
+        "!test/*",
+        "README.md",
+        "LICENSE"
     ],
     "keywords": [
         "blockchain",
