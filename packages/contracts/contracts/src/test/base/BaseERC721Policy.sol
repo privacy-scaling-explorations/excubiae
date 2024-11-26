@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.27;
 
-import {BasePolicy} from "../../src/BasePolicy.sol";
+import {BasePolicy} from "../../../src/BasePolicy.sol";
 import {BaseERC721Checker} from "./BaseERC721Checker.sol";
 
 contract BaseERC721Policy is BasePolicy {
