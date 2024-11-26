@@ -2,8 +2,8 @@
 pragma solidity 0.8.27;
 
 import {Test} from "forge-std/src/Test.sol";
-import {NFT} from "../src/test/NFT.sol";
-import {BaseERC721Checker} from "../src/test/base/BaseERC721Checker.sol";
+import {NFT} from "./utils/NFT.sol";
+import {BaseERC721Checker} from "./base/BaseERC721Checker.sol";
 import {BaseERC721CheckerHarness} from "./wrappers/BaseERC721CheckerHarness.sol";
 import {IERC721Errors} from "@openzeppelin/contracts/interfaces/draft-IERC6093.sol";
 

@@ -2,7 +2,7 @@
   # core
   libs = ['node_modules']
   cache_path = 'cache_forge'
-  test = 'contracts/test'
+  test = 'contracts/src/test'
   src = 'contracts/src'
   out = 'out'
   script = "contracts/scripts"

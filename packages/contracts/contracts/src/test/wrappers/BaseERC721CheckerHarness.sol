@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.27;
 
-import {BaseERC721Checker} from "../../src/test/base/BaseERC721Checker.sol";
+import {BaseERC721Checker} from "../base/BaseERC721Checker.sol";
 import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
 // This contract is a harness for testing the BaseERC721Checker contract.
