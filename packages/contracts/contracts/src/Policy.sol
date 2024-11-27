@@ -11,7 +11,7 @@ abstract contract Policy is IPolicy, Ownable(msg.sender) {
     /// @dev The target can be any contract address that requires a prior check to enable logic.
     /// For example, the target is a Semaphore group that requires the subject
     /// to meet certain criteria before joining.
-    address public target;
+    address internal target;
 
     /// @notice Modifier that restricts access to the target address.
     modifier onlyTarget() {
@@ -29,5 +29,11 @@ abstract contract Policy is IPolicy, Ownable(msg.sender) {
         target = _target;
 
         emit TargetSet(_target);
+    }
+
+    /// @notice Retrieves the current target address.
+    /// @return The address of the current target.
+    function getTarget() public view returns (address) {
+        return target;
     }
 }
