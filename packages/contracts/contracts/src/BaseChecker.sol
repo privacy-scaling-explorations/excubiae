@@ -9,6 +9,8 @@ import {IBaseChecker} from "./interfaces/IBaseChecker.sol";
 /// It defines a method `check` that invokes a protected `_check` method, which must be implemented by derived
 /// contracts.
 abstract contract BaseChecker is IBaseChecker {
+    constructor() {}
+
     /// @notice Checks the validity of the provided evidence for a given address.
     /// @param subject The address to be checked.
     /// @param evidence The evidence associated with the check.
@@ -19,5 +21,5 @@ abstract contract BaseChecker is IBaseChecker {
     /// @notice Internal method to perform the actual check logic.
     /// @param subject The address to be checked.
     /// @param evidence The evidence associated with the check.
-    function _check(address subject, bytes memory evidence) internal view virtual returns (bool checked);
+    function _check(address subject, bytes memory evidence) internal view virtual returns (bool checked) {}
 }

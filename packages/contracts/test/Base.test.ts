@@ -7,6 +7,10 @@ import {
     BaseERC721Checker__factory,
     BaseERC721Policy,
     BaseERC721Policy__factory,
+    BaseERC721CheckerHarness,
+    BaseERC721CheckerHarness__factory,
+    BaseERC721PolicyHarness,
+    BaseERC721PolicyHarness__factory,
     NFT,
     NFT__factory,
     IERC721Errors,
@@ -24,11 +28,16 @@ describe("Base", () => {
             const NFTFactory: NFT__factory = await ethers.getContractFactory("NFT")
             const BaseERC721CheckerFactory: BaseERC721Checker__factory =
                 await ethers.getContractFactory("BaseERC721Checker")
+            const BaseERC721CheckerHarnessFactory: BaseERC721CheckerHarness__factory =
+                await ethers.getContractFactory("BaseERC721CheckerHarness")
 
             const nft: NFT = await NFTFactory.deploy()
             const checker: BaseERC721Checker = await BaseERC721CheckerFactory.connect(deployer).deploy(
                 await nft.getAddress()
             )
+            const checkerHarness: BaseERC721CheckerHarness = await BaseERC721CheckerHarnessFactory.connect(
+                deployer
+            ).deploy(await nft.getAddress())
 
             // mint 0 for subject.
             await nft.connect(deployer).mint(subjectAddress)
@@ -40,6 +49,7 @@ describe("Base", () => {
             return {
                 nft,
                 checker,
+                checkerHarness,
                 target,
                 subjectAddress,
                 notOwnerAddress,
@@ -79,6 +89,35 @@ describe("Base", () => {
                 expect(await checker.connect(target).check(subjectAddress, validNFTId)).to.be.equal(true)
             })
         })
+
+        describe("_check()", () => {
+            it("should revert the check when the evidence is not meaningful", async () => {
+                const { nft, checkerHarness, target, subjectAddress, invalidNFTId } =
+                    await loadFixture(deployBaseCheckerFixture)
+
+                await expect(
+                    checkerHarness.connect(target).exposed__check(subjectAddress, invalidNFTId)
+                ).to.be.revertedWithCustomError(nft, "ERC721NonexistentToken")
+            })
+
+            it("should return false when the subject is not the owner of the evidenced token", async () => {
+                const { checkerHarness, target, notOwnerAddress, validNFTId } =
+                    await loadFixture(deployBaseCheckerFixture)
+
+                expect(await checkerHarness.connect(target).exposed__check(notOwnerAddress, validNFTId)).to.be.equal(
+                    false
+                )
+            })
+
+            it("should check", async () => {
+                const { checkerHarness, target, subjectAddress, validNFTId } =
+                    await loadFixture(deployBaseCheckerFixture)
+
+                expect(await checkerHarness.connect(target).exposed__check(subjectAddress, validNFTId)).to.be.equal(
+                    true
+                )
+            })
+        })
     })
 
     describe("Policy", () => {
@@ -92,6 +131,8 @@ describe("Base", () => {
                 await ethers.getContractFactory("BaseERC721Checker")
             const BaseERC721PolicyFactory: BaseERC721Policy__factory =
                 await ethers.getContractFactory("BaseERC721Policy")
+            const BaseERC721PolicyHarnessFactory: BaseERC721PolicyHarness__factory =
+                await ethers.getContractFactory("BaseERC721PolicyHarness")
 
             const nft: NFT = await NFTFactory.deploy()
             const iERC721Errors: IERC721Errors = await ethers.getContractAt("IERC721Errors", await nft.getAddress())
@@ -102,6 +143,9 @@ describe("Base", () => {
             const policy: BaseERC721Policy = await BaseERC721PolicyFactory.connect(deployer).deploy(
                 await checker.getAddress()
             )
+            const policyHarness: BaseERC721PolicyHarness = await BaseERC721PolicyHarnessFactory.connect(
+                deployer
+            ).deploy(await checker.getAddress())
 
             // mint 0 for subject.
             await nft.connect(deployer).mint(subjectAddress)
@@ -114,6 +158,7 @@ describe("Base", () => {
                 iERC721Errors,
                 BaseERC721PolicyFactory,
                 nft,
+                policyHarness,
                 policy,
                 subject,
                 deployer,
@@ -259,6 +304,79 @@ describe("Base", () => {
                 await expect(
                     policy.connect(target).enforce(subjectAddress, validEncodedNFTId)
                 ).to.be.revertedWithCustomError(policy, "AlreadyEnforced")
+            })
+        })
+
+        describe("_enforce()", () => {
+            it("should throw when the callee is not the target", async () => {
+                const { policyHarness, subject, target, subjectAddress } = await loadFixture(deployBasePolicyFixture)
+
+                await policyHarness.setTarget(await target.getAddress())
+
+                await expect(
+                    policyHarness.connect(subject).exposed__enforce(subjectAddress, ZeroHash)
+                ).to.be.revertedWithCustomError(policyHarness, "TargetOnly")
+            })
+
+            it("should throw when the evidence is not correct", async () => {
+                const { iERC721Errors, policyHarness, target, subjectAddress, invalidEncodedNFTId } =
+                    await loadFixture(deployBasePolicyFixture)
+
+                await policyHarness.setTarget(await target.getAddress())
+
+                await expect(
+                    policyHarness.connect(target).exposed__enforce(subjectAddress, invalidEncodedNFTId)
+                ).to.be.revertedWithCustomError(iERC721Errors, "ERC721NonexistentToken")
+            })
+
+            it("should throw when the check returns false", async () => {
+                const { policyHarness, target, notOwnerAddress, validEncodedNFTId } =
+                    await loadFixture(deployBasePolicyFixture)
+
+                await policyHarness.setTarget(await target.getAddress())
+
+                expect(
+                    policyHarness.connect(target).exposed__enforce(notOwnerAddress, validEncodedNFTId)
+                ).to.be.revertedWithCustomError(policyHarness, "UnsuccessfulCheck")
+            })
+
+            it("should enforce", async () => {
+                const { BaseERC721PolicyFactory, policyHarness, target, subjectAddress, validEncodedNFTId } =
+                    await loadFixture(deployBasePolicyFixture)
+                const targetAddress = await target.getAddress()
+
+                await policyHarness.setTarget(await target.getAddress())
+
+                const tx = await policyHarness.connect(target).exposed__enforce(subjectAddress, validEncodedNFTId)
+                const receipt = await tx.wait()
+                const event = BaseERC721PolicyFactory.interface.parseLog(
+                    receipt?.logs[0] as unknown as { topics: string[]; data: string }
+                ) as unknown as {
+                    args: {
+                        subject: string
+                        target: string
+                        evidence: string
+                    }
+                }
+
+                expect(receipt?.status).to.eq(1)
+                expect(event.args.subject).to.eq(subjectAddress)
+                expect(event.args.target).to.eq(targetAddress)
+                expect(event.args.evidence).to.eq(validEncodedNFTId)
+                expect(await policyHarness.enforced(targetAddress, subjectAddress)).to.be.equal(true)
+            })
+
+            it("should prevent to enforce twice", async () => {
+                const { policyHarness, target, subjectAddress, validEncodedNFTId } =
+                    await loadFixture(deployBasePolicyFixture)
+
+                await policyHarness.setTarget(await target.getAddress())
+
+                await policyHarness.connect(target).exposed__enforce(subjectAddress, validEncodedNFTId)
+
+                await expect(
+                    policyHarness.connect(target).enforce(subjectAddress, validEncodedNFTId)
+                ).to.be.revertedWithCustomError(policyHarness, "AlreadyEnforced")
             })
         })
     })

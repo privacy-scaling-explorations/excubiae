@@ -12,7 +12,7 @@ contract BaseERC721PolicyHarness is BaseERC721Policy {
     /// @notice Exposes the internal `_enforce` method for testing purposes.
     /// @param subject The address to be checked.
     /// @param evidence The data associated with the check.
-    function exposed__enforce(address subject, bytes calldata evidence) public {
+    function exposed__enforce(address subject, bytes calldata evidence) public onlyTarget {
         _enforce(subject, evidence);
     }
 }
