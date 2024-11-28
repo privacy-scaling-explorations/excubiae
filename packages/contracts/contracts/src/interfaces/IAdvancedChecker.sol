@@ -15,6 +15,11 @@ enum Check {
 /// @title IAdvancedChecker.
 /// @notice AdvancedChecker contract interface.
 interface IAdvancedChecker {
+    /// @notice Error thrown when the PRE check is skipped.
+    error PreCheckSkipped();
+    /// @notice Error thrown when the POST check is skipped.
+    error PostCheckSkipped();
+
     /// @dev Defines the custom `target` protection logic.
     /// @param subject The address of the entity attempting to interact with the `target`.
     /// @param evidence Additional data that may be required for the check.

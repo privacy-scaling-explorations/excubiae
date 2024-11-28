@@ -7,14 +7,14 @@ import {Check} from "./IAdvancedChecker.sol";
 /// @title IAdvancedPolicy
 /// @notice IAdvancedPolicy contract interface that extends the IPolicy interface.
 interface IAdvancedPolicy is IPolicy {
-    /// @notice Error thrown when the PRE check is skipped.
-    error PreCheckSkipped();
-
     /// @notice Error thrown when the MAIN check cannot be executed more than once.
     error MainCheckAlreadyEnforced();
 
-    /// @notice Error thrown when the POST check is skipped.
-    error PostCheckSkipped();
+    /// @notice Error thrown when the PRE check has not been enforced yet.
+    error PreCheckNotEnforced();
+
+    /// @notice Error thrown when the MAIN check has not been enforced yet.
+    error MainCheckNotEnforced();
 
     /// @notice Event emitted when someone enforces the `target` check.
     /// @param subject The address of those who have successfully enforced the check.

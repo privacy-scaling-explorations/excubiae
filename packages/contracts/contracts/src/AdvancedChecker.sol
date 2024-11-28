@@ -51,15 +51,18 @@ abstract contract AdvancedChecker is IAdvancedChecker {
     /// @param evidence The evidence associated with the check.
     /// @param checkType The type of check to perform (PRE, MAIN, POST).
     function _check(address subject, bytes memory evidence, Check checkType) internal view returns (bool checked) {
+        if (skipPre && checkType == Check.PRE) revert PreCheckSkipped();
+        if (skipPost && checkType == Check.POST) revert PostCheckSkipped();
+
         if (!skipPre && checkType == Check.PRE) {
             return _checkPre(subject, evidence);
-        } else if (!skipPost && checkType == Check.POST) {
-            return _checkPost(subject, evidence);
-        } else if (checkType == Check.MAIN) {
-            return _checkMain(subject, evidence);
         }
 
-        return false;
+        if (!skipPost && checkType == Check.POST) {
+            return _checkPost(subject, evidence);
+        }
+
+        return _checkMain(subject, evidence);
     }
 
     /// @notice Internal method for performing pre-condition checks.

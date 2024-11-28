@@ -37,21 +37,45 @@ abstract contract AdvancedPolicy is IAdvancedPolicy, Policy {
     function _enforce(address subject, bytes calldata evidence, Check checkType) internal {
         bool checked = ADVANCED_CHECKER.check(subject, evidence, checkType);
 
-        if (!checked) revert UnsuccessfulCheck();
+        if (!checked) {
+            revert UnsuccessfulCheck();
+        }
 
         if (checkType == Check.PRE) {
-            if (ADVANCED_CHECKER.skipPre()) revert PreCheckSkipped();
-            else if (enforced[msg.sender][subject].pre) revert AlreadyEnforced();
-            else enforced[msg.sender][subject].pre = true;
-        } else if (checkType == Check.POST) {
-            if (ADVANCED_CHECKER.skipPost()) revert PostCheckSkipped();
-            else if (enforced[msg.sender][subject].post) revert AlreadyEnforced();
-            else enforced[msg.sender][subject].post = true;
-        } else if (checkType == Check.MAIN) {
-            if (!ADVANCED_CHECKER.allowMultipleMain() && enforced[msg.sender][subject].main > 0) {
-                revert MainCheckAlreadyEnforced();
+            if (!ADVANCED_CHECKER.skipPost() && enforced[msg.sender][subject].pre) {
+                revert AlreadyEnforced();
             } else {
-                enforced[msg.sender][subject].main += 1;
+                enforced[msg.sender][subject].pre = true;
+            }
+        } else {
+            if (checkType == Check.POST) {
+                if (enforced[msg.sender][subject].post) {
+                    revert AlreadyEnforced();
+                } else {
+                    if (!ADVANCED_CHECKER.skipPre() && !enforced[msg.sender][subject].pre) {
+                        revert PreCheckNotEnforced();
+                    } else {
+                        if (enforced[msg.sender][subject].main == 0) {
+                            revert MainCheckNotEnforced();
+                        } else {
+                            enforced[msg.sender][subject].post = true;
+                        }
+                    }
+                }
+            } else {
+                if (
+                    checkType == Check.MAIN &&
+                    !ADVANCED_CHECKER.allowMultipleMain() &&
+                    enforced[msg.sender][subject].main > 0
+                ) {
+                    revert MainCheckAlreadyEnforced();
+                } else {
+                    if (checkType == Check.MAIN && !ADVANCED_CHECKER.skipPre() && !enforced[msg.sender][subject].pre) {
+                        revert PreCheckNotEnforced();
+                    } else {
+                        enforced[msg.sender][subject].main += 1;
+                    }
+                }
             }
         }
 
