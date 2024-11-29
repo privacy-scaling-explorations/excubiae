@@ -52,7 +52,7 @@ contract BaseChecker is Test {
         vm.stopPrank();
     }
 
-    function test_check_Internal() public {
+    function test_check_internal() public {
         vm.startPrank(target);
 
         nft.mint(subject);
@@ -96,7 +96,6 @@ contract BasePolicy is Test {
     NFT internal nft;
     BaseERC721Checker internal checker;
     BaseERC721Policy internal policy;
-    BaseERC721CheckerHarness internal checkerHarness;
     BaseERC721PolicyHarness internal policyHarness;
 
     address public deployer = vm.addr(0x1);
@@ -109,7 +108,6 @@ contract BasePolicy is Test {
 
         nft = new NFT();
         checker = new BaseERC721Checker(nft);
-        checkerHarness = new BaseERC721CheckerHarness(nft);
         policy = new BaseERC721Policy(checker);
         policyHarness = new BaseERC721PolicyHarness(checker);
 
@@ -118,6 +116,16 @@ contract BasePolicy is Test {
 
     function test_trait() public view {
         assertEq(policy.trait(), "BaseERC721");
+    }
+
+    function test_getTarget() public {
+        vm.startPrank(deployer);
+
+        policy.setTarget(target);
+
+        assertEq(policy.getTarget(), target);
+
+        vm.stopPrank();
     }
 
     function test_setTarget_RevertWhen_OwnableUnauthorizedAccount() public {
@@ -241,6 +249,88 @@ contract BasePolicy is Test {
 
         vm.stopPrank();
     }
+
+    function test_enforce_internal_RevertWhen_TargetOnly() public {
+        vm.startPrank(deployer);
+
+        policyHarness.setTarget(target);
+
+        vm.stopPrank();
+
+        vm.startPrank(subject);
+
+        vm.expectRevert(abi.encodeWithSelector(IPolicy.TargetOnly.selector));
+        policyHarness.exposed__enforce(subject, abi.encode(0x0));
+
+        vm.stopPrank();
+    }
+
+    function test_enforce_internal_RevertWhen_ERC721NonexistentToken() public {
+        vm.startPrank(deployer);
+
+        policyHarness.setTarget(target);
+
+        vm.stopPrank();
+
+        vm.startPrank(target);
+
+        vm.expectRevert(abi.encodeWithSelector(IERC721Errors.ERC721NonexistentToken.selector, uint256(0)));
+        policyHarness.exposed__enforce(subject, abi.encode(0x0));
+
+        vm.stopPrank();
+    }
+
+    function test_enforce_internal_RevertWhen_UnsuccessfulCheck() public {
+        vm.startPrank(deployer);
+
+        policyHarness.setTarget(target);
+        nft.mint(subject);
+
+        vm.stopPrank();
+
+        vm.startPrank(target);
+
+        vm.expectRevert(abi.encodeWithSelector(IPolicy.UnsuccessfulCheck.selector));
+        policyHarness.exposed__enforce(notOwner, abi.encode(0x0));
+
+        vm.stopPrank();
+    }
+
+    function test_enforce_internal() public {
+        vm.startPrank(deployer);
+
+        policyHarness.setTarget(target);
+        nft.mint(subject);
+
+        vm.stopPrank();
+
+        vm.startPrank(target);
+
+        vm.expectEmit(true, true, true, true);
+        emit IBasePolicy.Enforced(subject, target, abi.encode(0x0));
+
+        policyHarness.exposed__enforce(subject, abi.encode(0x0));
+
+        vm.stopPrank();
+    }
+
+    function test_enforce_internal_RevertWhen_AlreadyEnforced() public {
+        vm.startPrank(deployer);
+
+        policyHarness.setTarget(target);
+        nft.mint(subject);
+
+        vm.stopPrank();
+
+        vm.startPrank(target);
+
+        policyHarness.exposed__enforce(subject, abi.encode(0x0));
+
+        vm.expectRevert(abi.encodeWithSelector(IPolicy.AlreadyEnforced.selector));
+        policyHarness.exposed__enforce(subject, abi.encode(0x0));
+
+        vm.stopPrank();
+    }
 }
 
 contract Voting is Test {
@@ -248,8 +338,6 @@ contract Voting is Test {
     BaseERC721Checker internal checker;
     BaseERC721Policy internal policy;
     BaseVoting internal voting;
-    BaseERC721CheckerHarness internal checkerHarness;
-    BaseERC721PolicyHarness internal policyHarness;
 
     address public deployer = vm.addr(0x1);
     address public subject = vm.addr(0x2);
@@ -260,9 +348,7 @@ contract Voting is Test {
 
         nft = new NFT();
         checker = new BaseERC721Checker(nft);
-        checkerHarness = new BaseERC721CheckerHarness(nft);
         policy = new BaseERC721Policy(checker);
-        policyHarness = new BaseERC721PolicyHarness(checker);
         voting = new BaseVoting(policy);
 
         vm.stopPrank();

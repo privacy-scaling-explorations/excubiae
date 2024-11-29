@@ -14,7 +14,7 @@ contract AdvancedERC721PolicyHarness is AdvancedERC721Policy {
     /// @param subject The address of those who have successfully enforced the check.
     /// @param evidence Additional data required for the check (e.g., encoded token identifier).
     /// @param checkType The type of the check to be enforced for the subject with the given data.
-    function exposed__enforce(address subject, bytes calldata evidence, Check checkType) internal onlyTarget {
+    function exposed__enforce(address subject, bytes calldata evidence, Check checkType) public onlyTarget {
         _enforce(subject, evidence, checkType);
     }
 }
