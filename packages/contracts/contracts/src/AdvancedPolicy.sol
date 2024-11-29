@@ -42,7 +42,7 @@ abstract contract AdvancedPolicy is IAdvancedPolicy, Policy {
         }
 
         if (checkType == Check.PRE) {
-            if (!ADVANCED_CHECKER.skipPost() && enforced[msg.sender][subject].pre) {
+            if (!ADVANCED_CHECKER.SKIP_POST() && enforced[msg.sender][subject].pre) {
                 revert AlreadyEnforced();
             } else {
                 enforced[msg.sender][subject].pre = true;
@@ -52,7 +52,7 @@ abstract contract AdvancedPolicy is IAdvancedPolicy, Policy {
                 if (enforced[msg.sender][subject].post) {
                     revert AlreadyEnforced();
                 } else {
-                    if (!ADVANCED_CHECKER.skipPre() && !enforced[msg.sender][subject].pre) {
+                    if (!ADVANCED_CHECKER.SKIP_PRE() && !enforced[msg.sender][subject].pre) {
                         revert PreCheckNotEnforced();
                     } else {
                         if (enforced[msg.sender][subject].main == 0) {
@@ -65,12 +65,12 @@ abstract contract AdvancedPolicy is IAdvancedPolicy, Policy {
             } else {
                 if (
                     checkType == Check.MAIN &&
-                    !ADVANCED_CHECKER.allowMultipleMain() &&
+                    !ADVANCED_CHECKER.ALLOW_MULTIPLE_MAIN() &&
                     enforced[msg.sender][subject].main > 0
                 ) {
                     revert MainCheckAlreadyEnforced();
                 } else {
-                    if (checkType == Check.MAIN && !ADVANCED_CHECKER.skipPre() && !enforced[msg.sender][subject].pre) {
+                    if (checkType == Check.MAIN && !ADVANCED_CHECKER.SKIP_PRE() && !enforced[msg.sender][subject].pre) {
                         revert PreCheckNotEnforced();
                     } else {
                         enforced[msg.sender][subject].main += 1;

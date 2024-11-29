@@ -17,21 +17,21 @@ struct CheckStatus {
 /// based on the specified check type.
 abstract contract AdvancedChecker is IAdvancedChecker {
     /// @notice Flag to determine if pre-condition checks should be skipped.
-    bool public skipPre;
+    bool public immutable SKIP_PRE;
 
     /// @notice Flag to determine if post-condition checks should be skipped.
-    bool public skipPost;
+    bool public immutable SKIP_POST;
 
     /// @notice Flag to determine if main checks can be executed multiple times.
-    bool public allowMultipleMain;
+    bool public immutable ALLOW_MULTIPLE_MAIN;
 
     /// @param _skipPre Indicates whether to skip pre-condition checks.
     /// @param _skipPost Indicates whether to skip post-condition checks.
     /// @param _allowMultipleMain Indicates whether the main check can be executed multiple times.
     constructor(bool _skipPre, bool _skipPost, bool _allowMultipleMain) {
-        skipPre = _skipPre;
-        skipPost = _skipPost;
-        allowMultipleMain = _allowMultipleMain;
+        SKIP_PRE = _skipPre;
+        SKIP_POST = _skipPost;
+        ALLOW_MULTIPLE_MAIN = _allowMultipleMain;
     }
 
     /// @notice Public method to check the validity of the provided evidence for a given address and check type.
@@ -51,14 +51,14 @@ abstract contract AdvancedChecker is IAdvancedChecker {
     /// @param evidence The evidence associated with the check.
     /// @param checkType The type of check to perform (PRE, MAIN, POST).
     function _check(address subject, bytes memory evidence, Check checkType) internal view returns (bool checked) {
-        if (skipPre && checkType == Check.PRE) revert PreCheckSkipped();
-        if (skipPost && checkType == Check.POST) revert PostCheckSkipped();
+        if (SKIP_PRE && checkType == Check.PRE) revert PreCheckSkipped();
+        if (SKIP_POST && checkType == Check.POST) revert PostCheckSkipped();
 
-        if (!skipPre && checkType == Check.PRE) {
+        if (!SKIP_PRE && checkType == Check.PRE) {
             return _checkPre(subject, evidence);
         }
 
-        if (!skipPost && checkType == Check.POST) {
+        if (!SKIP_POST && checkType == Check.POST) {
             return _checkPost(subject, evidence);
         }
 
