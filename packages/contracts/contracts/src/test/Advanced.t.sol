@@ -34,7 +34,7 @@ contract AdvancedChecker is Test {
         vm.stopPrank();
     }
 
-    function test_check_pre_RevertWhen_ERC721NonexistentToken() public {
+    function test_checkPre_whenTokenDoesNotExist_reverts() public {
         vm.startPrank(target);
 
         vm.expectRevert(abi.encodeWithSelector(IERC721Errors.ERC721NonexistentToken.selector, uint256(0)));
@@ -43,7 +43,7 @@ contract AdvancedChecker is Test {
         vm.stopPrank();
     }
 
-    function test_check_pre_return_False() public {
+    function test_checkPre_whenCallerNotOwner_returnsFalse() public {
         vm.startPrank(target);
 
         nft.mint(subject);
@@ -53,7 +53,7 @@ contract AdvancedChecker is Test {
         vm.stopPrank();
     }
 
-    function test_check_pre() public {
+    function test_checkPre_whenValid_succeeds() public {
         vm.startPrank(target);
 
         nft.mint(subject);
@@ -63,7 +63,7 @@ contract AdvancedChecker is Test {
         vm.stopPrank();
     }
 
-    function test_check_main_return_False() public {
+    function test_checkMain_whenCallerHasNoTokens_returnsFalse() public {
         vm.startPrank(target);
 
         nft.mint(subject);
@@ -73,7 +73,7 @@ contract AdvancedChecker is Test {
         vm.stopPrank();
     }
 
-    function test_check_main() public {
+    function test_checkMain_whenCallerHasTokens_succeeds() public {
         vm.startPrank(target);
 
         nft.mint(subject);
@@ -83,7 +83,7 @@ contract AdvancedChecker is Test {
         vm.stopPrank();
     }
 
-    function test_check_post_RevertWhen_ERC721NonexistentToken() public {
+    function test_checkPost_whenTokenDoesNotExist_reverts() public {
         vm.startPrank(target);
 
         vm.expectRevert(abi.encodeWithSelector(IERC721Errors.ERC721NonexistentToken.selector, uint256(1)));
@@ -92,7 +92,7 @@ contract AdvancedChecker is Test {
         vm.stopPrank();
     }
 
-    function test_check_post_return_False() public {
+    function test_checkPost_whenCallerNotOwner_returnsFalse() public {
         vm.startPrank(target);
 
         nft.mint(subject);
@@ -102,7 +102,7 @@ contract AdvancedChecker is Test {
         vm.stopPrank();
     }
 
-    function test_check_post() public {
+    function test_checkPost_whenValid_succeeds() public {
         vm.startPrank(target);
 
         nft.mint(subject);
@@ -112,7 +112,7 @@ contract AdvancedChecker is Test {
         vm.stopPrank();
     }
 
-    function test_check_pre_internal_RevertWhen_ERC721NonexistentToken() public {
+    function test_checkerPre_whenTokenDoesNotExist_reverts() public {
         vm.startPrank(target);
 
         vm.expectRevert(abi.encodeWithSelector(IERC721Errors.ERC721NonexistentToken.selector, uint256(0)));
@@ -121,7 +121,7 @@ contract AdvancedChecker is Test {
         vm.stopPrank();
     }
 
-    function test_check_pre_internal_return_False() public {
+    function test_checkerPre_whenCallerNotOwner_returnsFalse() public {
         vm.startPrank(target);
 
         nft.mint(subject);
@@ -131,7 +131,7 @@ contract AdvancedChecker is Test {
         vm.stopPrank();
     }
 
-    function test_check_pre_internal() public {
+    function test_checkerPre_whenValid_succeeds() public {
         vm.startPrank(target);
 
         nft.mint(subject);
@@ -141,7 +141,7 @@ contract AdvancedChecker is Test {
         vm.stopPrank();
     }
 
-    function test_check_main_internal_return_False() public {
+    function test_checkerMain_whenCallerHasNoTokens_returnsFalse() public {
         vm.startPrank(target);
 
         nft.mint(subject);
@@ -151,7 +151,7 @@ contract AdvancedChecker is Test {
         vm.stopPrank();
     }
 
-    function test_check_main_internal() public {
+    function test_checkerMain_whenCallerHasTokens_succeeds() public {
         vm.startPrank(target);
 
         nft.mint(subject);
@@ -161,7 +161,7 @@ contract AdvancedChecker is Test {
         vm.stopPrank();
     }
 
-    function test_check_post_internal_RevertWhen_ERC721NonexistentToken() public {
+    function test_checkerPost_whenTokenDoesNotExist_reverts() public {
         vm.startPrank(target);
 
         vm.expectRevert(abi.encodeWithSelector(IERC721Errors.ERC721NonexistentToken.selector, uint256(1)));
@@ -170,7 +170,7 @@ contract AdvancedChecker is Test {
         vm.stopPrank();
     }
 
-    function test_check_post_internal_return_False() public {
+    function test_checkerPost_whenCallerNotOwner_returnsFalse() public {
         vm.startPrank(target);
 
         nft.mint(subject);
@@ -180,7 +180,7 @@ contract AdvancedChecker is Test {
         vm.stopPrank();
     }
 
-    function test_check_post_internal() public {
+    function test_checkerPost_whenValid_succeeds() public {
         vm.startPrank(target);
 
         nft.mint(subject);
@@ -190,7 +190,7 @@ contract AdvancedChecker is Test {
         vm.stopPrank();
     }
 
-    function test_checkPre_internal_RevertWhen_ERC721NonexistentToken() public {
+    function test_internalPre_whenTokenDoesNotExist_reverts() public {
         vm.startPrank(target);
 
         vm.expectRevert(abi.encodeWithSelector(IERC721Errors.ERC721NonexistentToken.selector, uint256(1)));
@@ -199,7 +199,7 @@ contract AdvancedChecker is Test {
         vm.stopPrank();
     }
 
-    function test_checkPre_internal_return_False() public {
+    function test_internalPre_whenCallerNotOwner_returnsFalse() public {
         vm.startPrank(target);
 
         nft.mint(subject);
@@ -209,7 +209,7 @@ contract AdvancedChecker is Test {
         vm.stopPrank();
     }
 
-    function test_checkPre() public {
+    function test_internalPre_whenValid_succeeds() public {
         vm.startPrank(target);
 
         nft.mint(subject);
@@ -219,7 +219,7 @@ contract AdvancedChecker is Test {
         vm.stopPrank();
     }
 
-    function test_checkMain_internal_return_False() public {
+    function test_internalMain_whenCallerHasNoTokens_returnsFalse() public {
         vm.startPrank(target);
 
         nft.mint(subject);
@@ -229,7 +229,7 @@ contract AdvancedChecker is Test {
         vm.stopPrank();
     }
 
-    function test_checkMain() public {
+    function test_internalMain_whenCallerHasTokens_succeeds() public {
         vm.startPrank(target);
 
         nft.mint(subject);
@@ -239,7 +239,7 @@ contract AdvancedChecker is Test {
         vm.stopPrank();
     }
 
-    function test_checkPost_internal_RevertWhen_ERC721NonexistentToken() public {
+    function test_internalPost_whenTokenDoesNotExist_reverts() public {
         vm.startPrank(target);
 
         vm.expectRevert(abi.encodeWithSelector(IERC721Errors.ERC721NonexistentToken.selector, uint256(1)));
@@ -248,7 +248,7 @@ contract AdvancedChecker is Test {
         vm.stopPrank();
     }
 
-    function test_checkPost_internal_return_False() public {
+    function test_internalPost_whenCallerNotOwner_returnsFalse() public {
         vm.startPrank(target);
 
         nft.mint(subject);
@@ -258,7 +258,7 @@ contract AdvancedChecker is Test {
         vm.stopPrank();
     }
 
-    function test_checkPost() public {
+    function test_internalPost_whenValid_succeeds() public {
         vm.startPrank(target);
 
         nft.mint(subject);
@@ -297,11 +297,11 @@ contract AdvancedPolicy is Test {
         vm.stopPrank();
     }
 
-    function test_trait() public view {
+    function test_trait_returnsCorrectValue() public view {
         assertEq(policy.trait(), "AdvancedERC721");
     }
 
-    function test_setTarget_RevertWhen_OwnableUnauthorizedAccount() public {
+    function test_setTarget_whenCallerNotOwner_reverts() public {
         vm.startPrank(notOwner);
 
         vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, notOwner));
@@ -310,7 +310,7 @@ contract AdvancedPolicy is Test {
         vm.stopPrank();
     }
 
-    function test_setTarget_RevertWhen_ZeroAddress() public {
+    function test_setTarget_whenZeroAddress_reverts() public {
         vm.startPrank(deployer);
 
         vm.expectRevert(abi.encodeWithSelector(IPolicy.ZeroAddress.selector));
@@ -319,7 +319,7 @@ contract AdvancedPolicy is Test {
         vm.stopPrank();
     }
 
-    function test_setTarget() public {
+    function test_setTarget_whenValid_succeeds() public {
         vm.startPrank(deployer);
 
         vm.expectEmit(true, true, true, true);
@@ -330,7 +330,7 @@ contract AdvancedPolicy is Test {
         vm.stopPrank();
     }
 
-    function test_setTarget_RevertWhen_TargetAlreadySet() public {
+    function test_setTarget_whenAlreadySet_reverts() public {
         vm.startPrank(deployer);
 
         policy.setTarget(target);
@@ -341,7 +341,7 @@ contract AdvancedPolicy is Test {
         vm.stopPrank();
     }
 
-    function test_enforce_pre_RevertWhen_TargetOnly() public {
+    function test_enforcePre_whenCallerNotTarget_reverts() public {
         vm.startPrank(deployer);
 
         policy.setTarget(target);
@@ -356,7 +356,7 @@ contract AdvancedPolicy is Test {
         vm.stopPrank();
     }
 
-    function test_enforce_pre_RevertWhen_ERC721NonexistentToken() public {
+    function test_enforcePre_whenTokenDoesNotExist_reverts() public {
         vm.startPrank(deployer);
 
         policy.setTarget(target);
@@ -371,7 +371,7 @@ contract AdvancedPolicy is Test {
         vm.stopPrank();
     }
 
-    function test_enforce_pre_RevertWhen_PreCheckSkipped() public {
+    function test_enforcePre_whenChecksSkipped_reverts() public {
         vm.startPrank(deployer);
 
         policySkipped.setTarget(target);
@@ -386,7 +386,7 @@ contract AdvancedPolicy is Test {
         vm.stopPrank();
     }
 
-    function test_enforce_pre_RevertWhen_UnsuccessfulCheck() public {
+    function test_enforcePre_whenCheckFails_reverts() public {
         vm.startPrank(deployer);
 
         policy.setTarget(target);
@@ -402,7 +402,7 @@ contract AdvancedPolicy is Test {
         vm.stopPrank();
     }
 
-    function test_enforce_pre() public {
+    function test_enforcePre_whenValid_succeeds() public {
         vm.startPrank(deployer);
 
         policy.setTarget(target);
@@ -420,7 +420,7 @@ contract AdvancedPolicy is Test {
         vm.stopPrank();
     }
 
-    function test_enforce_pre_RevertWhen_AlreadyEnforced() public {
+    function test_enforcePre_whenAlreadyEnforced_reverts() public {
         vm.startPrank(deployer);
 
         policy.setTarget(target);
@@ -438,7 +438,7 @@ contract AdvancedPolicy is Test {
         vm.stopPrank();
     }
 
-    function test_enforce_main_RevertWhen_TargetOnly() public {
+    function test_enforceMain_whenCallerNotTarget_reverts() public {
         vm.startPrank(deployer);
 
         policy.setTarget(target);
@@ -453,7 +453,7 @@ contract AdvancedPolicy is Test {
         vm.stopPrank();
     }
 
-    function test_enforce_main_RevertWhen_UnsuccessfulCheck() public {
+    function test_enforceMain_whenCheckFails_reverts() public {
         vm.startPrank(deployer);
 
         policy.setTarget(target);
@@ -468,7 +468,7 @@ contract AdvancedPolicy is Test {
         vm.stopPrank();
     }
 
-    function test_enforce_main_RevertWhen_PreCheckNotEnforced() public {
+    function test_enforceMain_whenPreCheckMissing_reverts() public {
         vm.startPrank(deployer);
 
         policy.setTarget(target);
@@ -484,7 +484,7 @@ contract AdvancedPolicy is Test {
         vm.stopPrank();
     }
 
-    function test_enforce_main() public {
+    function test_enforceMain_whenValid_succeeds() public {
         vm.startPrank(deployer);
 
         policy.setTarget(target);
@@ -504,7 +504,7 @@ contract AdvancedPolicy is Test {
         vm.stopPrank();
     }
 
-    function test_enforce_main_twice() public {
+    function test_enforceMain_whenMultipleValid_succeeds() public {
         vm.startPrank(deployer);
 
         policy.setTarget(target);
@@ -529,7 +529,7 @@ contract AdvancedPolicy is Test {
         vm.stopPrank();
     }
 
-    function test_enforce_main_RevertWhen_MainCheckAlreadyEnforced() public {
+    function test_enforceMain_whenMultipleNotAllowed_reverts() public {
         vm.startPrank(deployer);
 
         policySkipped.setTarget(target);
@@ -547,7 +547,7 @@ contract AdvancedPolicy is Test {
         vm.stopPrank();
     }
 
-    function test_enforce_post_RevertWhen_PreCheckNotEnforced() public {
+    function test_enforcePost_whenPreCheckMissing_reverts() public {
         vm.startPrank(deployer);
 
         policy.setTarget(target);
@@ -564,7 +564,7 @@ contract AdvancedPolicy is Test {
         vm.stopPrank();
     }
 
-    function test_enforce_post_RevertWhen_TargetOnly() public {
+    function test_enforcePost_whenCallerNotTarget_reverts() public {
         vm.startPrank(deployer);
 
         policy.setTarget(target);
@@ -579,7 +579,7 @@ contract AdvancedPolicy is Test {
         vm.stopPrank();
     }
 
-    function test_enforce_post_RevertWhen_ERC721NonexistentToken() public {
+    function test_enforcePost_whenTokenDoesNotExist_reverts() public {
         vm.startPrank(deployer);
 
         policy.setTarget(target);
@@ -597,7 +597,7 @@ contract AdvancedPolicy is Test {
         vm.stopPrank();
     }
 
-    function test_enforce_post_RevertWhen_PreCheckSkipped() public {
+    function test_enforcePost_whenChecksSkipped_reverts() public {
         vm.startPrank(deployer);
 
         policySkipped.setTarget(target);
@@ -615,7 +615,7 @@ contract AdvancedPolicy is Test {
         vm.stopPrank();
     }
 
-    function test_enforce_post_RevertWhen_UnsuccessfulCheck() public {
+    function test_enforcePost_whenCheckFails_reverts() public {
         vm.startPrank(deployer);
 
         policy.setTarget(target);
@@ -634,7 +634,7 @@ contract AdvancedPolicy is Test {
         vm.stopPrank();
     }
 
-    function test_enforce_post() public {
+    function test_enforcePost_whenValid_succeeds() public {
         vm.startPrank(deployer);
 
         policy.setTarget(target);
@@ -655,7 +655,7 @@ contract AdvancedPolicy is Test {
         vm.stopPrank();
     }
 
-    function test_enforce_post_RevertWhen_AlreadyEnforced() public {
+    function test_enforcePost_whenAlreadyEnforced_reverts() public {
         vm.startPrank(deployer);
 
         policy.setTarget(target);
@@ -675,7 +675,7 @@ contract AdvancedPolicy is Test {
         vm.stopPrank();
     }
 
-    function test_enforce_pre_internal_RevertWhen_TargetOnly() public {
+    function test_enforcePreInternal_whenCallerNotTarget_reverts() public {
         vm.startPrank(deployer);
 
         policyHarness.setTarget(target);
@@ -690,7 +690,7 @@ contract AdvancedPolicy is Test {
         vm.stopPrank();
     }
 
-    function test_enforce_pre_internal_RevertWhen_ERC721NonexistentToken() public {
+    function test_enforcePreInternal_whenTokenDoesNotExist_reverts() public {
         vm.startPrank(deployer);
 
         policyHarness.setTarget(target);
@@ -705,7 +705,7 @@ contract AdvancedPolicy is Test {
         vm.stopPrank();
     }
 
-    function test_enforce_pre_internal_RevertWhen_PreCheckSkipped() public {
+    function test_enforcePreInternal_whenChecksSkipped_reverts() public {
         vm.startPrank(deployer);
 
         policyHarnessSkipped.setTarget(target);
@@ -720,7 +720,7 @@ contract AdvancedPolicy is Test {
         vm.stopPrank();
     }
 
-    function test_enforce_pre_internal_RevertWhen_UnsuccessfulCheck() public {
+    function test_enforcePreInternal_whenCheckFails_reverts() public {
         vm.startPrank(deployer);
 
         policyHarness.setTarget(target);
@@ -736,7 +736,7 @@ contract AdvancedPolicy is Test {
         vm.stopPrank();
     }
 
-    function test_enforce_pre_internal() public {
+    function test_enforcePreInternal_whenValid_succeeds() public {
         vm.startPrank(deployer);
 
         policyHarness.setTarget(target);
@@ -754,7 +754,7 @@ contract AdvancedPolicy is Test {
         vm.stopPrank();
     }
 
-    function test_enforce_pre_internal_RevertWhen_AlreadyEnforced() public {
+    function test_enforcePreInternal_whenAlreadyEnforced_reverts() public {
         vm.startPrank(deployer);
 
         policyHarness.setTarget(target);
@@ -772,7 +772,7 @@ contract AdvancedPolicy is Test {
         vm.stopPrank();
     }
 
-    function test_enforce_main_internal_RevertWhen_TargetOnly() public {
+    function test_enforceMainInternal_whenCallerNotTarget_reverts() public {
         vm.startPrank(deployer);
 
         policyHarness.setTarget(target);
@@ -787,7 +787,7 @@ contract AdvancedPolicy is Test {
         vm.stopPrank();
     }
 
-    function test_enforce_main_internal_RevertWhen_UnsuccessfulCheck() public {
+    function test_enforceMainInternal_whenCheckFails_reverts() public {
         vm.startPrank(deployer);
 
         policyHarness.setTarget(target);
@@ -802,7 +802,7 @@ contract AdvancedPolicy is Test {
         vm.stopPrank();
     }
 
-    function test_enforce_main_internal_RevertWhen_PreCheckNotEnforced() public {
+    function test_enforceMainInternal_whenPreCheckMissing_reverts() public {
         vm.startPrank(deployer);
 
         policyHarness.setTarget(target);
@@ -818,7 +818,7 @@ contract AdvancedPolicy is Test {
         vm.stopPrank();
     }
 
-    function test_enforce_main_internal() public {
+    function test_enforceMainInternal_whenValid_succeeds() public {
         vm.startPrank(deployer);
 
         policyHarness.setTarget(target);
@@ -838,7 +838,7 @@ contract AdvancedPolicy is Test {
         vm.stopPrank();
     }
 
-    function test_enforce_main_internal_twice() public {
+    function test_enforceMainInternal_whenMultipleValid_succeeds() public {
         vm.startPrank(deployer);
 
         policyHarness.setTarget(target);
@@ -863,7 +863,7 @@ contract AdvancedPolicy is Test {
         vm.stopPrank();
     }
 
-    function test_enforce_main_internal_RevertWhen_MainCheckAlreadyEnforced() public {
+    function test_enforceMainInternal_whenMultipleNotAllowed_reverts() public {
         vm.startPrank(deployer);
 
         policyHarnessSkipped.setTarget(target);
@@ -881,7 +881,7 @@ contract AdvancedPolicy is Test {
         vm.stopPrank();
     }
 
-    function test_enforce_post_internal_RevertWhen_PreCheckNotEnforced() public {
+    function test_enforcePostInternal_whenPreCheckMissing_reverts() public {
         vm.startPrank(deployer);
 
         policyHarness.setTarget(target);
@@ -898,7 +898,7 @@ contract AdvancedPolicy is Test {
         vm.stopPrank();
     }
 
-    function test_enforce_post_internal_RevertWhen_TargetOnly() public {
+    function test_enforcePostInternal_whenCallerNotTarget_reverts() public {
         vm.startPrank(deployer);
 
         policyHarness.setTarget(target);
@@ -913,7 +913,7 @@ contract AdvancedPolicy is Test {
         vm.stopPrank();
     }
 
-    function test_enforce_post_internal_RevertWhen_ERC721NonexistentToken() public {
+    function test_enforcePostInternal_whenTokenDoesNotExist_reverts() public {
         vm.startPrank(deployer);
 
         policyHarness.setTarget(target);
@@ -931,7 +931,7 @@ contract AdvancedPolicy is Test {
         vm.stopPrank();
     }
 
-    function test_enforce_post_internal_RevertWhen_PreCheckSkipped() public {
+    function test_enforcePostInternal_whenChecksSkipped_reverts() public {
         vm.startPrank(deployer);
 
         policyHarnessSkipped.setTarget(target);
@@ -949,7 +949,7 @@ contract AdvancedPolicy is Test {
         vm.stopPrank();
     }
 
-    function test_enforce_post_internal_RevertWhen_UnsuccessfulCheck() public {
+    function test_enforcePostInternal_whenCheckFails_reverts() public {
         vm.startPrank(deployer);
 
         policyHarness.setTarget(target);
@@ -968,7 +968,7 @@ contract AdvancedPolicy is Test {
         vm.stopPrank();
     }
 
-    function test_enforce_post_internal() public {
+    function test_enforcePostInternal_whenValid_succeeds() public {
         vm.startPrank(deployer);
 
         policyHarness.setTarget(target);
@@ -989,7 +989,7 @@ contract AdvancedPolicy is Test {
         vm.stopPrank();
     }
 
-    function test_enforce_post_internal_RevertWhen_AlreadyEnforced() public {
+    function test_enforcePostInternal_whenAlreadyEnforced_reverts() public {
         vm.startPrank(deployer);
 
         policyHarness.setTarget(target);
@@ -1031,7 +1031,7 @@ contract Voting is Test {
         vm.stopPrank();
     }
 
-    function test_register_RevertWhen_TargetOnly() public {
+    function test_register_whenCallerNotTarget_reverts() public {
         vm.startPrank(deployer);
 
         policy.setTarget(deployer);
@@ -1047,7 +1047,7 @@ contract Voting is Test {
         vm.stopPrank();
     }
 
-    function test_register_RevertWhen_ERC721NonexistentToken() public {
+    function test_register_whenTokenDoesNotExist_reverts() public {
         vm.startPrank(deployer);
 
         policy.setTarget(address(voting));
@@ -1063,7 +1063,7 @@ contract Voting is Test {
         vm.stopPrank();
     }
 
-    function test_register_RevertWhen_UnsuccessfulCheck() public {
+    function test_register_whenCheckFails_reverts() public {
         vm.startPrank(deployer);
 
         policy.setTarget(address(voting));
@@ -1079,7 +1079,7 @@ contract Voting is Test {
         vm.stopPrank();
     }
 
-    function test_register() public {
+    function test_register_whenValid_succeeds() public {
         vm.startPrank(deployer);
 
         policy.setTarget(address(voting));
@@ -1097,7 +1097,7 @@ contract Voting is Test {
         vm.stopPrank();
     }
 
-    function test_register_RevertWhen_AlreadyEnforced() public {
+    function test_register_whenAlreadyRegistered_reverts() public {
         vm.startPrank(deployer);
 
         policy.setTarget(address(voting));
@@ -1115,7 +1115,7 @@ contract Voting is Test {
         vm.stopPrank();
     }
 
-    function test_vote_RevertWhen_NotRegistered() public {
+    function test_vote_whenNotRegistered_reverts() public {
         vm.startPrank(deployer);
 
         policy.setTarget(address(voting));
@@ -1131,7 +1131,7 @@ contract Voting is Test {
         vm.stopPrank();
     }
 
-    function test_vote_RevertWhen_InvalidOption() public {
+    function test_vote_whenInvalidOption_reverts() public {
         vm.startPrank(deployer);
 
         policy.setTarget(address(voting));
@@ -1148,7 +1148,7 @@ contract Voting is Test {
         vm.stopPrank();
     }
 
-    function test_vote() public {
+    function test_vote_whenValid_succeeds() public {
         vm.startPrank(deployer);
 
         policy.setTarget(address(voting));
@@ -1167,7 +1167,7 @@ contract Voting is Test {
         vm.stopPrank();
     }
 
-    function test_vote_twice() public {
+    function test_vote_whenMultipleValid_succeeds() public {
         vm.startPrank(deployer);
 
         policy.setTarget(address(voting));
@@ -1187,7 +1187,7 @@ contract Voting is Test {
         vm.stopPrank();
     }
 
-    function test_reward_RevertWhen_ERC721NonexistentToken() public {
+    function test_reward_whenTokenDoesNotExist_reverts() public {
         vm.startPrank(deployer);
 
         policy.setTarget(address(voting));
@@ -1206,7 +1206,7 @@ contract Voting is Test {
         vm.stopPrank();
     }
 
-    function test_reward_RevertWhen_UnsuccessfulCheck() public {
+    function test_reward_whenCheckFails_reverts() public {
         vm.startPrank(deployer);
 
         policy.setTarget(address(voting));
@@ -1231,7 +1231,7 @@ contract Voting is Test {
         vm.stopPrank();
     }
 
-    function test_reward_RevertWhen_NotRegistered() public {
+    function test_reward_whenNotRegistered_reverts() public {
         vm.startPrank(deployer);
 
         policy.setTarget(address(voting));
@@ -1247,7 +1247,7 @@ contract Voting is Test {
         vm.stopPrank();
     }
 
-    function test_reward_RevertWhen_NotVoted() public {
+    function test_reward_whenNotVoted_reverts() public {
         vm.startPrank(deployer);
 
         policy.setTarget(address(voting));
@@ -1264,7 +1264,7 @@ contract Voting is Test {
         vm.stopPrank();
     }
 
-    function test_reward() public {
+    function test_reward_whenValid_succeeds() public {
         vm.startPrank(deployer);
 
         policy.setTarget(address(voting));
@@ -1285,7 +1285,7 @@ contract Voting is Test {
         vm.stopPrank();
     }
 
-    function test_reward_RevertWhen_AlreadyClaimed() public {
+    function test_reward_whenAlreadyClaimed_reverts() public {
         vm.startPrank(deployer);
 
         policy.setTarget(address(voting));

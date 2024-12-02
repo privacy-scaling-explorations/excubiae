@@ -68,17 +68,17 @@ describe("Advanced", () => {
             }
         }
 
-        describe("constructor()", () => {
-            it("Should deploy the checker contract correctly", async () => {
+        describe("constructor", () => {
+            it("deploys correctly", async () => {
                 const { checker } = await loadFixture(deployAdvancedCheckerFixture)
 
                 expect(checker).to.not.eq(undefined)
             })
         })
 
-        describe("check()", () => {
-            describe("pre", () => {
-                it("should revert the check when the evidence is not meaningful", async () => {
+        describe("check", () => {
+            describe("pre check", () => {
+                it("reverts when evidence invalid", async () => {
                     const { nft, checker, target, subjectAddress, invalidNFTId } =
                         await loadFixture(deployAdvancedCheckerFixture)
 
@@ -87,37 +87,37 @@ describe("Advanced", () => {
                     ).to.be.revertedWithCustomError(nft, "ERC721NonexistentToken")
                 })
 
-                it("should return false when the subject is not the owner of the evidenced token", async () => {
+                it("returns false when not owner", async () => {
                     const { checker, target, notOwnerAddress, validNFTId } =
                         await loadFixture(deployAdvancedCheckerFixture)
 
                     expect(await checker.connect(target).check(notOwnerAddress, validNFTId, 0)).to.be.equal(false)
                 })
 
-                it("should check", async () => {
+                it("succeeds when valid", async () => {
                     const { checker, target, subjectAddress, validNFTId } =
                         await loadFixture(deployAdvancedCheckerFixture)
 
                     expect(await checker.connect(target).check(subjectAddress, validNFTId, 0)).to.be.equal(true)
                 })
             })
-            describe("main", () => {
-                it("should return false when the subject does not satisfy the attributes", async () => {
+            describe("main check", () => {
+                it("returns false when balance insufficient", async () => {
                     const { checker, target, notOwnerAddress, validNFTId } =
                         await loadFixture(deployAdvancedCheckerFixture)
 
                     expect(await checker.connect(target).check(notOwnerAddress, validNFTId, 1)).to.be.equal(false)
                 })
 
-                it("should check", async () => {
+                it("succeeds when balance sufficient", async () => {
                     const { checker, target, subjectAddress, validNFTId } =
                         await loadFixture(deployAdvancedCheckerFixture)
 
                     expect(await checker.connect(target).check(subjectAddress, validNFTId, 1)).to.be.equal(true)
                 })
             })
-            describe("post", () => {
-                it("should revert the check when the evidence is not meaningful", async () => {
+            describe("post check", () => {
+                it("reverts when evidence invalid", async () => {
                     const { nft, checker, target, subjectAddress, invalidNFTId } =
                         await loadFixture(deployAdvancedCheckerFixture)
 
@@ -126,14 +126,14 @@ describe("Advanced", () => {
                     ).to.be.revertedWithCustomError(nft, "ERC721NonexistentToken")
                 })
 
-                it("should return false when the subject does not satisfy the attributes", async () => {
+                it("returns false when not in range", async () => {
                     const { checker, target, notOwnerAddress, validNFTId } =
                         await loadFixture(deployAdvancedCheckerFixture)
 
                     expect(await checker.connect(target).check(notOwnerAddress, validNFTId, 2)).to.be.equal(false)
                 })
 
-                it("should check", async () => {
+                it("succeeds when in valid range", async () => {
                     const { checker, target, subjectAddress, validNFTId } =
                         await loadFixture(deployAdvancedCheckerFixture)
 
@@ -142,9 +142,9 @@ describe("Advanced", () => {
             })
         })
 
-        describe("_check()", () => {
-            describe("_pre", () => {
-                it("should revert the check when the evidence is not meaningful", async () => {
+        describe("internal checks", () => {
+            describe("pre check", () => {
+                it("reverts when evidence invalid", async () => {
                     const { nft, checkerHarness, target, subjectAddress, invalidNFTId } =
                         await loadFixture(deployAdvancedCheckerFixture)
 
@@ -153,7 +153,7 @@ describe("Advanced", () => {
                     ).to.be.revertedWithCustomError(nft, "ERC721NonexistentToken")
                 })
 
-                it("should return false when the subject is not the owner of the evidenced token", async () => {
+                it("returns false when not owner", async () => {
                     const { checkerHarness, target, notOwnerAddress, validNFTId } =
                         await loadFixture(deployAdvancedCheckerFixture)
 
@@ -162,7 +162,7 @@ describe("Advanced", () => {
                     ).to.be.equal(false)
                 })
 
-                it("should check", async () => {
+                it("succeeds when valid", async () => {
                     const { checkerHarness, target, subjectAddress, validNFTId } =
                         await loadFixture(deployAdvancedCheckerFixture)
 
@@ -171,8 +171,8 @@ describe("Advanced", () => {
                     ).to.be.equal(true)
                 })
             })
-            describe("_main", () => {
-                it("should return false when the subject does not satisfy the attributes", async () => {
+            describe("main check", () => {
+                it("returns false when balance insufficient", async () => {
                     const { checkerHarness, target, notOwnerAddress, validNFTId } =
                         await loadFixture(deployAdvancedCheckerFixture)
 
@@ -181,7 +181,7 @@ describe("Advanced", () => {
                     ).to.be.equal(false)
                 })
 
-                it("should check", async () => {
+                it("succeeds when balance sufficient", async () => {
                     const { checkerHarness, target, subjectAddress, validNFTId } =
                         await loadFixture(deployAdvancedCheckerFixture)
 
@@ -190,8 +190,8 @@ describe("Advanced", () => {
                     ).to.be.equal(true)
                 })
             })
-            describe("_post", () => {
-                it("should revert the check when the evidence is not meaningful", async () => {
+            describe("post check", () => {
+                it("reverts when evidence invalid", async () => {
                     const { nft, checkerHarness, target, subjectAddress, invalidNFTId } =
                         await loadFixture(deployAdvancedCheckerFixture)
 
@@ -200,7 +200,7 @@ describe("Advanced", () => {
                     ).to.be.revertedWithCustomError(nft, "ERC721NonexistentToken")
                 })
 
-                it("should return false when the subject does not satisfy the attributes", async () => {
+                it("returns false when not in range", async () => {
                     const { checkerHarness, target, notOwnerAddress, validNFTId } =
                         await loadFixture(deployAdvancedCheckerFixture)
 
@@ -209,7 +209,7 @@ describe("Advanced", () => {
                     ).to.be.equal(false)
                 })
 
-                it("should check", async () => {
+                it("succeeds when in valid range", async () => {
                     const { checkerHarness, target, subjectAddress, validNFTId } =
                         await loadFixture(deployAdvancedCheckerFixture)
 
@@ -220,8 +220,8 @@ describe("Advanced", () => {
             })
         })
 
-        describe("_checkPre", () => {
-            it("should revert the check when the evidence is not meaningful", async () => {
+        describe("internal checkPre", () => {
+            it("reverts when evidence invalid", async () => {
                 const { nft, checkerHarness, target, subjectAddress, invalidNFTId } =
                     await loadFixture(deployAdvancedCheckerFixture)
 
@@ -230,7 +230,7 @@ describe("Advanced", () => {
                 ).to.be.revertedWithCustomError(nft, "ERC721NonexistentToken")
             })
 
-            it("should return false when the subject is not the owner of the evidenced token", async () => {
+            it("returns false when not owner", async () => {
                 const { checkerHarness, target, notOwnerAddress, validNFTId } =
                     await loadFixture(deployAdvancedCheckerFixture)
 
@@ -239,7 +239,7 @@ describe("Advanced", () => {
                 )
             })
 
-            it("should check", async () => {
+            it("succeeds when valid", async () => {
                 const { checkerHarness, target, subjectAddress, validNFTId } =
                     await loadFixture(deployAdvancedCheckerFixture)
 
@@ -249,8 +249,8 @@ describe("Advanced", () => {
             })
         })
 
-        describe("_checkMain", () => {
-            it("should return false when the subject does not satisfy the attributes", async () => {
+        describe("internal checkMain", () => {
+            it("returns false when balance insufficient", async () => {
                 const { checkerHarness, target, notOwnerAddress, validNFTId } =
                     await loadFixture(deployAdvancedCheckerFixture)
 
@@ -259,7 +259,7 @@ describe("Advanced", () => {
                 ).to.be.equal(false)
             })
 
-            it("should check", async () => {
+            it("succeeds when balance sufficient", async () => {
                 const { checkerHarness, target, subjectAddress, validNFTId } =
                     await loadFixture(deployAdvancedCheckerFixture)
 
@@ -269,8 +269,8 @@ describe("Advanced", () => {
             })
         })
 
-        describe("_checkPost", () => {
-            it("should revert the check when the evidence is not meaningful", async () => {
+        describe("internal checkPost", () => {
+            it("reverts when evidence invalid", async () => {
                 const { nft, checkerHarness, target, subjectAddress, invalidNFTId } =
                     await loadFixture(deployAdvancedCheckerFixture)
 
@@ -279,7 +279,7 @@ describe("Advanced", () => {
                 ).to.be.revertedWithCustomError(nft, "ERC721NonexistentToken")
             })
 
-            it("should return false when the subject does not satisfy the attributes", async () => {
+            it("returns false when not in range", async () => {
                 const { checkerHarness, target, notOwnerAddress, validNFTId } =
                     await loadFixture(deployAdvancedCheckerFixture)
 
@@ -288,7 +288,7 @@ describe("Advanced", () => {
                 ).to.be.equal(false)
             })
 
-            it("should check", async () => {
+            it("succeeds when in valid range", async () => {
                 const { checkerHarness, target, subjectAddress, validNFTId } =
                     await loadFixture(deployAdvancedCheckerFixture)
 
@@ -370,24 +370,24 @@ describe("Advanced", () => {
             }
         }
 
-        describe("constructor()", () => {
-            it("Should deploy the checker contract correctly", async () => {
+        describe("constructor", () => {
+            it("deploys correctly", async () => {
                 const { policy } = await loadFixture(deployAdvancedPolicyFixture)
 
                 expect(policy).to.not.eq(undefined)
             })
         })
 
-        describe("trait()", () => {
-            it("should return the trait of the policy contract", async () => {
+        describe("trait", () => {
+            it("returns correct value", async () => {
                 const { policy } = await loadFixture(deployAdvancedPolicyFixture)
 
                 expect(await policy.trait()).to.be.eq("AdvancedERC721")
             })
         })
 
-        describe("setTarget()", () => {
-            it("should fail to set the target when the caller is not the owner", async () => {
+        describe("setTarget", () => {
+            it("reverts when caller not owner", async () => {
                 const { policy, notOwner, target } = await loadFixture(deployAdvancedPolicyFixture)
 
                 await expect(
@@ -395,7 +395,7 @@ describe("Advanced", () => {
                 ).to.be.revertedWithCustomError(policy, "OwnableUnauthorizedAccount")
             })
 
-            it("should fail to set the target when the target address is zero", async () => {
+            it("reverts when zero address", async () => {
                 const { policy, deployer } = await loadFixture(deployAdvancedPolicyFixture)
 
                 await expect(policy.connect(deployer).setTarget(ZeroAddress)).to.be.revertedWithCustomError(
@@ -404,7 +404,7 @@ describe("Advanced", () => {
                 )
             })
 
-            it("Should set the target contract address correctly", async () => {
+            it("sets target correctly", async () => {
                 const { policy, target, AdvancedERC721PolicyFactory } = await loadFixture(deployAdvancedPolicyFixture)
                 const targetAddress = await target.getAddress()
 
@@ -423,7 +423,7 @@ describe("Advanced", () => {
                 expect(await policy.getTarget()).to.eq(targetAddress)
             })
 
-            it("Should fail to set the target if already set", async () => {
+            it("reverts when already set", async () => {
                 const { policy, target } = await loadFixture(deployAdvancedPolicyFixture)
                 const targetAddress = await target.getAddress()
 
@@ -433,9 +433,9 @@ describe("Advanced", () => {
             })
         })
 
-        describe("enforce()", () => {
-            describe("pre", () => {
-                it("should throw when the callee is not the target", async () => {
+        describe("enforce", () => {
+            describe("pre check", () => {
+                it("reverts when caller not target", async () => {
                     const { policy, subject, target, subjectAddress } = await loadFixture(deployAdvancedPolicyFixture)
 
                     await policy.setTarget(await target.getAddress())
@@ -445,7 +445,7 @@ describe("Advanced", () => {
                     ).to.be.revertedWithCustomError(policy, "TargetOnly")
                 })
 
-                it("should throw when the evidence is not correct", async () => {
+                it("reverts when evidence invalid", async () => {
                     const { iERC721Errors, policy, target, subjectAddress, invalidEncodedNFTId } =
                         await loadFixture(deployAdvancedPolicyFixture)
 
@@ -456,7 +456,7 @@ describe("Advanced", () => {
                     ).to.be.revertedWithCustomError(iERC721Errors, "ERC721NonexistentToken")
                 })
 
-                it("should throw when the check is skipped", async () => {
+                it("reverts when pre-check skipped", async () => {
                     const { checker, policySkipped, target, subjectAddress, validEncodedNFTId } =
                         await loadFixture(deployAdvancedPolicyFixture)
 
@@ -467,7 +467,7 @@ describe("Advanced", () => {
                     ).to.be.revertedWithCustomError(checker, "PreCheckSkipped")
                 })
 
-                it("should throw when the check returns false", async () => {
+                it("reverts when check unsuccessful", async () => {
                     const { policy, target, notOwnerAddress, validEncodedNFTId } =
                         await loadFixture(deployAdvancedPolicyFixture)
 
@@ -478,7 +478,7 @@ describe("Advanced", () => {
                     ).to.be.revertedWithCustomError(policy, "UnsuccessfulCheck")
                 })
 
-                it("should enforce", async () => {
+                it("enforces pre-check successfully", async () => {
                     const { AdvancedERC721PolicyFactory, policy, target, subjectAddress, validEncodedNFTId } =
                         await loadFixture(deployAdvancedPolicyFixture)
                     const targetAddress = await target.getAddress()
@@ -506,7 +506,7 @@ describe("Advanced", () => {
                     expect((await policy.enforced(targetAddress, subjectAddress))[0]).to.be.equal(true)
                 })
 
-                it("should prevent to enforce twice", async () => {
+                it("reverts when pre already enforced", async () => {
                     const { policy, target, subjectAddress, validEncodedNFTId } =
                         await loadFixture(deployAdvancedPolicyFixture)
 
@@ -520,8 +520,8 @@ describe("Advanced", () => {
                 })
             })
 
-            describe("main", () => {
-                it("should throw when the subject does not satisfy the chain of checks", async () => {
+            describe("main check", () => {
+                it("reverts when pre-check missing", async () => {
                     const { policy, target, subjectAddress, validEncodedNFTId } =
                         await loadFixture(deployAdvancedPolicyFixture)
 
@@ -532,7 +532,7 @@ describe("Advanced", () => {
                     ).to.be.revertedWithCustomError(policy, "PreCheckNotEnforced")
                 })
 
-                it("should throw when the subject does not satisfy the attributes", async () => {
+                it("reverts when check unsuccessful", async () => {
                     const { policy, target, notOwnerAddress, subjectAddress, validEncodedNFTId } =
                         await loadFixture(deployAdvancedPolicyFixture)
 
@@ -544,7 +544,7 @@ describe("Advanced", () => {
                     ).to.be.revertedWithCustomError(policy, "UnsuccessfulCheck")
                 })
 
-                it("should enforce", async () => {
+                it("enforces main-check successfully", async () => {
                     const { AdvancedERC721PolicyFactory, policy, target, subjectAddress, validEncodedNFTId } =
                         await loadFixture(deployAdvancedPolicyFixture)
                     const targetAddress = await target.getAddress()
@@ -573,7 +573,7 @@ describe("Advanced", () => {
                     expect((await policy.enforced(targetAddress, subjectAddress))[1]).to.be.equal(1)
                 })
 
-                it("should enforce twice when allowed", async () => {
+                it("executes multiple mains when allowed", async () => {
                     const { AdvancedERC721PolicyFactory, policy, target, subjectAddress, validEncodedNFTId } =
                         await loadFixture(deployAdvancedPolicyFixture)
                     const targetAddress = await target.getAddress()
@@ -603,7 +603,7 @@ describe("Advanced", () => {
                     expect((await policy.enforced(targetAddress, subjectAddress))[1]).to.be.equal(2)
                 })
 
-                it("should prevent to enforce twice when not allowed", async () => {
+                it("executes multiple mains when allowed", async () => {
                     const { policySkipped, target, notOwnerAddress, subjectAddress, validEncodedNFTId } =
                         await loadFixture(deployAdvancedPolicyFixture)
 
@@ -616,8 +616,8 @@ describe("Advanced", () => {
                 })
             })
 
-            describe("post", () => {
-                it("should throw when the subject does not satisfy the chain of checks", async () => {
+            describe("post check", () => {
+                it("reverts when pre/main missing", async () => {
                     const { policy, target, subjectAddress, validEncodedNFTId } =
                         await loadFixture(deployAdvancedPolicyFixture)
 
@@ -634,7 +634,7 @@ describe("Advanced", () => {
                     ).to.be.revertedWithCustomError(policy, "MainCheckNotEnforced")
                 })
 
-                it("should throw when the callee is not the target", async () => {
+                it("reverts when caller not target", async () => {
                     const { policy, subject, target, subjectAddress, validEncodedNFTId } =
                         await loadFixture(deployAdvancedPolicyFixture)
 
@@ -647,7 +647,7 @@ describe("Advanced", () => {
                     ).to.be.revertedWithCustomError(policy, "TargetOnly")
                 })
 
-                it("should throw when the evidence is not correct", async () => {
+                it("reverts when evidence invalid", async () => {
                     const { iERC721Errors, policy, target, subjectAddress, validEncodedNFTId, invalidEncodedNFTId } =
                         await loadFixture(deployAdvancedPolicyFixture)
 
@@ -660,7 +660,7 @@ describe("Advanced", () => {
                     ).to.be.revertedWithCustomError(iERC721Errors, "ERC721NonexistentToken")
                 })
 
-                it("should throw when the check is skipped", async () => {
+                it("reverts when post-check skipped", async () => {
                     const { checker, policySkipped, target, subjectAddress, validEncodedNFTId } =
                         await loadFixture(deployAdvancedPolicyFixture)
 
@@ -672,7 +672,7 @@ describe("Advanced", () => {
                     ).to.be.revertedWithCustomError(checker, "PostCheckSkipped")
                 })
 
-                it("should throw when the check returns false", async () => {
+                it("reverts when check unsuccessful", async () => {
                     const { policy, target, subjectAddress, notOwnerAddress, validEncodedNFTId } =
                         await loadFixture(deployAdvancedPolicyFixture)
 
@@ -685,7 +685,7 @@ describe("Advanced", () => {
                     ).to.be.revertedWithCustomError(policy, "UnsuccessfulCheck")
                 })
 
-                it("should enforce", async () => {
+                it("enforces post-check successfully", async () => {
                     const { AdvancedERC721PolicyFactory, policy, target, subjectAddress, validEncodedNFTId } =
                         await loadFixture(deployAdvancedPolicyFixture)
                     const targetAddress = await target.getAddress()
@@ -715,7 +715,7 @@ describe("Advanced", () => {
                     expect((await policy.enforced(targetAddress, subjectAddress))[2]).to.be.equal(true)
                 })
 
-                it("should prevent to enforce twice", async () => {
+                it("reverts when post already enforced", async () => {
                     const { policy, target, subjectAddress, validEncodedNFTId } =
                         await loadFixture(deployAdvancedPolicyFixture)
 
@@ -731,9 +731,9 @@ describe("Advanced", () => {
             })
         })
 
-        describe("_enforce()", () => {
-            describe("_pre", () => {
-                it("should throw when the callee is not the target", async () => {
+        describe("internal enforce", () => {
+            describe("internal pre", () => {
+                it("reverts when caller not target", async () => {
                     const { policyHarness, subject, target, subjectAddress } =
                         await loadFixture(deployAdvancedPolicyFixture)
 
@@ -744,7 +744,7 @@ describe("Advanced", () => {
                     ).to.be.revertedWithCustomError(policyHarness, "TargetOnly")
                 })
 
-                it("should throw when the evidence is not correct", async () => {
+                it("reverts when evidence invalid", async () => {
                     const { iERC721Errors, policyHarness, target, subjectAddress, invalidEncodedNFTId } =
                         await loadFixture(deployAdvancedPolicyFixture)
 
@@ -755,7 +755,7 @@ describe("Advanced", () => {
                     ).to.be.revertedWithCustomError(iERC721Errors, "ERC721NonexistentToken")
                 })
 
-                it("should throw when the check is skipped", async () => {
+                it("reverts when pre-check skipped", async () => {
                     const { checker, policyHarnessSkipped, target, subjectAddress, validEncodedNFTId } =
                         await loadFixture(deployAdvancedPolicyFixture)
 
@@ -766,7 +766,7 @@ describe("Advanced", () => {
                     ).to.be.revertedWithCustomError(checker, "PreCheckSkipped")
                 })
 
-                it("should throw when the check returns false", async () => {
+                it("reverts when check unsuccessful", async () => {
                     const { policyHarness, target, notOwnerAddress, validEncodedNFTId } =
                         await loadFixture(deployAdvancedPolicyFixture)
 
@@ -777,7 +777,7 @@ describe("Advanced", () => {
                     ).to.be.revertedWithCustomError(policyHarness, "UnsuccessfulCheck")
                 })
 
-                it("should enforce", async () => {
+                it("enforces pre-check successfully", async () => {
                     const { AdvancedERC721PolicyFactory, policyHarness, target, subjectAddress, validEncodedNFTId } =
                         await loadFixture(deployAdvancedPolicyFixture)
                     const targetAddress = await target.getAddress()
@@ -805,7 +805,7 @@ describe("Advanced", () => {
                     expect((await policyHarness.enforced(targetAddress, subjectAddress))[0]).to.be.equal(true)
                 })
 
-                it("should prevent to enforce twice", async () => {
+                it("reverts when pre already enforced", async () => {
                     const { policyHarness, target, subjectAddress, validEncodedNFTId } =
                         await loadFixture(deployAdvancedPolicyFixture)
 
@@ -820,7 +820,7 @@ describe("Advanced", () => {
             })
 
             describe("_main", () => {
-                it("should throw when the subject does not satisfy the chain of checks", async () => {
+                it("reverts when pre-check missing", async () => {
                     const { policyHarness, target, subjectAddress, validEncodedNFTId } =
                         await loadFixture(deployAdvancedPolicyFixture)
 
@@ -831,7 +831,7 @@ describe("Advanced", () => {
                     ).to.be.revertedWithCustomError(policyHarness, "PreCheckNotEnforced")
                 })
 
-                it("should throw when the subject does not satisfy the attributes", async () => {
+                it("reverts when check unsuccessful", async () => {
                     const { policyHarness, target, notOwnerAddress, subjectAddress, validEncodedNFTId } =
                         await loadFixture(deployAdvancedPolicyFixture)
 
@@ -843,7 +843,7 @@ describe("Advanced", () => {
                     ).to.be.revertedWithCustomError(policyHarness, "UnsuccessfulCheck")
                 })
 
-                it("should enforce", async () => {
+                it("enforces main-check successfully", async () => {
                     const { AdvancedERC721PolicyFactory, policyHarness, target, subjectAddress, validEncodedNFTId } =
                         await loadFixture(deployAdvancedPolicyFixture)
                     const targetAddress = await target.getAddress()
@@ -872,7 +872,7 @@ describe("Advanced", () => {
                     expect((await policyHarness.enforced(targetAddress, subjectAddress))[1]).to.be.equal(1)
                 })
 
-                it("should enforce twice when allowed", async () => {
+                it("executes multiple mains when allowed", async () => {
                     const { AdvancedERC721PolicyFactory, policyHarness, target, subjectAddress, validEncodedNFTId } =
                         await loadFixture(deployAdvancedPolicyFixture)
                     const targetAddress = await target.getAddress()
@@ -902,7 +902,7 @@ describe("Advanced", () => {
                     expect((await policyHarness.enforced(targetAddress, subjectAddress))[1]).to.be.equal(2)
                 })
 
-                it("should prevent to enforce twice when not allowed", async () => {
+                it("executes multiple mains when allowed", async () => {
                     const { policyHarnessSkipped, target, notOwnerAddress, subjectAddress, validEncodedNFTId } =
                         await loadFixture(deployAdvancedPolicyFixture)
 
@@ -919,7 +919,7 @@ describe("Advanced", () => {
             })
 
             describe("_post", () => {
-                it("should throw when the subject does not satisfy the chain of checks", async () => {
+                it("reverts when pre/main missing", async () => {
                     const { policyHarness, target, subjectAddress, validEncodedNFTId } =
                         await loadFixture(deployAdvancedPolicyFixture)
 
@@ -936,7 +936,7 @@ describe("Advanced", () => {
                     ).to.be.revertedWithCustomError(policyHarness, "MainCheckNotEnforced")
                 })
 
-                it("should throw when the callee is not the target", async () => {
+                it("reverts when caller not target", async () => {
                     const { policyHarness, subject, target, subjectAddress, validEncodedNFTId } =
                         await loadFixture(deployAdvancedPolicyFixture)
 
@@ -949,7 +949,7 @@ describe("Advanced", () => {
                     ).to.be.revertedWithCustomError(policyHarness, "TargetOnly")
                 })
 
-                it("should throw when the evidence is not correct", async () => {
+                it("reverts when evidence invalid", async () => {
                     const {
                         iERC721Errors,
                         policyHarness,
@@ -968,7 +968,7 @@ describe("Advanced", () => {
                     ).to.be.revertedWithCustomError(iERC721Errors, "ERC721NonexistentToken")
                 })
 
-                it("should throw when the check is skipped", async () => {
+                it("reverts when post-check skipped", async () => {
                     const { checker, policyHarnessSkipped, target, subjectAddress, validEncodedNFTId } =
                         await loadFixture(deployAdvancedPolicyFixture)
 
@@ -980,7 +980,7 @@ describe("Advanced", () => {
                     ).to.be.revertedWithCustomError(checker, "PostCheckSkipped")
                 })
 
-                it("should throw when the check returns false", async () => {
+                it("reverts when check unsuccessful", async () => {
                     const { policyHarness, target, subjectAddress, notOwnerAddress, validEncodedNFTId } =
                         await loadFixture(deployAdvancedPolicyFixture)
 
@@ -993,7 +993,7 @@ describe("Advanced", () => {
                     ).to.be.revertedWithCustomError(policyHarness, "UnsuccessfulCheck")
                 })
 
-                it("should enforce", async () => {
+                it("enforces post-check successfully", async () => {
                     const { AdvancedERC721PolicyFactory, policyHarness, target, subjectAddress, validEncodedNFTId } =
                         await loadFixture(deployAdvancedPolicyFixture)
                     const targetAddress = await target.getAddress()
@@ -1023,7 +1023,7 @@ describe("Advanced", () => {
                     expect((await policyHarness.enforced(targetAddress, subjectAddress))[2]).to.be.equal(true)
                 })
 
-                it("should prevent to enforce twice", async () => {
+                it("reverts when post already enforced", async () => {
                     const { policyHarness, target, subjectAddress, validEncodedNFTId } =
                         await loadFixture(deployAdvancedPolicyFixture)
 
@@ -1101,16 +1101,16 @@ describe("Advanced", () => {
             }
         }
 
-        describe("constructor()", () => {
-            it("Should deploy the voting contract correctly", async () => {
+        describe("constructor", () => {
+            it("deploys correctly", async () => {
                 const { voting } = await loadFixture(deployAdvancedVotingFixture)
 
                 expect(voting).to.not.eq(undefined)
             })
         })
 
-        describe("register()", () => {
-            it("Should revert when the callee is not the target", async () => {
+        describe("register", () => {
+            it("reverts when caller not target", async () => {
                 const { voting, policy, notOwner, validNFTId } = await loadFixture(deployAdvancedVotingFixture)
 
                 await policy.setTarget(await notOwner.getAddress())
@@ -1121,7 +1121,7 @@ describe("Advanced", () => {
                 )
             })
 
-            it("Should revert when the evidence is not correct", async () => {
+            it("reverts when evidence invalid", async () => {
                 const { iERC721Errors, voting, policy, subject, invalidNFTId } =
                     await loadFixture(deployAdvancedVotingFixture)
 
@@ -1133,7 +1133,7 @@ describe("Advanced", () => {
                 )
             })
 
-            it("should throw when the registration check returns false", async () => {
+            it("reverts when check fails", async () => {
                 const { voting, policy, notOwner, validNFTId } = await loadFixture(deployAdvancedVotingFixture)
 
                 await policy.setTarget(await voting.getAddress())
@@ -1144,7 +1144,7 @@ describe("Advanced", () => {
                 )
             })
 
-            it("should register", async () => {
+            it("registers successfully", async () => {
                 const { AdvancedVotingFactory, voting, policy, subject, validNFTId, subjectAddress } =
                     await loadFixture(deployAdvancedVotingFixture)
                 const targetAddress = await voting.getAddress()
@@ -1169,7 +1169,7 @@ describe("Advanced", () => {
                 expect(await voting.voteCounts(1)).to.be.equal(0)
             })
 
-            it("should prevent to register twice", async () => {
+            it("reverts when already registered", async () => {
                 const { voting, policy, subject, validNFTId } = await loadFixture(deployAdvancedVotingFixture)
                 const targetAddress = await voting.getAddress()
 
@@ -1184,8 +1184,8 @@ describe("Advanced", () => {
             })
         })
 
-        describe("vote()", () => {
-            it("Should revert when the callee is not registered", async () => {
+        describe("vote", () => {
+            it("reverts when not registered", async () => {
                 const { voting, policy, subject } = await loadFixture(deployAdvancedVotingFixture)
 
                 await policy.setTarget(await voting.getAddress())
@@ -1193,7 +1193,7 @@ describe("Advanced", () => {
                 await expect(voting.connect(subject).vote(0)).to.be.revertedWithCustomError(voting, "NotRegistered")
             })
 
-            it("Should revert when the option is not correct", async () => {
+            it("reverts when option invalid", async () => {
                 const { voting, policy, subject, validNFTId } = await loadFixture(deployAdvancedVotingFixture)
 
                 await policy.setTarget(await voting.getAddress())
@@ -1202,7 +1202,7 @@ describe("Advanced", () => {
                 await expect(voting.connect(subject).vote(3)).to.be.revertedWithCustomError(voting, "InvalidOption")
             })
 
-            it("should vote", async () => {
+            it("votes successfully", async () => {
                 const { AdvancedVotingFactory, voting, policy, subject, subjectAddress, validNFTId } =
                     await loadFixture(deployAdvancedVotingFixture)
                 const option = 0
@@ -1231,7 +1231,7 @@ describe("Advanced", () => {
                 expect(await voting.voteCounts(1)).to.be.equal(0)
             })
 
-            it("should vote twice", async () => {
+            it("allows multiple votes", async () => {
                 const { AdvancedVotingFactory, voting, policy, subject, subjectAddress, validNFTId } =
                     await loadFixture(deployAdvancedVotingFixture)
                 const option = 0
@@ -1262,8 +1262,8 @@ describe("Advanced", () => {
             })
         })
 
-        describe("reward()", () => {
-            it("Should revert when the callee is not the target", async () => {
+        describe("reward", () => {
+            it("reverts when caller not target", async () => {
                 const { voting, policy, subject, notOwner, validNFTId } = await loadFixture(deployAdvancedVotingFixture)
 
                 await policy.setTarget(await notOwner.getAddress())
@@ -1274,7 +1274,7 @@ describe("Advanced", () => {
                 )
             })
 
-            it("Should revert when the evidence is not correct", async () => {
+            it("reverts when evidence invalid", async () => {
                 const { iERC721Errors, voting, policy, subject, validNFTId, invalidNFTId } =
                     await loadFixture(deployAdvancedVotingFixture)
 
@@ -1288,7 +1288,7 @@ describe("Advanced", () => {
                 )
             })
 
-            it("should throw when the rewared check returns false", async () => {
+            it("reverts when check fails", async () => {
                 const { nft, deployer, voting, policy, notOwner, subject, validNFTId } =
                     await loadFixture(deployAdvancedVotingFixture)
 
@@ -1305,7 +1305,7 @@ describe("Advanced", () => {
                 )
             })
 
-            it("Should revert when the callee is not registered", async () => {
+            it("reverts when not registered", async () => {
                 const { voting, policy, notOwner, validNFTId } = await loadFixture(deployAdvancedVotingFixture)
 
                 await policy.setTarget(await notOwner.getAddress())
@@ -1316,7 +1316,7 @@ describe("Advanced", () => {
                 )
             })
 
-            it("Should revert when the callee has not voted", async () => {
+            it("reverts when not voted", async () => {
                 const { voting, policy, subject, validNFTId } = await loadFixture(deployAdvancedVotingFixture)
 
                 await policy.setTarget(await voting.getAddress())
@@ -1328,7 +1328,7 @@ describe("Advanced", () => {
                 )
             })
 
-            it("should get the reward", async () => {
+            it("claims reward successfully", async () => {
                 const { AdvancedVotingFactory, voting, policy, subject, subjectAddress, validNFTId } =
                     await loadFixture(deployAdvancedVotingFixture)
                 const targetAddress = await voting.getAddress()
@@ -1356,7 +1356,7 @@ describe("Advanced", () => {
                 expect(await voting.voteCounts(1)).to.be.equal(0)
             })
 
-            it("should prevent to reward twice", async () => {
+            it("reverts when already claimed", async () => {
                 const { voting, policy, subject, validNFTId } = await loadFixture(deployAdvancedVotingFixture)
 
                 await policy.setTarget(await voting.getAddress())
@@ -1370,8 +1370,8 @@ describe("Advanced", () => {
                 )
             })
         })
-        describe("e2e", () => {
-            it("should submit a vote for each subject", async () => {
+        describe("end to end", () => {
+            it("completes full voting lifecycle", async () => {
                 const [deployer]: Signer[] = await ethers.getSigners()
 
                 const NFTFactory: NFT__factory = await ethers.getContractFactory("NFT")

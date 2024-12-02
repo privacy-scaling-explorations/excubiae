@@ -58,16 +58,16 @@ describe("Base", () => {
             }
         }
 
-        describe("constructor()", () => {
-            it("Should deploy the checker contract correctly", async () => {
+        describe("constructor", () => {
+            it("deploys correctly", async () => {
                 const { checker } = await loadFixture(deployBaseCheckerFixture)
 
                 expect(checker).to.not.eq(undefined)
             })
         })
 
-        describe("check()", () => {
-            it("should revert the check when the evidence is not meaningful", async () => {
+        describe("check", () => {
+            it("reverts when evidence is invalid", async () => {
                 const { nft, checker, target, subjectAddress, invalidNFTId } =
                     await loadFixture(deployBaseCheckerFixture)
 
@@ -77,21 +77,21 @@ describe("Base", () => {
                 )
             })
 
-            it("should return false when the subject is not the owner of the evidenced token", async () => {
+            it("returns false when subject not owner", async () => {
                 const { checker, target, notOwnerAddress, validNFTId } = await loadFixture(deployBaseCheckerFixture)
 
                 expect(await checker.connect(target).check(notOwnerAddress, validNFTId)).to.be.equal(false)
             })
 
-            it("should check", async () => {
+            it("succeeds when valid", async () => {
                 const { checker, target, subjectAddress, validNFTId } = await loadFixture(deployBaseCheckerFixture)
 
                 expect(await checker.connect(target).check(subjectAddress, validNFTId)).to.be.equal(true)
             })
         })
 
-        describe("_check()", () => {
-            it("should revert the check when the evidence is not meaningful", async () => {
+        describe("internal check", () => {
+            it("reverts when evidence is invalid", async () => {
                 const { nft, checkerHarness, target, subjectAddress, invalidNFTId } =
                     await loadFixture(deployBaseCheckerFixture)
 
@@ -100,7 +100,7 @@ describe("Base", () => {
                 ).to.be.revertedWithCustomError(nft, "ERC721NonexistentToken")
             })
 
-            it("should return false when the subject is not the owner of the evidenced token", async () => {
+            it("returns false when subject not owner", async () => {
                 const { checkerHarness, target, notOwnerAddress, validNFTId } =
                     await loadFixture(deployBaseCheckerFixture)
 
@@ -109,7 +109,7 @@ describe("Base", () => {
                 )
             })
 
-            it("should check", async () => {
+            it("succeeds when valid", async () => {
                 const { checkerHarness, target, subjectAddress, validNFTId } =
                     await loadFixture(deployBaseCheckerFixture)
 
@@ -171,24 +171,24 @@ describe("Base", () => {
             }
         }
 
-        describe("constructor()", () => {
-            it("Should deploy the policy contract correctly", async () => {
+        describe("constructor", () => {
+            it("deploys correctly", async () => {
                 const { policy } = await loadFixture(deployBasePolicyFixture)
 
                 expect(policy).to.not.eq(undefined)
             })
         })
 
-        describe("trait()", () => {
-            it("should return the trait of the policy contract", async () => {
+        describe("trait", () => {
+            it("returns correct value", async () => {
                 const { policy } = await loadFixture(deployBasePolicyFixture)
 
                 expect(await policy.trait()).to.be.eq("BaseERC721")
             })
         })
 
-        describe("setTarget()", () => {
-            it("should fail to set the target when the caller is not the owner", async () => {
+        describe("setTarget", () => {
+            it("reverts when caller not owner", async () => {
                 const { policy, notOwner, target } = await loadFixture(deployBasePolicyFixture)
 
                 await expect(
@@ -196,7 +196,7 @@ describe("Base", () => {
                 ).to.be.revertedWithCustomError(policy, "OwnableUnauthorizedAccount")
             })
 
-            it("should fail to set the target when the target address is zero", async () => {
+            it("reverts when zero address", async () => {
                 const { policy, deployer } = await loadFixture(deployBasePolicyFixture)
 
                 await expect(policy.connect(deployer).setTarget(ZeroAddress)).to.be.revertedWithCustomError(
@@ -205,7 +205,7 @@ describe("Base", () => {
                 )
             })
 
-            it("Should set the target contract address correctly", async () => {
+            it("sets target correctly", async () => {
                 const { policy, target, BaseERC721PolicyFactory } = await loadFixture(deployBasePolicyFixture)
                 const targetAddress = await target.getAddress()
 
@@ -224,7 +224,7 @@ describe("Base", () => {
                 expect(await policy.getTarget()).to.eq(targetAddress)
             })
 
-            it("Should fail to set the target if already set", async () => {
+            it("reverts when already set", async () => {
                 const { policy, target } = await loadFixture(deployBasePolicyFixture)
                 const targetAddress = await target.getAddress()
 
@@ -234,8 +234,8 @@ describe("Base", () => {
             })
         })
 
-        describe("enforce()", () => {
-            it("should throw when the callee is not the target", async () => {
+        describe("enforce", () => {
+            it("reverts when caller not target", async () => {
                 const { policy, subject, target, subjectAddress } = await loadFixture(deployBasePolicyFixture)
 
                 await policy.setTarget(await target.getAddress())
@@ -246,7 +246,7 @@ describe("Base", () => {
                 )
             })
 
-            it("should throw when the evidence is not correct", async () => {
+            it("reverts when evidence invalid", async () => {
                 const { iERC721Errors, policy, target, subjectAddress, invalidEncodedNFTId } =
                     await loadFixture(deployBasePolicyFixture)
 
@@ -257,7 +257,7 @@ describe("Base", () => {
                 ).to.be.revertedWithCustomError(iERC721Errors, "ERC721NonexistentToken")
             })
 
-            it("should throw when the check returns false", async () => {
+            it("reverts when check fails", async () => {
                 const { policy, target, notOwnerAddress, validEncodedNFTId } =
                     await loadFixture(deployBasePolicyFixture)
 
@@ -268,7 +268,7 @@ describe("Base", () => {
                 ).to.be.revertedWithCustomError(policy, "UnsuccessfulCheck")
             })
 
-            it("should enforce", async () => {
+            it("enforces successfully", async () => {
                 const { BaseERC721PolicyFactory, policy, target, subjectAddress, validEncodedNFTId } =
                     await loadFixture(deployBasePolicyFixture)
                 const targetAddress = await target.getAddress()
@@ -294,7 +294,7 @@ describe("Base", () => {
                 expect(await policy.enforced(targetAddress, subjectAddress)).to.be.equal(true)
             })
 
-            it("should prevent to enforce twice", async () => {
+            it("reverts when already enforced", async () => {
                 const { policy, target, subjectAddress, validEncodedNFTId } = await loadFixture(deployBasePolicyFixture)
 
                 await policy.setTarget(await target.getAddress())
@@ -307,8 +307,8 @@ describe("Base", () => {
             })
         })
 
-        describe("_enforce()", () => {
-            it("should throw when the callee is not the target", async () => {
+        describe("internal enforce", () => {
+            it("reverts when caller not target", async () => {
                 const { policyHarness, subject, target, subjectAddress } = await loadFixture(deployBasePolicyFixture)
 
                 await policyHarness.setTarget(await target.getAddress())
@@ -318,7 +318,7 @@ describe("Base", () => {
                 ).to.be.revertedWithCustomError(policyHarness, "TargetOnly")
             })
 
-            it("should throw when the evidence is not correct", async () => {
+            it("reverts when evidence invalid", async () => {
                 const { iERC721Errors, policyHarness, target, subjectAddress, invalidEncodedNFTId } =
                     await loadFixture(deployBasePolicyFixture)
 
@@ -329,7 +329,7 @@ describe("Base", () => {
                 ).to.be.revertedWithCustomError(iERC721Errors, "ERC721NonexistentToken")
             })
 
-            it("should throw when the check returns false", async () => {
+            it("reverts when check fails", async () => {
                 const { policyHarness, target, notOwnerAddress, validEncodedNFTId } =
                     await loadFixture(deployBasePolicyFixture)
 
@@ -340,7 +340,7 @@ describe("Base", () => {
                 ).to.be.revertedWithCustomError(policyHarness, "UnsuccessfulCheck")
             })
 
-            it("should enforce", async () => {
+            it("enforces successfully", async () => {
                 const { BaseERC721PolicyFactory, policyHarness, target, subjectAddress, validEncodedNFTId } =
                     await loadFixture(deployBasePolicyFixture)
                 const targetAddress = await target.getAddress()
@@ -366,7 +366,7 @@ describe("Base", () => {
                 expect(await policyHarness.enforced(targetAddress, subjectAddress)).to.be.equal(true)
             })
 
-            it("should prevent to enforce twice", async () => {
+            it("reverts when already enforced", async () => {
                 const { policyHarness, target, subjectAddress, validEncodedNFTId } =
                     await loadFixture(deployBasePolicyFixture)
 
@@ -432,16 +432,16 @@ describe("Base", () => {
             }
         }
 
-        describe("constructor()", () => {
-            it("Should deploy the voting contract correctly", async () => {
+        describe("constructor", () => {
+            it("deploys correctly", async () => {
                 const { voting } = await loadFixture(deployBaseVotingFixture)
 
                 expect(voting).to.not.eq(undefined)
             })
         })
 
-        describe("register()", () => {
-            it("Should revert when the callee is not the target", async () => {
+        describe("register", () => {
+            it("reverts when caller not target", async () => {
                 const { voting, policy, notOwner, validNFTId } = await loadFixture(deployBaseVotingFixture)
 
                 await policy.setTarget(await notOwner.getAddress())
@@ -452,7 +452,7 @@ describe("Base", () => {
                 )
             })
 
-            it("Should revert when the evidence is not correct", async () => {
+            it("reverts when evidence invalid", async () => {
                 const { iERC721Errors, voting, policy, subject, invalidNFTId } =
                     await loadFixture(deployBaseVotingFixture)
 
@@ -464,7 +464,7 @@ describe("Base", () => {
                 )
             })
 
-            it("should throw when the registration check returns false", async () => {
+            it("reverts when check fails", async () => {
                 const { voting, policy, notOwner, validNFTId } = await loadFixture(deployBaseVotingFixture)
 
                 await policy.setTarget(await voting.getAddress())
@@ -475,7 +475,7 @@ describe("Base", () => {
                 )
             })
 
-            it("should register", async () => {
+            it("registers successfully", async () => {
                 const { BaseVotingFactory, voting, policy, subject, validNFTId, subjectAddress } =
                     await loadFixture(deployBaseVotingFixture)
                 const targetAddress = await voting.getAddress()
@@ -500,7 +500,7 @@ describe("Base", () => {
                 expect(await voting.voteCounts(1)).to.be.equal(0)
             })
 
-            it("should prevent to register twice", async () => {
+            it("reverts when already registered", async () => {
                 const { voting, policy, subject, validNFTId } = await loadFixture(deployBaseVotingFixture)
                 const targetAddress = await voting.getAddress()
 
@@ -515,8 +515,8 @@ describe("Base", () => {
             })
         })
 
-        describe("vote()", () => {
-            it("Should revert when the callee is not registered", async () => {
+        describe("vote", () => {
+            it("reverts when not registered", async () => {
                 const { voting, policy, subject } = await loadFixture(deployBaseVotingFixture)
 
                 await policy.setTarget(await voting.getAddress())
@@ -524,7 +524,7 @@ describe("Base", () => {
                 await expect(voting.connect(subject).vote(0)).to.be.revertedWithCustomError(voting, "NotRegistered")
             })
 
-            it("Should revert when the option is not correct", async () => {
+            it("reverts when option invalid", async () => {
                 const { voting, policy, subject, validNFTId } = await loadFixture(deployBaseVotingFixture)
 
                 await policy.setTarget(await voting.getAddress())
@@ -533,7 +533,7 @@ describe("Base", () => {
                 await expect(voting.connect(subject).vote(3)).to.be.revertedWithCustomError(voting, "InvalidOption")
             })
 
-            it("should vote", async () => {
+            it("votes successfully", async () => {
                 const { BaseVotingFactory, voting, policy, subject, subjectAddress, validNFTId } =
                     await loadFixture(deployBaseVotingFixture)
                 const option = 0
@@ -560,7 +560,7 @@ describe("Base", () => {
                 expect(await voting.voteCounts(1)).to.be.equal(0)
             })
 
-            it("should prevent to vote twice", async () => {
+            it("reverts when already voted", async () => {
                 const { voting, policy, subject, validNFTId } = await loadFixture(deployBaseVotingFixture)
                 const targetAddress = await voting.getAddress()
 
@@ -573,8 +573,8 @@ describe("Base", () => {
             })
         })
 
-        describe("e2e", () => {
-            it("should submit a vote for each subject", async () => {
+        describe("end to end", () => {
+            it("completes full voting flow", async () => {
                 const [deployer]: Signer[] = await ethers.getSigners()
 
                 const NFTFactory: NFT__factory = await ethers.getContractFactory("NFT")

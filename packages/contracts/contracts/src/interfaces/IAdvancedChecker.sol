@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.27;
 
-/// @notice This enum defines the types of checks that can be performed in the AdvancedChecker system.
-/// @dev The `Check` enum represents the different phases of validation in the AdvancedChecker system.
-/// - `PRE`: Represents the pre-condition check that must be satisfied before the `MAIN` check can occur.
-/// - `MAIN`: The primary check that is executed, which can be validated multiple times.
-/// - `POST`: Represents the post-condition check that can be validated after the `MAIN` check has been completed.
+/// @title Check.
+/// @notice Defines validation phases in the AdvancedChecker system.
+/// @custom:values PRE - Pre-condition validation.
+///                MAIN - Primary validation.
+///                POST - Post-condition validation.
 enum Check {
     PRE,
     MAIN,
@@ -13,17 +13,19 @@ enum Check {
 }
 
 /// @title IAdvancedChecker.
-/// @notice AdvancedChecker contract interface.
+/// @notice Defines multi-phase validation system interface.
+/// @dev Implement this for custom validation logic with pre/main/post checks.
 interface IAdvancedChecker {
-    /// @notice Error thrown when the PRE check is skipped.
+    /// @notice Thrown when pre-check validation attempted while disabled.
     error PreCheckSkipped();
-    /// @notice Error thrown when the POST check is skipped.
+
+    /// @notice Thrown when post-check validation attempted while disabled.
     error PostCheckSkipped();
 
-    /// @dev Defines the custom `target` protection logic.
-    /// @param subject The address of the entity attempting to interact with the `target`.
-    /// @param evidence Additional data that may be required for the check.
-    /// @param checkType The type of check to be enforced (e.g., PRE, MAIN, POST).
-    /// @return checked A boolean that resolves to true when the subject satisfies the checks; otherwise false.
+    /// @notice Validates subject against specified check type.
+    /// @param subject Address to validate.
+    /// @param evidence Validation data.
+    /// @param checkType Check phase to execute.
+    /// @return checked True if validation passes.
     function check(address subject, bytes calldata evidence, Check checkType) external view returns (bool checked);
 }

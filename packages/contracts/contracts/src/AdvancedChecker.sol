@@ -3,41 +3,45 @@ pragma solidity 0.8.27;
 
 import {IAdvancedChecker, Check} from "./interfaces/IAdvancedChecker.sol";
 
+/// @notice Tracks validation status for pre, main, and post checks.
+/// @dev Used to maintain check state in AdvancedPolicy.
 struct CheckStatus {
+    /// @dev Pre-check completion status.
     bool pre;
+    /// @dev Number of completed main checks.
     uint8 main;
+    /// @dev Post-check completion status.
     bool post;
 }
 
 /// @title AdvancedChecker.
-/// @notice Abstract base contract which can be extended to implement a specific `AdvancedChecker`.
-/// @dev The `AdvancedChecker` contract builds upon the `BaseChecker` by introducing additional validation phases.
-/// It allows for pre-condition (`PRE`), main (`MAIN`), and post-condition (`POST`) checks, with the option to skip
-/// pre and post checks based on constructor parameters. The `_check` method orchestrates the validation process
-/// based on the specified check type.
+/// @notice Multi-phase validation checker with pre, main, and post checks.
+/// @dev Base contract for implementing complex validation logic with configurable check phases.
 abstract contract AdvancedChecker is IAdvancedChecker {
-    /// @notice Flag to determine if pre-condition checks should be skipped.
+    /// @notice Controls whether pre-condition checks are required.
     bool public immutable SKIP_PRE;
 
-    /// @notice Flag to determine if post-condition checks should be skipped.
+    /// @notice Controls whether post-condition checks are required.
     bool public immutable SKIP_POST;
 
-    /// @notice Flag to determine if main checks can be executed multiple times.
+    /// @notice Controls whether main check can be executed multiple times.
     bool public immutable ALLOW_MULTIPLE_MAIN;
 
-    /// @param _skipPre Indicates whether to skip pre-condition checks.
-    /// @param _skipPost Indicates whether to skip post-condition checks.
-    /// @param _allowMultipleMain Indicates whether the main check can be executed multiple times.
+    /// @notice Sets up checker configuration.
+    /// @param _skipPre Skip pre-condition validation.
+    /// @param _skipPost Skip post-condition validation.
+    /// @param _allowMultipleMain Allow multiple main validations.
     constructor(bool _skipPre, bool _skipPost, bool _allowMultipleMain) {
         SKIP_PRE = _skipPre;
         SKIP_POST = _skipPost;
         ALLOW_MULTIPLE_MAIN = _allowMultipleMain;
     }
 
-    /// @notice Public method to check the validity of the provided evidence for a given address and check type.
-    /// @param subject The address to be checked.
-    /// @param evidence The evidence associated with the check.
-    /// @param checkType The type of check to perform (PRE, MAIN, POST).
+    /// @notice Entry point for validation checks.
+    /// @param subject Address to validate.
+    /// @param evidence Validation data.
+    /// @param checkType Type of check (PRE, MAIN, POST).
+    /// @return checked Validation result.
     function check(
         address subject,
         bytes memory evidence,
@@ -46,37 +50,46 @@ abstract contract AdvancedChecker is IAdvancedChecker {
         return _check(subject, evidence, checkType);
     }
 
-    /// @notice Internal method to orchestrate the validation process based on the specified check type.
-    /// @param subject The address to be checked.
-    /// @param evidence The evidence associated with the check.
-    /// @param checkType The type of check to perform (PRE, MAIN, POST).
+    /// @notice Core validation logic router.
+    /// @dev Directs to appropriate check based on type and configuration.
+    /// @param subject Address to validate.
+    /// @param evidence Validation data.
+    /// @param checkType Check type to perform.
+    /// @return checked Validation result.
+    /// @custom:throws PreCheckSkipped If PRE check attempted when skipped.
+    /// @custom:throws PostCheckSkipped If POST check attempted when skipped.
     function _check(address subject, bytes memory evidence, Check checkType) internal view returns (bool checked) {
-        if (SKIP_PRE && checkType == Check.PRE) revert PreCheckSkipped();
-        if (SKIP_POST && checkType == Check.POST) revert PostCheckSkipped();
+        // Validate skip conditions first.
+        if (checkType == Check.PRE && SKIP_PRE) revert PreCheckSkipped();
+        if (checkType == Check.POST && SKIP_POST) revert PostCheckSkipped();
 
-        if (!SKIP_PRE && checkType == Check.PRE) {
-            return _checkPre(subject, evidence);
-        }
-
-        if (!SKIP_POST && checkType == Check.POST) {
-            return _checkPost(subject, evidence);
-        }
-
-        return _checkMain(subject, evidence);
+        // Route to appropriate check.
+        return
+            checkType == Check.PRE
+                ? _checkPre(subject, evidence)
+                : checkType == Check.POST
+                    ? _checkPost(subject, evidence)
+                    : _checkMain(subject, evidence);
     }
 
-    /// @notice Internal method for performing pre-condition checks.
-    /// @param subject The address to be checked.
-    /// @param evidence The evidence associated with the check.
+    /// @notice Pre-condition validation implementation.
+    /// @dev Override to implement pre-check logic.
+    /// @param subject Address to validate.
+    /// @param evidence Validation data.
+    /// @return checked Validation result.
     function _checkPre(address subject, bytes memory evidence) internal view virtual returns (bool checked) {}
 
-    /// @notice Internal method for performing main checks.
-    /// @param subject The address to be checked.
-    /// @param evidence The evidence associated with the check.
+    /// @notice Main validation implementation.
+    /// @dev Override to implement main check logic.
+    /// @param subject Address to validate.
+    /// @param evidence Validation data.
+    /// @return checked Validation result.
     function _checkMain(address subject, bytes memory evidence) internal view virtual returns (bool checked) {}
 
-    /// @notice Internal method for performing post-condition checks.
-    /// @param subject The address to be checked.
-    /// @param evidence The evidence associated with the check.
+    /// @notice Post-condition validation implementation.
+    /// @dev Override to implement post-check logic.
+    /// @param subject Address to validate.
+    /// @param evidence Validation data.
+    /// @return checked Validation result.
     function _checkPost(address subject, bytes memory evidence) internal view virtual returns (bool checked) {}
 }

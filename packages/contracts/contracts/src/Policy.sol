@@ -4,24 +4,33 @@ pragma solidity 0.8.27;
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {IPolicy} from "./interfaces/IPolicy.sol";
 
-/// @title Policy abstract contract.
-/// @dev This contract implements the IPolicy interface and manages the target address.
+/// @title Policy
+/// @notice Implements a base policy contract that protects access to a target contract
+/// @dev Inherits from OpenZeppelin's Ownable and implements IPolicy interface
+///
+/// This contract serves as a base for implementing specific policy checks that must be
+/// satisfied before interacting with a protected target contract. It provides core
+/// functionality for managing the protected target address and access control.
 abstract contract Policy is IPolicy, Ownable(msg.sender) {
-    /// @notice The Policy-protected contract address.
-    /// @dev The target can be any contract address that requires a prior check to enable logic.
+    /// @notice The policy-protected contract address.
+    /// @dev This address can only be set once by the owner.
     /// For example, the target is a Semaphore group that requires the subject
-    /// to meet certain criteria before joining.
+    /// to meet certain criteria in order to join the group.
     address internal target;
 
-    /// @notice Modifier that restricts access to the target address.
+    /// @notice Restricts function access to only the target contract.
+    /// @dev Throws TargetOnly error if called by any other address.
     modifier onlyTarget() {
         if (msg.sender != target) revert TargetOnly();
         _;
     }
 
-    /// @notice Sets the target address.
-    /// @dev Only the owner can set the destination `target` address.
-    /// @param _target The address of the contract to be set as the target.
+    /// @notice Sets the target contract address.
+    /// @dev Can only be called once by the owner.
+    /// @param _target Address of the contract to be protected by this policy.
+    /// @custom:throws ZeroAddress if _target is the zero address.
+    /// @custom:throws TargetAlreadySet if target has already been set.
+    /// @custom:emits TargetSet when target is successfully set.
     function setTarget(address _target) public virtual onlyOwner {
         if (_target == address(0)) revert ZeroAddress();
         if (target != address(0)) revert TargetAlreadySet();
@@ -31,8 +40,9 @@ abstract contract Policy is IPolicy, Ownable(msg.sender) {
         emit TargetSet(_target);
     }
 
-    /// @notice Retrieves the current target address.
-    /// @return The address of the current target.
+    /// @notice Retrieves the current target contract address.
+    /// @return address The address of the policy-protected contract.
+    /// @dev Returns zero address if target hasn't been set yet.
     function getTarget() public view returns (address) {
         return target;
     }
