@@ -1,3 +1,4 @@
 module.exports = {
-    istanbulFolder: "../../coverage/contracts"
+    istanbulFolder: "../../coverage/contracts",
+    skipFiles: ["test"]
 }
