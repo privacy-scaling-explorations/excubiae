@@ -380,7 +380,7 @@ contract AdvancedPolicy is Test {
 
         vm.startPrank(target);
 
-        vm.expectRevert(abi.encodeWithSelector(IAdvancedChecker.PreCheckSkipped.selector));
+        vm.expectRevert(abi.encodeWithSelector(IAdvancedChecker.CannotPreCheckWhenSkipped.selector));
         policySkipped.enforce(subject, abi.encode(0x0), Check.PRE);
 
         vm.stopPrank();
@@ -609,7 +609,7 @@ contract AdvancedPolicy is Test {
 
         policySkipped.enforce(subject, abi.encode(0x0), Check.MAIN);
 
-        vm.expectRevert(abi.encodeWithSelector(IAdvancedChecker.PostCheckSkipped.selector));
+        vm.expectRevert(abi.encodeWithSelector(IAdvancedChecker.CannotPostCheckWhenSkipped.selector));
         policySkipped.enforce(subject, abi.encode(0x0), Check.POST);
 
         vm.stopPrank();
@@ -714,7 +714,7 @@ contract AdvancedPolicy is Test {
 
         vm.startPrank(target);
 
-        vm.expectRevert(abi.encodeWithSelector(IAdvancedChecker.PreCheckSkipped.selector));
+        vm.expectRevert(abi.encodeWithSelector(IAdvancedChecker.CannotPreCheckWhenSkipped.selector));
         policyHarnessSkipped.exposed__enforce(subject, abi.encode(0x0), Check.PRE);
 
         vm.stopPrank();
@@ -943,7 +943,7 @@ contract AdvancedPolicy is Test {
 
         policyHarnessSkipped.exposed__enforce(subject, abi.encode(0x0), Check.MAIN);
 
-        vm.expectRevert(abi.encodeWithSelector(IAdvancedChecker.PostCheckSkipped.selector));
+        vm.expectRevert(abi.encodeWithSelector(IAdvancedChecker.CannotPostCheckWhenSkipped.selector));
         policyHarnessSkipped.exposed__enforce(subject, abi.encode(0x0), Check.POST);
 
         vm.stopPrank();

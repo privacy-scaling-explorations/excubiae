@@ -464,7 +464,7 @@ describe("Advanced", () => {
 
                     await expect(
                         policySkipped.connect(target).enforce(subjectAddress, validEncodedNFTId, 0)
-                    ).to.be.revertedWithCustomError(checker, "PreCheckSkipped")
+                    ).to.be.revertedWithCustomError(checker, "CannotPreCheckWhenSkipped")
                 })
 
                 it("reverts when check unsuccessful", async () => {
@@ -669,7 +669,7 @@ describe("Advanced", () => {
 
                     await expect(
                         policySkipped.connect(target).enforce(subjectAddress, validEncodedNFTId, 2)
-                    ).to.be.revertedWithCustomError(checker, "PostCheckSkipped")
+                    ).to.be.revertedWithCustomError(checker, "CannotPostCheckWhenSkipped")
                 })
 
                 it("reverts when check unsuccessful", async () => {
@@ -763,7 +763,7 @@ describe("Advanced", () => {
 
                     await expect(
                         policyHarnessSkipped.connect(target).exposed__enforce(subjectAddress, validEncodedNFTId, 0)
-                    ).to.be.revertedWithCustomError(checker, "PreCheckSkipped")
+                    ).to.be.revertedWithCustomError(checker, "CannotPreCheckWhenSkipped")
                 })
 
                 it("reverts when check unsuccessful", async () => {
@@ -977,7 +977,7 @@ describe("Advanced", () => {
 
                     await expect(
                         policyHarnessSkipped.connect(target).exposed__enforce(subjectAddress, validEncodedNFTId, 2)
-                    ).to.be.revertedWithCustomError(checker, "PostCheckSkipped")
+                    ).to.be.revertedWithCustomError(checker, "CannotPostCheckWhenSkipped")
                 })
 
                 it("reverts when check unsuccessful", async () => {

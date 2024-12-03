@@ -16,11 +16,11 @@ enum Check {
 /// @notice Defines multi-phase validation system interface.
 /// @dev Implement this for custom validation logic with pre/main/post checks.
 interface IAdvancedChecker {
-    /// @notice Thrown when pre-check validation attempted while disabled.
-    error PreCheckSkipped();
+    /// @notice Thrown when pre-check validation attempted while skipped.
+    error CannotPreCheckWhenSkipped();
 
-    /// @notice Thrown when post-check validation attempted while disabled.
-    error PostCheckSkipped();
+    /// @notice Thrown when post-check validation attempted while skipped.
+    error CannotPostCheckWhenSkipped();
 
     /// @notice Validates subject against specified check type.
     /// @param subject Address to validate.

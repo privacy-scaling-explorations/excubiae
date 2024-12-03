@@ -56,12 +56,12 @@ abstract contract AdvancedChecker is IAdvancedChecker {
     /// @param evidence Validation data.
     /// @param checkType Check type to perform.
     /// @return checked Validation result.
-    /// @custom:throws PreCheckSkipped If PRE check attempted when skipped.
-    /// @custom:throws PostCheckSkipped If POST check attempted when skipped.
+    /// @custom:throws CannotPreCheckWhenSkipped If PRE check attempted when skipped.
+    /// @custom:throws CannotPostCheckWhenSkipped If POST check attempted when skipped.
     function _check(address subject, bytes memory evidence, Check checkType) internal view returns (bool checked) {
         // Validate skip conditions first.
-        if (checkType == Check.PRE && SKIP_PRE) revert PreCheckSkipped();
-        if (checkType == Check.POST && SKIP_POST) revert PostCheckSkipped();
+        if (checkType == Check.PRE && SKIP_PRE) revert CannotPreCheckWhenSkipped();
+        if (checkType == Check.POST && SKIP_POST) revert CannotPostCheckWhenSkipped();
 
         // Route to appropriate check.
         return
