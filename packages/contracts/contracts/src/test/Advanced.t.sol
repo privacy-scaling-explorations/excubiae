@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.27;
+pragma solidity ^0.8.20;
 
 import {Test} from "forge-std/src/Test.sol";
 import {NFT} from "./utils/NFT.sol";
@@ -12,7 +12,7 @@ import {IPolicy} from "../interfaces/IPolicy.sol";
 import {IAdvancedPolicy} from "../interfaces/IAdvancedPolicy.sol";
 import {IERC721Errors} from "@openzeppelin/contracts/interfaces/draft-IERC6093.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
-import {Check, IAdvancedChecker} from "../interfaces/IAdvancedChecker.sol";
+import {Check} from "../interfaces/IAdvancedChecker.sol";
 
 contract AdvancedChecker is Test {
     NFT internal nft;
@@ -270,6 +270,9 @@ contract AdvancedChecker is Test {
 }
 
 contract AdvancedPolicy is Test {
+    event TargetSet(address indexed target);
+    event Enforced(address indexed subject, address indexed target, bytes evidence, Check checkType);
+
     NFT internal nft;
     AdvancedERC721Checker internal checker;
     AdvancedERC721Checker internal checkerSkipped;
@@ -323,7 +326,7 @@ contract AdvancedPolicy is Test {
         vm.startPrank(deployer);
 
         vm.expectEmit(true, true, true, true);
-        emit IPolicy.TargetSet(target);
+        emit TargetSet(target);
 
         policy.setTarget(target);
 
@@ -414,7 +417,7 @@ contract AdvancedPolicy is Test {
         vm.startPrank(target);
 
         vm.expectEmit(true, true, true, true);
-        emit IAdvancedPolicy.Enforced(subject, target, abi.encode(0x0), Check.PRE);
+        emit Enforced(subject, target, abi.encode(0x0), Check.PRE);
 
         policy.enforce(subject, abi.encode(0x0), Check.PRE);
 
@@ -498,7 +501,7 @@ contract AdvancedPolicy is Test {
         policy.enforce(subject, abi.encode(0x0), Check.PRE);
 
         vm.expectEmit(true, true, true, true);
-        emit IAdvancedPolicy.Enforced(subject, target, abi.encode(0x0), Check.MAIN);
+        emit Enforced(subject, target, abi.encode(0x0), Check.MAIN);
 
         policy.enforce(subject, abi.encode(0x0), Check.MAIN);
 
@@ -518,12 +521,12 @@ contract AdvancedPolicy is Test {
         policy.enforce(subject, abi.encode(0x0), Check.PRE);
 
         vm.expectEmit(true, true, true, true);
-        emit IAdvancedPolicy.Enforced(subject, target, abi.encode(0x0), Check.MAIN);
+        emit Enforced(subject, target, abi.encode(0x0), Check.MAIN);
 
         policy.enforce(subject, abi.encode(0x0), Check.MAIN);
 
         vm.expectEmit(true, true, true, true);
-        emit IAdvancedPolicy.Enforced(subject, target, abi.encode(0x0), Check.MAIN);
+        emit Enforced(subject, target, abi.encode(0x0), Check.MAIN);
 
         policy.enforce(subject, abi.encode(0x0), Check.MAIN);
 
@@ -649,7 +652,7 @@ contract AdvancedPolicy is Test {
         policy.enforce(subject, abi.encode(0x0), Check.MAIN);
 
         vm.expectEmit(true, true, true, true);
-        emit IAdvancedPolicy.Enforced(subject, target, abi.encode(0x0), Check.POST);
+        emit Enforced(subject, target, abi.encode(0x0), Check.POST);
 
         policy.enforce(subject, abi.encode(0x0), Check.POST);
 
@@ -749,7 +752,7 @@ contract AdvancedPolicy is Test {
         vm.startPrank(target);
 
         vm.expectEmit(true, true, true, true);
-        emit IAdvancedPolicy.Enforced(subject, target, abi.encode(0x0), Check.PRE);
+        emit Enforced(subject, target, abi.encode(0x0), Check.PRE);
 
         policyHarness.exposed__enforce(subject, abi.encode(0x0), Check.PRE);
 
@@ -833,7 +836,7 @@ contract AdvancedPolicy is Test {
         policyHarness.exposed__enforce(subject, abi.encode(0x0), Check.PRE);
 
         vm.expectEmit(true, true, true, true);
-        emit IAdvancedPolicy.Enforced(subject, target, abi.encode(0x0), Check.MAIN);
+        emit Enforced(subject, target, abi.encode(0x0), Check.MAIN);
 
         policyHarness.exposed__enforce(subject, abi.encode(0x0), Check.MAIN);
 
@@ -853,12 +856,12 @@ contract AdvancedPolicy is Test {
         policyHarness.exposed__enforce(subject, abi.encode(0x0), Check.PRE);
 
         vm.expectEmit(true, true, true, true);
-        emit IAdvancedPolicy.Enforced(subject, target, abi.encode(0x0), Check.MAIN);
+        emit Enforced(subject, target, abi.encode(0x0), Check.MAIN);
 
         policyHarness.exposed__enforce(subject, abi.encode(0x0), Check.MAIN);
 
         vm.expectEmit(true, true, true, true);
-        emit IAdvancedPolicy.Enforced(subject, target, abi.encode(0x0), Check.MAIN);
+        emit Enforced(subject, target, abi.encode(0x0), Check.MAIN);
 
         policyHarness.exposed__enforce(subject, abi.encode(0x0), Check.MAIN);
 
@@ -984,7 +987,7 @@ contract AdvancedPolicy is Test {
         policyHarness.exposed__enforce(subject, abi.encode(0x0), Check.MAIN);
 
         vm.expectEmit(true, true, true, true);
-        emit IAdvancedPolicy.Enforced(subject, target, abi.encode(0x0), Check.POST);
+        emit Enforced(subject, target, abi.encode(0x0), Check.POST);
 
         policyHarness.exposed__enforce(subject, abi.encode(0x0), Check.POST);
 
@@ -1013,6 +1016,10 @@ contract AdvancedPolicy is Test {
 }
 
 contract Voting is Test {
+    event Registered(address voter);
+    event Voted(address voter, uint8 option);
+    event RewardClaimed(address voter, uint256 rewardId);
+
     NFT internal nft;
     AdvancedERC721Checker internal checker;
     AdvancedERC721Policy internal policy;
@@ -1092,7 +1099,7 @@ contract Voting is Test {
         vm.startPrank(subject);
 
         vm.expectEmit(true, true, true, true);
-        emit AdvancedVoting.Registered(subject);
+        emit Registered(subject);
 
         voting.register(0);
 
@@ -1162,7 +1169,7 @@ contract Voting is Test {
         voting.register(0);
 
         vm.expectEmit(true, true, true, true);
-        emit AdvancedVoting.Voted(subject, 0);
+        emit Voted(subject, 0);
 
         voting.vote(0);
 
@@ -1183,7 +1190,7 @@ contract Voting is Test {
         voting.vote(0);
 
         vm.expectEmit(true, true, true, true);
-        emit AdvancedVoting.Voted(subject, 0);
+        emit Voted(subject, 0);
         voting.vote(0);
 
         vm.stopPrank();
@@ -1280,7 +1287,7 @@ contract Voting is Test {
         voting.vote(0);
 
         vm.expectEmit(true, true, true, true);
-        emit AdvancedVoting.RewardClaimed(subject, 0);
+        emit RewardClaimed(subject, 0);
 
         voting.reward(0);
 

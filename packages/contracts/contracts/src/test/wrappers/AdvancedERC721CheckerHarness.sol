@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.27;
+pragma solidity ^0.8.20;
 
 import {AdvancedERC721Checker} from "../advanced/AdvancedERC721Checker.sol";
 import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";

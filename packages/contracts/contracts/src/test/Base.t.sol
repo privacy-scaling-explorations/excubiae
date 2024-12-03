@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.27;
+pragma solidity ^0.8.20;
 
 import {Test} from "forge-std/src/Test.sol";
 import {NFT} from "./utils/NFT.sol";
@@ -9,7 +9,6 @@ import {BaseVoting} from "./base/BaseVoting.sol";
 import {BaseERC721CheckerHarness} from "./wrappers/BaseERC721CheckerHarness.sol";
 import {BaseERC721PolicyHarness} from "./wrappers/BaseERC721PolicyHarness.sol";
 import {IPolicy} from "../interfaces/IPolicy.sol";
-import {IBasePolicy} from "../interfaces/IBasePolicy.sol";
 import {IERC721Errors} from "@openzeppelin/contracts/interfaces/draft-IERC6093.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
@@ -93,6 +92,9 @@ contract BaseChecker is Test {
 }
 
 contract BasePolicy is Test {
+    event TargetSet(address indexed target);
+    event Enforced(address indexed subject, address indexed target, bytes evidence);
+
     NFT internal nft;
     BaseERC721Checker internal checker;
     BaseERC721Policy internal policy;
@@ -150,7 +152,7 @@ contract BasePolicy is Test {
         vm.startPrank(deployer);
 
         vm.expectEmit(true, true, true, true);
-        emit IPolicy.TargetSet(target);
+        emit TargetSet(target);
 
         policy.setTarget(target);
 
@@ -225,7 +227,7 @@ contract BasePolicy is Test {
         vm.startPrank(target);
 
         vm.expectEmit(true, true, true, true);
-        emit IBasePolicy.Enforced(subject, target, abi.encode(0x0));
+        emit Enforced(subject, target, abi.encode(0x0));
 
         policy.enforce(subject, abi.encode(0x0));
 
@@ -307,7 +309,7 @@ contract BasePolicy is Test {
         vm.startPrank(target);
 
         vm.expectEmit(true, true, true, true);
-        emit IBasePolicy.Enforced(subject, target, abi.encode(0x0));
+        emit Enforced(subject, target, abi.encode(0x0));
 
         policyHarness.exposed__enforce(subject, abi.encode(0x0));
 
@@ -334,6 +336,9 @@ contract BasePolicy is Test {
 }
 
 contract Voting is Test {
+    event Registered(address voter);
+    event Voted(address voter, uint8 option);
+
     NFT internal nft;
     BaseERC721Checker internal checker;
     BaseERC721Policy internal policy;
@@ -413,7 +418,7 @@ contract Voting is Test {
         vm.startPrank(subject);
 
         vm.expectEmit(true, true, true, true);
-        emit BaseVoting.Registered(subject);
+        emit Registered(subject);
 
         voting.register(0);
 
@@ -483,7 +488,7 @@ contract Voting is Test {
         voting.register(0);
 
         vm.expectEmit(true, true, true, true);
-        emit BaseVoting.Voted(subject, 0);
+        emit Voted(subject, 0);
 
         voting.vote(0);
 

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.27;
+pragma solidity ^0.8.20;
 
 import {BaseERC721Policy} from "../base/BaseERC721Policy.sol";
 import {BaseERC721Checker} from "../base/BaseERC721Checker.sol";

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.27;
+pragma solidity ^0.8.20;
 
 import {Policy} from "./Policy.sol";
 import {IAdvancedPolicy, Check} from "./interfaces/IAdvancedPolicy.sol";

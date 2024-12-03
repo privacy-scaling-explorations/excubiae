@@ -12,7 +12,7 @@ const backendPrivateKey = process.env.BACKEND_PRIVATE_KEY
 
 const config: HardhatUserConfig = {
     solidity: {
-        version: "0.8.27",
+        version: "0.8.20",
         settings: {
             optimizer: {
                 enabled: true,

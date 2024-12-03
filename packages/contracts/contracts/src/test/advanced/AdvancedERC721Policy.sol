@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.27;
+pragma solidity ^0.8.20;
 
 import {AdvancedPolicy} from "../../AdvancedPolicy.sol";
 import {AdvancedERC721Checker} from "./AdvancedERC721Checker.sol";
@@ -14,9 +14,7 @@ contract AdvancedERC721Policy is AdvancedPolicy {
         bool _skipPre,
         bool _skipPost,
         bool _allowMultipleMain
-    ) AdvancedPolicy(_checker, _skipPre, _skipPost, _allowMultipleMain) {
-        ADVANCED_CHECKER = _checker;
-    }
+    ) AdvancedPolicy(_checker, _skipPre, _skipPost, _allowMultipleMain) {}
 
     /// @notice Returns policy identifier.
     function trait() external pure returns (string memory) {
