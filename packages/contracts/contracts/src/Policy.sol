@@ -31,7 +31,7 @@ abstract contract Policy is IPolicy, Ownable(msg.sender) {
     /// @custom:throws ZeroAddress if _target is the zero address.
     /// @custom:throws TargetAlreadySet if target has already been set.
     /// @custom:emits TargetSet when target is successfully set.
-    function setTarget(address _target) public virtual onlyOwner {
+    function setTarget(address _target) external virtual onlyOwner {
         if (_target == address(0)) revert ZeroAddress();
         if (target != address(0)) revert TargetAlreadySet();
 
