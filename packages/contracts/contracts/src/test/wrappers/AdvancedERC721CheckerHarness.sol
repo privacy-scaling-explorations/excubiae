@@ -14,18 +14,12 @@ contract AdvancedERC721CheckerHarness is AdvancedERC721Checker {
     /// @param _minBalance Minimum token balance required.
     /// @param _minTokenId Minimum valid token ID.
     /// @param _maxTokenId Maximum valid token ID.
-    /// @param _skipPre Skip pre-check validation.
-    /// @param _skipPost Skip post-check validation.
-    /// @param _allowMultipleMain Allow multiple main validations.
     constructor(
         IERC721 _nft,
         uint256 _minBalance,
         uint256 _minTokenId,
-        uint256 _maxTokenId,
-        bool _skipPre,
-        bool _skipPost,
-        bool _allowMultipleMain
-    ) AdvancedERC721Checker(_nft, _minBalance, _minTokenId, _maxTokenId, _skipPre, _skipPost, _allowMultipleMain) {}
+        uint256 _maxTokenId
+    ) AdvancedERC721Checker(_nft, _minBalance, _minTokenId, _maxTokenId) {}
 
     /// @notice Test exposure for _check method.
     /// @param subject Address to validate.

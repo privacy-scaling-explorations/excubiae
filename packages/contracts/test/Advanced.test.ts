@@ -37,15 +37,12 @@ describe("Advanced", () => {
                 await nft.getAddress(),
                 1,
                 0,
-                10,
-                false,
-                false,
-                true
+                10
             )
 
             const checkerHarness: AdvancedERC721CheckerHarness = await AdvancedERC721CheckerHarnessFactory.connect(
                 deployer
-            ).deploy(await nft.getAddress(), 1, 0, 10, false, false, true)
+            ).deploy(await nft.getAddress(), 1, 0, 10)
 
             // mint 0 for subject.
             await nft.connect(deployer).mint(subjectAddress)
@@ -320,28 +317,31 @@ describe("Advanced", () => {
                 await nft.getAddress(),
                 1,
                 0,
-                10,
-                false,
-                false,
-                true
+                10
             )
 
             const checkerSkippedPrePostNoMultMain: AdvancedERC721Checker = await AdvancedERC721CheckerFactory.connect(
                 deployer
-            ).deploy(await nft.getAddress(), 1, 0, 10, true, true, false)
+            ).deploy(await nft.getAddress(), 1, 0, 10)
 
             const policy: AdvancedERC721Policy = await AdvancedERC721PolicyFactory.connect(deployer).deploy(
-                await checker.getAddress()
+                await checker.getAddress(),
+                false,
+                false,
+                true
             )
             const policySkipped: AdvancedERC721Policy = await AdvancedERC721PolicyFactory.connect(deployer).deploy(
-                await checkerSkippedPrePostNoMultMain.getAddress()
+                await checkerSkippedPrePostNoMultMain.getAddress(),
+                true,
+                true,
+                false
             )
             const policyHarness: AdvancedERC721PolicyHarness = await AdvancedERC721PolicyHarnessFactory.connect(
                 deployer
-            ).deploy(await checker.getAddress())
+            ).deploy(await checker.getAddress(), false, false, true)
             const policyHarnessSkipped: AdvancedERC721PolicyHarness = await AdvancedERC721PolicyHarnessFactory.connect(
                 deployer
-            ).deploy(await checkerSkippedPrePostNoMultMain.getAddress())
+            ).deploy(await checkerSkippedPrePostNoMultMain.getAddress(), true, true, false)
 
             // mint 0 for subject.
             await nft.connect(deployer).mint(subjectAddress)
@@ -457,14 +457,14 @@ describe("Advanced", () => {
                 })
 
                 it("reverts when pre-check skipped", async () => {
-                    const { checker, policySkipped, target, subjectAddress, validEncodedNFTId } =
+                    const { policySkipped, target, subjectAddress, validEncodedNFTId } =
                         await loadFixture(deployAdvancedPolicyFixture)
 
                     await policySkipped.setTarget(await target.getAddress())
 
                     await expect(
                         policySkipped.connect(target).enforce(subjectAddress, validEncodedNFTId, 0)
-                    ).to.be.revertedWithCustomError(checker, "CannotPreCheckWhenSkipped")
+                    ).to.be.revertedWithCustomError(policySkipped, "CannotPreCheckWhenSkipped")
                 })
 
                 it("reverts when check unsuccessful", async () => {
@@ -661,7 +661,7 @@ describe("Advanced", () => {
                 })
 
                 it("reverts when post-check skipped", async () => {
-                    const { checker, policySkipped, target, subjectAddress, validEncodedNFTId } =
+                    const { policySkipped, target, subjectAddress, validEncodedNFTId } =
                         await loadFixture(deployAdvancedPolicyFixture)
 
                     await policySkipped.setTarget(await target.getAddress())
@@ -669,7 +669,7 @@ describe("Advanced", () => {
 
                     await expect(
                         policySkipped.connect(target).enforce(subjectAddress, validEncodedNFTId, 2)
-                    ).to.be.revertedWithCustomError(checker, "CannotPostCheckWhenSkipped")
+                    ).to.be.revertedWithCustomError(policySkipped, "CannotPostCheckWhenSkipped")
                 })
 
                 it("reverts when check unsuccessful", async () => {
@@ -756,14 +756,14 @@ describe("Advanced", () => {
                 })
 
                 it("reverts when pre-check skipped", async () => {
-                    const { checker, policyHarnessSkipped, target, subjectAddress, validEncodedNFTId } =
+                    const { policyHarnessSkipped, target, subjectAddress, validEncodedNFTId } =
                         await loadFixture(deployAdvancedPolicyFixture)
 
                     await policyHarnessSkipped.setTarget(await target.getAddress())
 
                     await expect(
                         policyHarnessSkipped.connect(target).exposed__enforce(subjectAddress, validEncodedNFTId, 0)
-                    ).to.be.revertedWithCustomError(checker, "CannotPreCheckWhenSkipped")
+                    ).to.be.revertedWithCustomError(policyHarnessSkipped, "CannotPreCheckWhenSkipped")
                 })
 
                 it("reverts when check unsuccessful", async () => {
@@ -969,7 +969,7 @@ describe("Advanced", () => {
                 })
 
                 it("reverts when post-check skipped", async () => {
-                    const { checker, policyHarnessSkipped, target, subjectAddress, validEncodedNFTId } =
+                    const { policyHarnessSkipped, target, subjectAddress, validEncodedNFTId } =
                         await loadFixture(deployAdvancedPolicyFixture)
 
                     await policyHarnessSkipped.setTarget(await target.getAddress())
@@ -977,7 +977,7 @@ describe("Advanced", () => {
 
                     await expect(
                         policyHarnessSkipped.connect(target).exposed__enforce(subjectAddress, validEncodedNFTId, 2)
-                    ).to.be.revertedWithCustomError(checker, "CannotPostCheckWhenSkipped")
+                    ).to.be.revertedWithCustomError(policyHarnessSkipped, "CannotPostCheckWhenSkipped")
                 })
 
                 it("reverts when check unsuccessful", async () => {
@@ -1060,14 +1060,14 @@ describe("Advanced", () => {
                 await nft.getAddress(),
                 1,
                 0,
-                10,
-                false,
-                false,
-                true
+                10
             )
 
             const policy: AdvancedERC721Policy = await AdvancedERC721PolicyFactory.connect(deployer).deploy(
-                await checker.getAddress()
+                await checker.getAddress(),
+                false,
+                false,
+                true
             )
 
             const voting: AdvancedVoting = await AdvancedVotingFactory.connect(deployer).deploy(
@@ -1387,14 +1387,14 @@ describe("Advanced", () => {
                     await nft.getAddress(),
                     1,
                     0,
-                    20,
-                    false,
-                    false,
-                    true
+                    20
                 )
 
                 const policy: AdvancedERC721Policy = await AdvancedERC721PolicyFactory.connect(deployer).deploy(
-                    await checker.getAddress()
+                    await checker.getAddress(),
+                    false,
+                    false,
+                    true
                 )
 
                 const voting: AdvancedVoting = await AdvancedVotingFactory.connect(deployer).deploy(

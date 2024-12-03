@@ -13,14 +13,29 @@ abstract contract AdvancedPolicy is IAdvancedPolicy, Policy {
     /// @dev Immutable to ensure checker cannot be changed after deployment.
     AdvancedChecker public immutable ADVANCED_CHECKER;
 
+    /// @notice Controls whether pre-condition checks are required.
+    bool public immutable SKIP_PRE;
+
+    /// @notice Controls whether post-condition checks are required.
+    bool public immutable SKIP_POST;
+
+    /// @notice Controls whether main check can be executed multiple times.
+    bool public immutable ALLOW_MULTIPLE_MAIN;
+
     /// @notice Tracks validation status for each subject per target.
     /// @dev Maps target => subject => CheckStatus.
     mapping(address => mapping(address => CheckStatus)) public enforced;
 
-    /// @notice Initializes contract with an AdvancedChecker instance.
+    /// @notice Initializes contract with an AdvancedChecker instance and checks configs.
     /// @param _advancedChecker Address of the AdvancedChecker contract.
-    constructor(AdvancedChecker _advancedChecker) {
+    /// @param _skipPre Skip pre-condition validation.
+    /// @param _skipPost Skip post-condition validation.
+    /// @param _allowMultipleMain Allow multiple main validations.
+    constructor(AdvancedChecker _advancedChecker, bool _skipPre, bool _skipPost, bool _allowMultipleMain) {
         ADVANCED_CHECKER = _advancedChecker;
+        SKIP_PRE = _skipPre;
+        SKIP_POST = _skipPost;
+        ALLOW_MULTIPLE_MAIN = _allowMultipleMain;
     }
 
     /// @notice Enforces policy check for a subject.
@@ -37,6 +52,8 @@ abstract contract AdvancedPolicy is IAdvancedPolicy, Policy {
     /// @param subject Address to validate.
     /// @param evidence Validation data.
     /// @param checkType Type of check to perform.
+    /// @custom:throws CannotPreCheckWhenSkipped If PRE check attempted when skipped.
+    /// @custom:throws CannotPostCheckWhenSkipped If POST check attempted when skipped.
     /// @custom:throws UnsuccessfulCheck If validation fails.
     /// @custom:throws AlreadyEnforced If check was already completed.
     /// @custom:throws PreCheckNotEnforced If PRE check is required but not done.
@@ -51,38 +68,36 @@ abstract contract AdvancedPolicy is IAdvancedPolicy, Policy {
 
         // Handle PRE check.
         if (checkType == Check.PRE) {
-            if (!ADVANCED_CHECKER.SKIP_POST() && status.pre) {
+            if (SKIP_PRE) revert CannotPreCheckWhenSkipped();
+            if (status.pre) {
                 revert AlreadyEnforced();
             }
-            status.pre = true;
-            emit Enforced(subject, target, evidence, checkType);
-            return;
-        }
 
-        // Handle POST check.
-        if (checkType == Check.POST) {
-            if (status.post) {
-                revert AlreadyEnforced();
-            }
-            if (!ADVANCED_CHECKER.SKIP_PRE() && !status.pre) {
+            status.pre = true;
+        } else if (checkType == Check.POST) {
+            // Handle POST check.
+            if (SKIP_POST) revert CannotPostCheckWhenSkipped();
+            if (!status.pre) {
                 revert PreCheckNotEnforced();
             }
             if (status.main == 0) {
                 revert MainCheckNotEnforced();
             }
+            if (status.post) {
+                revert AlreadyEnforced();
+            }
             status.post = true;
-            emit Enforced(subject, target, evidence, checkType);
-            return;
+        } else {
+            // Handle MAIN check.
+            if (!SKIP_PRE && !status.pre) {
+                revert PreCheckNotEnforced();
+            }
+            if (!ALLOW_MULTIPLE_MAIN && status.main > 0) {
+                revert MainCheckAlreadyEnforced();
+            }
+            status.main += 1;
         }
 
-        // Handle MAIN check.
-        if (!ADVANCED_CHECKER.ALLOW_MULTIPLE_MAIN() && status.main > 0) {
-            revert MainCheckAlreadyEnforced();
-        }
-        if (!ADVANCED_CHECKER.SKIP_PRE() && !status.pre) {
-            revert PreCheckNotEnforced();
-        }
-        status.main += 1;
         emit Enforced(subject, target, evidence, checkType);
     }
 }

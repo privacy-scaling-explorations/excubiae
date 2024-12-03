@@ -28,8 +28,8 @@ contract AdvancedChecker is Test {
         vm.startPrank(deployer);
 
         nft = new NFT();
-        checker = new AdvancedERC721Checker(nft, 1, 0, 10, false, false, true);
-        checkerHarness = new AdvancedERC721CheckerHarness(nft, 1, 0, 10, false, false, true);
+        checker = new AdvancedERC721Checker(nft, 1, 0, 10);
+        checkerHarness = new AdvancedERC721CheckerHarness(nft, 1, 0, 10);
 
         vm.stopPrank();
     }
@@ -287,12 +287,12 @@ contract AdvancedPolicy is Test {
         vm.startPrank(deployer);
 
         nft = new NFT();
-        checker = new AdvancedERC721Checker(nft, 1, 0, 10, false, false, true);
-        checkerSkipped = new AdvancedERC721Checker(nft, 1, 0, 10, true, true, false);
-        policy = new AdvancedERC721Policy(checker);
-        policyHarness = new AdvancedERC721PolicyHarness(checker);
-        policySkipped = new AdvancedERC721Policy(checkerSkipped);
-        policyHarnessSkipped = new AdvancedERC721PolicyHarness(checkerSkipped);
+        checker = new AdvancedERC721Checker(nft, 1, 0, 10);
+        checkerSkipped = new AdvancedERC721Checker(nft, 1, 0, 10);
+        policy = new AdvancedERC721Policy(checker, false, false, true);
+        policyHarness = new AdvancedERC721PolicyHarness(checker, false, false, true);
+        policySkipped = new AdvancedERC721Policy(checkerSkipped, true, true, false);
+        policyHarnessSkipped = new AdvancedERC721PolicyHarness(checkerSkipped, true, true, false);
 
         vm.stopPrank();
     }
@@ -375,12 +375,13 @@ contract AdvancedPolicy is Test {
         vm.startPrank(deployer);
 
         policySkipped.setTarget(target);
+        nft.mint(subject);
 
         vm.stopPrank();
 
         vm.startPrank(target);
 
-        vm.expectRevert(abi.encodeWithSelector(IAdvancedChecker.CannotPreCheckWhenSkipped.selector));
+        vm.expectRevert(abi.encodeWithSelector(IAdvancedPolicy.CannotPreCheckWhenSkipped.selector));
         policySkipped.enforce(subject, abi.encode(0x0), Check.PRE);
 
         vm.stopPrank();
@@ -609,7 +610,7 @@ contract AdvancedPolicy is Test {
 
         policySkipped.enforce(subject, abi.encode(0x0), Check.MAIN);
 
-        vm.expectRevert(abi.encodeWithSelector(IAdvancedChecker.CannotPostCheckWhenSkipped.selector));
+        vm.expectRevert(abi.encodeWithSelector(IAdvancedPolicy.CannotPostCheckWhenSkipped.selector));
         policySkipped.enforce(subject, abi.encode(0x0), Check.POST);
 
         vm.stopPrank();
@@ -709,12 +710,13 @@ contract AdvancedPolicy is Test {
         vm.startPrank(deployer);
 
         policyHarnessSkipped.setTarget(target);
+        nft.mint(subject);
 
         vm.stopPrank();
 
         vm.startPrank(target);
 
-        vm.expectRevert(abi.encodeWithSelector(IAdvancedChecker.CannotPreCheckWhenSkipped.selector));
+        vm.expectRevert(abi.encodeWithSelector(IAdvancedPolicy.CannotPreCheckWhenSkipped.selector));
         policyHarnessSkipped.exposed__enforce(subject, abi.encode(0x0), Check.PRE);
 
         vm.stopPrank();
@@ -943,7 +945,7 @@ contract AdvancedPolicy is Test {
 
         policyHarnessSkipped.exposed__enforce(subject, abi.encode(0x0), Check.MAIN);
 
-        vm.expectRevert(abi.encodeWithSelector(IAdvancedChecker.CannotPostCheckWhenSkipped.selector));
+        vm.expectRevert(abi.encodeWithSelector(IAdvancedPolicy.CannotPostCheckWhenSkipped.selector));
         policyHarnessSkipped.exposed__enforce(subject, abi.encode(0x0), Check.POST);
 
         vm.stopPrank();
@@ -1024,8 +1026,8 @@ contract Voting is Test {
         vm.startPrank(deployer);
 
         nft = new NFT();
-        checker = new AdvancedERC721Checker(nft, 1, 0, 10, false, false, true);
-        policy = new AdvancedERC721Policy(checker);
+        checker = new AdvancedERC721Checker(nft, 1, 0, 10);
+        policy = new AdvancedERC721Policy(checker, false, false, true);
         voting = new AdvancedVoting(policy);
 
         vm.stopPrank();

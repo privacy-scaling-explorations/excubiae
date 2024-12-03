@@ -19,18 +19,7 @@ contract AdvancedERC721Checker is AdvancedChecker {
     /// @param _minBalance Required token balance.
     /// @param _minTokenId Minimum valid token ID.
     /// @param _maxTokenId Maximum valid token ID.
-    /// @param _skipPre Skip pre-check flag.
-    /// @param _skipPost Skip post-check flag.
-    /// @param _allowMultipleMain Allow multiple main checks flag.
-    constructor(
-        IERC721 _nft,
-        uint256 _minBalance,
-        uint256 _minTokenId,
-        uint256 _maxTokenId,
-        bool _skipPre,
-        bool _skipPost,
-        bool _allowMultipleMain
-    ) AdvancedChecker(_skipPre, _skipPost, _allowMultipleMain) {
+    constructor(IERC721 _nft, uint256 _minBalance, uint256 _minTokenId, uint256 _maxTokenId) {
         NFT = _nft;
         MIN_BALANCE = _minBalance;
         MIN_TOKEN_ID = _minTokenId;

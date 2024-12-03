@@ -18,25 +18,6 @@ struct CheckStatus {
 /// @notice Multi-phase validation checker with pre, main, and post checks.
 /// @dev Base contract for implementing complex validation logic with configurable check phases.
 abstract contract AdvancedChecker is IAdvancedChecker {
-    /// @notice Controls whether pre-condition checks are required.
-    bool public immutable SKIP_PRE;
-
-    /// @notice Controls whether post-condition checks are required.
-    bool public immutable SKIP_POST;
-
-    /// @notice Controls whether main check can be executed multiple times.
-    bool public immutable ALLOW_MULTIPLE_MAIN;
-
-    /// @notice Sets up checker configuration.
-    /// @param _skipPre Skip pre-condition validation.
-    /// @param _skipPost Skip post-condition validation.
-    /// @param _allowMultipleMain Allow multiple main validations.
-    constructor(bool _skipPre, bool _skipPost, bool _allowMultipleMain) {
-        SKIP_PRE = _skipPre;
-        SKIP_POST = _skipPost;
-        ALLOW_MULTIPLE_MAIN = _allowMultipleMain;
-    }
-
     /// @notice Entry point for validation checks.
     /// @param subject Address to validate.
     /// @param evidence Validation data.
@@ -56,20 +37,16 @@ abstract contract AdvancedChecker is IAdvancedChecker {
     /// @param evidence Validation data.
     /// @param checkType Check type to perform.
     /// @return checked Validation result.
-    /// @custom:throws CannotPreCheckWhenSkipped If PRE check attempted when skipped.
-    /// @custom:throws CannotPostCheckWhenSkipped If POST check attempted when skipped.
     function _check(address subject, bytes memory evidence, Check checkType) internal view returns (bool checked) {
-        // Validate skip conditions first.
-        if (checkType == Check.PRE && SKIP_PRE) revert CannotPreCheckWhenSkipped();
-        if (checkType == Check.POST && SKIP_POST) revert CannotPostCheckWhenSkipped();
+        if (checkType == Check.PRE) {
+            return _checkPre(subject, evidence);
+        }
 
-        // Route to appropriate check.
-        return
-            checkType == Check.PRE
-                ? _checkPre(subject, evidence)
-                : checkType == Check.POST
-                    ? _checkPost(subject, evidence)
-                    : _checkMain(subject, evidence);
+        if (checkType == Check.POST) {
+            return _checkPost(subject, evidence);
+        }
+
+        return _checkMain(subject, evidence);
     }
 
     /// @notice Pre-condition validation implementation.

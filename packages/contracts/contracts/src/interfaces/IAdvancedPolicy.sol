@@ -16,6 +16,12 @@ interface IAdvancedPolicy is IPolicy {
     /// @notice Thrown when post check attempted before main check.
     error MainCheckNotEnforced();
 
+    /// @notice Thrown when pre-check validation attempted while skipped.
+    error CannotPreCheckWhenSkipped();
+
+    /// @notice Thrown when post-check validation attempted while skipped.
+    error CannotPostCheckWhenSkipped();
+
     /// @notice Emitted when validation check succeeds.
     /// @param subject Address that passed validation.
     /// @param target Protected contract address.

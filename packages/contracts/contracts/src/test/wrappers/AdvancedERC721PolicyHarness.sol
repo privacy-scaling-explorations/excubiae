@@ -9,7 +9,12 @@ import {Check} from "../../interfaces/IAdvancedChecker.sol";
 /// @notice Test harness for AdvancedERC721Policy internal methods.
 contract AdvancedERC721PolicyHarness is AdvancedERC721Policy {
     /// @notice Initializes test harness.
-    constructor(AdvancedERC721Checker _checker) AdvancedERC721Policy(_checker) {}
+    constructor(
+        AdvancedERC721Checker _checker,
+        bool _skipPre,
+        bool _skipPost,
+        bool _allowMultipleMain
+    ) AdvancedERC721Policy(_checker, _skipPre, _skipPost, _allowMultipleMain) {}
 
     /// @notice Test exposure for _enforce method.
     /// @param subject Address to validate.
