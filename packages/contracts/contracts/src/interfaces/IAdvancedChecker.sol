@@ -12,6 +12,17 @@ enum Check {
     POST
 }
 
+/// @notice Tracks validation status for pre, main, and post checks.
+/// @dev Used to maintain check state in AdvancedPolicy.
+struct CheckStatus {
+    /// @dev Pre-check completion status.
+    bool pre;
+    /// @dev Number of completed main checks.
+    uint8 main;
+    /// @dev Post-check completion status.
+    bool post;
+}
+
 /// @title IAdvancedChecker.
 /// @notice Defines multi-phase validation system interface.
 /// @dev Implement this for custom validation logic with pre/main/post checks.

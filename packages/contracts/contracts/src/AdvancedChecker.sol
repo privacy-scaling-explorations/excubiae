@@ -1,18 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import {IAdvancedChecker, Check} from "./interfaces/IAdvancedChecker.sol";
-
-/// @notice Tracks validation status for pre, main, and post checks.
-/// @dev Used to maintain check state in AdvancedPolicy.
-struct CheckStatus {
-    /// @dev Pre-check completion status.
-    bool pre;
-    /// @dev Number of completed main checks.
-    uint8 main;
-    /// @dev Post-check completion status.
-    bool post;
-}
+import {IAdvancedChecker, Check, CheckStatus} from "./interfaces/IAdvancedChecker.sol";
 
 /// @title AdvancedChecker.
 /// @notice Multi-phase validation checker with pre, main, and post checks.

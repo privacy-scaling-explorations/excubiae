@@ -77,9 +77,6 @@ abstract contract AdvancedPolicy is IAdvancedPolicy, Policy {
         } else if (checkType == Check.POST) {
             // Handle POST check.
             if (SKIP_POST) revert CannotPostCheckWhenSkipped();
-            if (!status.pre) {
-                revert PreCheckNotEnforced();
-            }
             if (status.main == 0) {
                 revert MainCheckNotEnforced();
             }
