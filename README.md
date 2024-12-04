@@ -76,8 +76,8 @@ yarn compile:contracts
 1. Bump a new version of the package with:
 
 ```bash
-yarn version:bump <package-name> <version>
-# e.g. yarn version:bump excubiae 0.2.0
+yarn version:bump <strategy> <package-name>
+# e.g. yarn version:bump minor excubiae-contracts
 ```
 
 This step creates a commit and a git tag.
