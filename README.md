@@ -1,10 +1,10 @@
 # Excubiae
 
-Excubiae is a composable framework for building custom attribute-based access control policies on Ethereum.
+Excubiae is a composable framework for creating custom attribute-based access control policies on EVM-compatible networks.
 
-The framework provides a set of common, abstract, and flexible smart contracts to simplify the creation of reusable, attribute-based criteria. These contracts, called "gatekeepers," are solution-agnostic, enforcing checks against user-provided evidence and maintaining records of those who meet the criteria.
+It provides a set of abstract and flexible smart contracts, known as "gatekeepers," to streamline the definition of reusable criteria. These solution-agnostic contracts enforce checks against user-provided evidence and track those who satisfy the requirements.
 
-This approach enables seamless interoperability across different protocols. For instance, a single check could combine verifiable attributes from Semaphore and MACI, ensuring flexible and composable access control based on two different protocols. Indeed, for example, you can define criteria to verify token ownership or/and validate a zero-knowledge proof (ZKP). Using these criteria, you can create a policy to enforce the checks and integrate it seamlessly into your smart contract logic. A practical use case might involve requiring verification before registering a new voter for a poll (e.g., in a MACI-based voting system).
+This approach enables seamless interoperability across different protocols. For instance, a single check could combine verifiable attributes from Semaphore and MACI, ensuring flexible and composable access control. Indeed, for example, you can define criteria to verify token ownership and/or validate a zero-knowledge proof (ZKP). Using these criteria, you can create a policy to enforce the checks and integrate it seamlessly into your smart contract logic. A practical use case might involve requiring verification before registering a new voter for a poll (e.g., in a MACI-based voting system).
 
 You can learn more in this [design document](https://hackmd.io/@0xjei/B1RXoTh71e).
 
@@ -77,7 +77,7 @@ yarn compile:contracts
 
 ```bash
 yarn version:bump <package-name> <version>
-# e.g. yarn version:bump imt.sol 2.0.0
+# e.g. yarn version:bump excubiae 0.2.0
 ```
 
 This step creates a commit and a git tag.
@@ -92,7 +92,7 @@ git push origin main
 
 ```bash
 git push origin <package-name>-<version>
-# e.g. git push origin excubiae-v0.1.0
+# e.g. git push origin excubiae-v0.2.0
 ```
 
 After pushing the new git tag, a workflow will be triggered and will publish the package on [npm](https://www.npmjs.com/) and release a new version on Github with its changelogs automatically.

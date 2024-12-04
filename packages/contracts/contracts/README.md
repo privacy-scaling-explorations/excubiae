@@ -20,7 +20,7 @@ yarn add @excubiae/contracts
 
 ## Usage
 
-This package is configured to support the combination of [Hardhat](https://hardhat.org/) and [Foundry](https://book.getfoundry.sh/), see the Hardhat [documentation](https://hardhat.org/hardhat-runner/docs/advanced/hardhat-and-foundry) to learn more.
+This package is configured to support the combination of [Hardhat](https://hardhat.org/) and [Foundry](https://book.getfoundry.sh/), see the Hardhat's [documentation](https://hardhat.org/hardhat-runner/docs/advanced/hardhat-and-foundry) to learn more.
 
 ### Compile contracts
 
