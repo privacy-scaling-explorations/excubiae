@@ -1,0 +1,3 @@
+if [ "$NO_HOOK" != "1" ]; then
+  exec < /dev/tty && npx czg --hook || true
+fi
