@@ -2,7 +2,6 @@
 pragma solidity ^0.8.20;
 
 import {AdvancedERC721Checker} from "../advanced/AdvancedERC721Checker.sol";
-import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import {Check} from "../../interfaces/IAdvancedChecker.sol";
 
 /// @title AdvancedERC721CheckerHarness.
@@ -10,23 +9,23 @@ import {Check} from "../../interfaces/IAdvancedChecker.sol";
 /// @dev Inherits AdvancedERC721Checker and exposes protected methods for testing.
 contract AdvancedERC721CheckerHarness is AdvancedERC721Checker {
     /// @notice Initializes test harness with checker configuration.
-    /// @param _nft ERC721 contract to validate.
+    /// @param _verifiers Array of addresses for existing verification contracts.
     /// @param _minBalance Minimum token balance required.
     /// @param _minTokenId Minimum valid token ID.
     /// @param _maxTokenId Maximum valid token ID.
     constructor(
-        IERC721 _nft,
+        address[] memory _verifiers,
         uint256 _minBalance,
         uint256 _minTokenId,
         uint256 _maxTokenId
-    ) AdvancedERC721Checker(_nft, _minBalance, _minTokenId, _maxTokenId) {}
+    ) AdvancedERC721Checker(_verifiers, _minBalance, _minTokenId, _maxTokenId) {}
 
     /// @notice Test exposure for _check method.
     /// @param subject Address to validate.
     /// @param evidence Validation data.
     /// @param checkType Type of check to perform.
     /// @return Validation result.
-    function exposed__check(address subject, bytes calldata evidence, Check checkType) public view returns (bool) {
+    function exposed__check(address subject, bytes[] calldata evidence, Check checkType) public view returns (bool) {
         return _check(subject, evidence, checkType);
     }
 
@@ -34,7 +33,7 @@ contract AdvancedERC721CheckerHarness is AdvancedERC721Checker {
     /// @param subject Address to validate.
     /// @param evidence Validation data.
     /// @return Pre-check validation result.
-    function exposed__checkPre(address subject, bytes calldata evidence) public view returns (bool) {
+    function exposed__checkPre(address subject, bytes[] calldata evidence) public view returns (bool) {
         return _checkPre(subject, evidence);
     }
 
@@ -42,7 +41,7 @@ contract AdvancedERC721CheckerHarness is AdvancedERC721Checker {
     /// @param subject Address to validate.
     /// @param evidence Validation data.
     /// @return Main validation result.
-    function exposed__checkMain(address subject, bytes calldata evidence) public view returns (bool) {
+    function exposed__checkMain(address subject, bytes[] calldata evidence) public view returns (bool) {
         return _checkMain(subject, evidence);
     }
 
@@ -50,7 +49,7 @@ contract AdvancedERC721CheckerHarness is AdvancedERC721Checker {
     /// @param subject Address to validate.
     /// @param evidence Validation data.
     /// @return Post-check validation result.
-    function exposed__checkPost(address subject, bytes calldata evidence) public view returns (bool) {
+    function exposed__checkPost(address subject, bytes[] calldata evidence) public view returns (bool) {
         return _checkPost(subject, evidence);
     }
 }

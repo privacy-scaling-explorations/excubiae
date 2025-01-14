@@ -20,7 +20,7 @@ contract AdvancedERC721PolicyHarness is AdvancedERC721Policy {
     /// @param subject Address to validate.
     /// @param evidence Validation data.
     /// @param checkType Check type to enforce.
-    function exposed__enforce(address subject, bytes calldata evidence, Check checkType) public onlyTarget {
+    function exposed__enforce(address subject, bytes[] calldata evidence, Check checkType) public onlyTarget {
         _enforce(subject, evidence, checkType);
     }
 }

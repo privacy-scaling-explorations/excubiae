@@ -43,7 +43,7 @@ abstract contract AdvancedPolicy is IAdvancedPolicy, Policy {
     /// @param subject Address to validate.
     /// @param evidence Validation data.
     /// @param checkType Type of check (PRE, MAIN, POST).
-    function enforce(address subject, bytes calldata evidence, Check checkType) external override onlyTarget {
+    function enforce(address subject, bytes[] calldata evidence, Check checkType) external override onlyTarget {
         _enforce(subject, evidence, checkType);
     }
 
@@ -59,7 +59,7 @@ abstract contract AdvancedPolicy is IAdvancedPolicy, Policy {
     /// @custom:throws PreCheckNotEnforced If PRE check is required but not done.
     /// @custom:throws MainCheckNotEnforced If MAIN check is required but not done.
     /// @custom:throws MainCheckAlreadyEnforced If multiple MAIN checks not allowed.
-    function _enforce(address subject, bytes calldata evidence, Check checkType) internal {
+    function _enforce(address subject, bytes[] calldata evidence, Check checkType) internal {
         if (!ADVANCED_CHECKER.check(subject, evidence, checkType)) {
             revert UnsuccessfulCheck();
         }

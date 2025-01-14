@@ -15,12 +15,17 @@ contract AdvancedERC721Checker is AdvancedChecker {
     uint256 public immutable MAX_TOKEN_ID;
 
     /// @notice Initializes checker with validation parameters.
-    /// @param _nft ERC721 contract address.
+    /// @param _verifiers Array of addresses for existing verification contracts.
     /// @param _minBalance Required token balance.
     /// @param _minTokenId Minimum valid token ID.
     /// @param _maxTokenId Maximum valid token ID.
-    constructor(IERC721 _nft, uint256 _minBalance, uint256 _minTokenId, uint256 _maxTokenId) {
-        NFT = _nft;
+    constructor(
+        address[] memory _verifiers,
+        uint256 _minBalance,
+        uint256 _minTokenId,
+        uint256 _maxTokenId
+    ) AdvancedChecker(_verifiers) {
+        NFT = IERC721(getVerifierAtIndex(0));
         MIN_BALANCE = _minBalance;
         MIN_TOKEN_ID = _minTokenId;
         MAX_TOKEN_ID = _maxTokenId;
@@ -30,9 +35,9 @@ contract AdvancedERC721Checker is AdvancedChecker {
     /// @param subject Address to validate.
     /// @param evidence Encoded tokenId.
     /// @return Token ownership status.
-    function _checkPre(address subject, bytes memory evidence) internal view override returns (bool) {
+    function _checkPre(address subject, bytes[] calldata evidence) internal view override returns (bool) {
         super._checkPre(subject, evidence);
-        uint256 tokenId = abi.decode(evidence, (uint256));
+        uint256 tokenId = abi.decode(evidence[0], (uint256));
         return NFT.ownerOf(tokenId) == subject;
     }
 
@@ -40,7 +45,7 @@ contract AdvancedERC721Checker is AdvancedChecker {
     /// @param subject Address to validate.
     /// @param evidence Unused parameter.
     /// @return Balance threshold status.
-    function _checkMain(address subject, bytes memory evidence) internal view override returns (bool) {
+    function _checkMain(address subject, bytes[] calldata evidence) internal view override returns (bool) {
         super._checkMain(subject, evidence);
         return NFT.balanceOf(subject) >= MIN_BALANCE;
     }
@@ -49,9 +54,9 @@ contract AdvancedERC721Checker is AdvancedChecker {
     /// @param subject Address to validate.
     /// @param evidence Encoded tokenId.
     /// @return Token range validation status.
-    function _checkPost(address subject, bytes memory evidence) internal view override returns (bool) {
+    function _checkPost(address subject, bytes[] calldata evidence) internal view override returns (bool) {
         super._checkPost(subject, evidence);
-        uint256 tokenId = abi.decode(evidence, (uint256));
+        uint256 tokenId = abi.decode(evidence[0], (uint256));
         return tokenId >= MIN_TOKEN_ID && tokenId <= MAX_TOKEN_ID && NFT.ownerOf(tokenId) == subject;
     }
 }

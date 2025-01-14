@@ -43,10 +43,11 @@ contract AdvancedVoting {
     /// @custom:emits Registered on successful registration.
     function register(uint256 tokenId) external {
         // Encode token ID for policy verification.
-        bytes memory evidence = abi.encode(tokenId);
+        bytes[] memory _evidence = new bytes[](1);
+        _evidence[0] = abi.encode(tokenId);
 
         // Verify NFT ownership through policy's PRE check.
-        POLICY.enforce(msg.sender, evidence, Check.PRE);
+        POLICY.enforce(msg.sender, _evidence, Check.PRE);
 
         emit Registered(msg.sender);
     }
@@ -66,8 +67,9 @@ contract AdvancedVoting {
         if (option >= 2) revert InvalidOption();
 
         // Verify voting power through policy's MAIN check.
-        bytes memory evidence = abi.encode(option);
-        POLICY.enforce(msg.sender, evidence, Check.MAIN);
+        bytes[] memory _evidence = new bytes[](1);
+        _evidence[0] = abi.encode(option);
+        POLICY.enforce(msg.sender, _evidence, Check.MAIN);
 
         // Increment vote count safely.
         unchecked {
@@ -94,8 +96,9 @@ contract AdvancedVoting {
         if (post) revert AlreadyClaimed();
 
         // Verify reward eligibility through policy's POST check.
-        bytes memory evidence = abi.encode(rewardId);
-        POLICY.enforce(msg.sender, evidence, Check.POST);
+        bytes[] memory _evidence = new bytes[](1);
+        _evidence[0] = abi.encode(rewardId);
+        POLICY.enforce(msg.sender, _evidence, Check.POST);
 
         emit RewardClaimed(msg.sender, rewardId);
     }

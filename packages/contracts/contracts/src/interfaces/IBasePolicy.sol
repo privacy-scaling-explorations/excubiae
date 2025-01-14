@@ -10,10 +10,10 @@ interface IBasePolicy is IPolicy {
     /// @param subject Address that passed validation.
     /// @param target Protected contract address.
     /// @param evidence Validation data.
-    event Enforced(address indexed subject, address indexed target, bytes evidence);
+    event Enforced(address indexed subject, address indexed target, bytes[] evidence);
 
     /// @notice Enforces validation check on subject.
     /// @param subject Address to validate.
     /// @param evidence Validation data.
-    function enforce(address subject, bytes calldata evidence) external;
+    function enforce(address subject, bytes[] calldata evidence) external;
 }

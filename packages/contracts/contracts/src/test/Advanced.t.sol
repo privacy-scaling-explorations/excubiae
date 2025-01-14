@@ -24,12 +24,22 @@ contract AdvancedChecker is Test {
     address public subject = vm.addr(0x3);
     address public notOwner = vm.addr(0x4);
 
+    address[] internal verifiers;
+    bytes[] public evidence = new bytes[](1);
+    bytes[] public wrongEvidence = new bytes[](1);
+
     function setUp() public virtual {
         vm.startPrank(deployer);
 
         nft = new NFT();
-        checker = new AdvancedERC721Checker(nft, 1, 0, 10);
-        checkerHarness = new AdvancedERC721CheckerHarness(nft, 1, 0, 10);
+        verifiers = new address[](1);
+        verifiers[0] = address(nft);
+
+        checker = new AdvancedERC721Checker(verifiers, 1, 0, 10);
+        checkerHarness = new AdvancedERC721CheckerHarness(verifiers, 1, 0, 10);
+
+        evidence[0] = abi.encode(0);
+        wrongEvidence[0] = abi.encode(1);
 
         vm.stopPrank();
     }
@@ -38,7 +48,7 @@ contract AdvancedChecker is Test {
         vm.startPrank(target);
 
         vm.expectRevert(abi.encodeWithSelector(IERC721Errors.ERC721NonexistentToken.selector, uint256(0)));
-        checker.check(subject, abi.encode(0), Check.PRE);
+        checker.check(subject, evidence, Check.PRE);
 
         vm.stopPrank();
     }
@@ -48,7 +58,7 @@ contract AdvancedChecker is Test {
 
         nft.mint(subject);
 
-        assert(!checker.check(notOwner, abi.encode(0), Check.PRE));
+        assert(!checker.check(notOwner, evidence, Check.PRE));
 
         vm.stopPrank();
     }
@@ -58,7 +68,7 @@ contract AdvancedChecker is Test {
 
         nft.mint(subject);
 
-        assert(checker.check(subject, abi.encode(0), Check.PRE));
+        assert(checker.check(subject, evidence, Check.PRE));
 
         vm.stopPrank();
     }
@@ -68,7 +78,7 @@ contract AdvancedChecker is Test {
 
         nft.mint(subject);
 
-        assert(!checker.check(notOwner, abi.encode(0), Check.MAIN));
+        assert(!checker.check(notOwner, evidence, Check.MAIN));
 
         vm.stopPrank();
     }
@@ -78,7 +88,7 @@ contract AdvancedChecker is Test {
 
         nft.mint(subject);
 
-        assert(checker.check(subject, abi.encode(0), Check.MAIN));
+        assert(checker.check(subject, evidence, Check.MAIN));
 
         vm.stopPrank();
     }
@@ -87,7 +97,7 @@ contract AdvancedChecker is Test {
         vm.startPrank(target);
 
         vm.expectRevert(abi.encodeWithSelector(IERC721Errors.ERC721NonexistentToken.selector, uint256(1)));
-        checker.check(subject, abi.encode(1), Check.POST);
+        checker.check(subject, wrongEvidence, Check.POST);
 
         vm.stopPrank();
     }
@@ -97,7 +107,7 @@ contract AdvancedChecker is Test {
 
         nft.mint(subject);
 
-        assert(!checker.check(notOwner, abi.encode(0), Check.POST));
+        assert(!checker.check(notOwner, evidence, Check.POST));
 
         vm.stopPrank();
     }
@@ -107,7 +117,7 @@ contract AdvancedChecker is Test {
 
         nft.mint(subject);
 
-        assert(checker.check(subject, abi.encode(0), Check.POST));
+        assert(checker.check(subject, evidence, Check.POST));
 
         vm.stopPrank();
     }
@@ -116,7 +126,7 @@ contract AdvancedChecker is Test {
         vm.startPrank(target);
 
         vm.expectRevert(abi.encodeWithSelector(IERC721Errors.ERC721NonexistentToken.selector, uint256(0)));
-        checkerHarness.exposed__check(subject, abi.encode(0), Check.PRE);
+        checkerHarness.exposed__check(subject, evidence, Check.PRE);
 
         vm.stopPrank();
     }
@@ -126,7 +136,7 @@ contract AdvancedChecker is Test {
 
         nft.mint(subject);
 
-        assert(!checkerHarness.exposed__check(notOwner, abi.encode(0), Check.PRE));
+        assert(!checkerHarness.exposed__check(notOwner, evidence, Check.PRE));
 
         vm.stopPrank();
     }
@@ -136,7 +146,7 @@ contract AdvancedChecker is Test {
 
         nft.mint(subject);
 
-        assert(checkerHarness.exposed__check(subject, abi.encode(0), Check.PRE));
+        assert(checkerHarness.exposed__check(subject, evidence, Check.PRE));
 
         vm.stopPrank();
     }
@@ -146,7 +156,7 @@ contract AdvancedChecker is Test {
 
         nft.mint(subject);
 
-        assert(!checkerHarness.exposed__check(notOwner, abi.encode(0), Check.MAIN));
+        assert(!checkerHarness.exposed__check(notOwner, evidence, Check.MAIN));
 
         vm.stopPrank();
     }
@@ -156,7 +166,7 @@ contract AdvancedChecker is Test {
 
         nft.mint(subject);
 
-        assert(checkerHarness.exposed__check(subject, abi.encode(0), Check.MAIN));
+        assert(checkerHarness.exposed__check(subject, evidence, Check.MAIN));
 
         vm.stopPrank();
     }
@@ -165,7 +175,7 @@ contract AdvancedChecker is Test {
         vm.startPrank(target);
 
         vm.expectRevert(abi.encodeWithSelector(IERC721Errors.ERC721NonexistentToken.selector, uint256(1)));
-        checkerHarness.exposed__check(subject, abi.encode(1), Check.POST);
+        checkerHarness.exposed__check(subject, wrongEvidence, Check.POST);
 
         vm.stopPrank();
     }
@@ -175,7 +185,7 @@ contract AdvancedChecker is Test {
 
         nft.mint(subject);
 
-        assert(!checkerHarness.exposed__check(notOwner, abi.encode(0), Check.POST));
+        assert(!checkerHarness.exposed__check(notOwner, evidence, Check.POST));
 
         vm.stopPrank();
     }
@@ -185,7 +195,7 @@ contract AdvancedChecker is Test {
 
         nft.mint(subject);
 
-        assert(checkerHarness.exposed__check(subject, abi.encode(0), Check.POST));
+        assert(checkerHarness.exposed__check(subject, evidence, Check.POST));
 
         vm.stopPrank();
     }
@@ -194,7 +204,7 @@ contract AdvancedChecker is Test {
         vm.startPrank(target);
 
         vm.expectRevert(abi.encodeWithSelector(IERC721Errors.ERC721NonexistentToken.selector, uint256(1)));
-        checkerHarness.exposed__checkPre(subject, abi.encode(1));
+        checkerHarness.exposed__checkPre(subject, wrongEvidence);
 
         vm.stopPrank();
     }
@@ -204,7 +214,7 @@ contract AdvancedChecker is Test {
 
         nft.mint(subject);
 
-        assert(!checkerHarness.exposed__checkPre(notOwner, abi.encode(0)));
+        assert(!checkerHarness.exposed__checkPre(notOwner, evidence));
 
         vm.stopPrank();
     }
@@ -214,7 +224,7 @@ contract AdvancedChecker is Test {
 
         nft.mint(subject);
 
-        assert(checkerHarness.exposed__checkPre(subject, abi.encode(0)));
+        assert(checkerHarness.exposed__checkPre(subject, evidence));
 
         vm.stopPrank();
     }
@@ -224,7 +234,7 @@ contract AdvancedChecker is Test {
 
         nft.mint(subject);
 
-        assert(!checkerHarness.exposed__checkMain(notOwner, abi.encode(0)));
+        assert(!checkerHarness.exposed__checkMain(notOwner, evidence));
 
         vm.stopPrank();
     }
@@ -234,7 +244,7 @@ contract AdvancedChecker is Test {
 
         nft.mint(subject);
 
-        assert(checkerHarness.exposed__checkMain(subject, abi.encode(0)));
+        assert(checkerHarness.exposed__checkMain(subject, evidence));
 
         vm.stopPrank();
     }
@@ -243,7 +253,7 @@ contract AdvancedChecker is Test {
         vm.startPrank(target);
 
         vm.expectRevert(abi.encodeWithSelector(IERC721Errors.ERC721NonexistentToken.selector, uint256(1)));
-        checkerHarness.exposed__checkPost(subject, abi.encode(1));
+        checkerHarness.exposed__checkPost(subject, wrongEvidence);
 
         vm.stopPrank();
     }
@@ -253,7 +263,7 @@ contract AdvancedChecker is Test {
 
         nft.mint(subject);
 
-        assert(!checkerHarness.exposed__checkPost(notOwner, abi.encode(0)));
+        assert(!checkerHarness.exposed__checkPost(notOwner, evidence));
 
         vm.stopPrank();
     }
@@ -263,7 +273,7 @@ contract AdvancedChecker is Test {
 
         nft.mint(subject);
 
-        assert(checkerHarness.exposed__checkPost(subject, abi.encode(0)));
+        assert(checkerHarness.exposed__checkPost(subject, evidence));
 
         vm.stopPrank();
     }
@@ -271,7 +281,7 @@ contract AdvancedChecker is Test {
 
 contract AdvancedPolicy is Test {
     event TargetSet(address indexed target);
-    event Enforced(address indexed subject, address indexed target, bytes evidence, Check checkType);
+    event Enforced(address indexed subject, address indexed target, bytes[] evidence, Check checkType);
 
     NFT internal nft;
     AdvancedERC721Checker internal checker;
@@ -286,16 +296,26 @@ contract AdvancedPolicy is Test {
     address public subject = vm.addr(0x3);
     address public notOwner = vm.addr(0x4);
 
+    address[] internal verifiers;
+    bytes[] public evidence = new bytes[](1);
+    bytes[] public wrongEvidence = new bytes[](1);
+
     function setUp() public virtual {
         vm.startPrank(deployer);
 
         nft = new NFT();
-        checker = new AdvancedERC721Checker(nft, 1, 0, 10);
-        checkerSkipped = new AdvancedERC721Checker(nft, 1, 0, 10);
+        verifiers = new address[](1);
+        verifiers[0] = address(nft);
+
+        checker = new AdvancedERC721Checker(verifiers, 1, 0, 10);
+        checkerSkipped = new AdvancedERC721Checker(verifiers, 1, 0, 10);
         policy = new AdvancedERC721Policy(checker, false, false, true);
         policyHarness = new AdvancedERC721PolicyHarness(checker, false, false, true);
         policySkipped = new AdvancedERC721Policy(checkerSkipped, true, true, false);
         policyHarnessSkipped = new AdvancedERC721PolicyHarness(checkerSkipped, true, true, false);
+
+        evidence[0] = abi.encode(0);
+        wrongEvidence[0] = abi.encode(1);
 
         vm.stopPrank();
     }
@@ -354,7 +374,7 @@ contract AdvancedPolicy is Test {
         vm.startPrank(subject);
 
         vm.expectRevert(abi.encodeWithSelector(IPolicy.TargetOnly.selector));
-        policy.enforce(subject, abi.encode(0x0), Check.PRE);
+        policy.enforce(subject, evidence, Check.PRE);
 
         vm.stopPrank();
     }
@@ -369,7 +389,7 @@ contract AdvancedPolicy is Test {
         vm.startPrank(target);
 
         vm.expectRevert(abi.encodeWithSelector(IERC721Errors.ERC721NonexistentToken.selector, uint256(0)));
-        policy.enforce(subject, abi.encode(0x0), Check.PRE);
+        policy.enforce(subject, evidence, Check.PRE);
 
         vm.stopPrank();
     }
@@ -385,7 +405,7 @@ contract AdvancedPolicy is Test {
         vm.startPrank(target);
 
         vm.expectRevert(abi.encodeWithSelector(IAdvancedPolicy.CannotPreCheckWhenSkipped.selector));
-        policySkipped.enforce(subject, abi.encode(0x0), Check.PRE);
+        policySkipped.enforce(subject, evidence, Check.PRE);
 
         vm.stopPrank();
     }
@@ -401,7 +421,7 @@ contract AdvancedPolicy is Test {
         vm.startPrank(target);
 
         vm.expectRevert(abi.encodeWithSelector(IPolicy.UnsuccessfulCheck.selector));
-        policy.enforce(notOwner, abi.encode(0x0), Check.PRE);
+        policy.enforce(notOwner, evidence, Check.PRE);
 
         vm.stopPrank();
     }
@@ -417,9 +437,9 @@ contract AdvancedPolicy is Test {
         vm.startPrank(target);
 
         vm.expectEmit(true, true, true, true);
-        emit Enforced(subject, target, abi.encode(0x0), Check.PRE);
+        emit Enforced(subject, target, evidence, Check.PRE);
 
-        policy.enforce(subject, abi.encode(0x0), Check.PRE);
+        policy.enforce(subject, evidence, Check.PRE);
 
         vm.stopPrank();
     }
@@ -434,10 +454,10 @@ contract AdvancedPolicy is Test {
 
         vm.startPrank(target);
 
-        policy.enforce(subject, abi.encode(0x0), Check.PRE);
+        policy.enforce(subject, evidence, Check.PRE);
 
         vm.expectRevert(abi.encodeWithSelector(IPolicy.AlreadyEnforced.selector));
-        policy.enforce(subject, abi.encode(0x0), Check.PRE);
+        policy.enforce(subject, evidence, Check.PRE);
 
         vm.stopPrank();
     }
@@ -452,7 +472,7 @@ contract AdvancedPolicy is Test {
         vm.startPrank(subject);
 
         vm.expectRevert(abi.encodeWithSelector(IPolicy.TargetOnly.selector));
-        policy.enforce(subject, abi.encode(0x0), Check.MAIN);
+        policy.enforce(subject, evidence, Check.MAIN);
 
         vm.stopPrank();
     }
@@ -467,7 +487,7 @@ contract AdvancedPolicy is Test {
         vm.startPrank(target);
 
         vm.expectRevert(abi.encodeWithSelector(IPolicy.UnsuccessfulCheck.selector));
-        policy.enforce(subject, abi.encode(0x0), Check.MAIN);
+        policy.enforce(subject, evidence, Check.MAIN);
 
         vm.stopPrank();
     }
@@ -483,7 +503,7 @@ contract AdvancedPolicy is Test {
         vm.startPrank(target);
 
         vm.expectRevert(abi.encodeWithSelector(IAdvancedPolicy.PreCheckNotEnforced.selector));
-        policy.enforce(subject, abi.encode(0x0), Check.MAIN);
+        policy.enforce(subject, evidence, Check.MAIN);
 
         vm.stopPrank();
     }
@@ -498,12 +518,12 @@ contract AdvancedPolicy is Test {
 
         vm.startPrank(target);
 
-        policy.enforce(subject, abi.encode(0x0), Check.PRE);
+        policy.enforce(subject, evidence, Check.PRE);
 
         vm.expectEmit(true, true, true, true);
-        emit Enforced(subject, target, abi.encode(0x0), Check.MAIN);
+        emit Enforced(subject, target, evidence, Check.MAIN);
 
-        policy.enforce(subject, abi.encode(0x0), Check.MAIN);
+        policy.enforce(subject, evidence, Check.MAIN);
 
         vm.stopPrank();
     }
@@ -518,17 +538,17 @@ contract AdvancedPolicy is Test {
 
         vm.startPrank(target);
 
-        policy.enforce(subject, abi.encode(0x0), Check.PRE);
+        policy.enforce(subject, evidence, Check.PRE);
 
         vm.expectEmit(true, true, true, true);
-        emit Enforced(subject, target, abi.encode(0x0), Check.MAIN);
+        emit Enforced(subject, target, evidence, Check.MAIN);
 
-        policy.enforce(subject, abi.encode(0x0), Check.MAIN);
+        policy.enforce(subject, evidence, Check.MAIN);
 
         vm.expectEmit(true, true, true, true);
-        emit Enforced(subject, target, abi.encode(0x0), Check.MAIN);
+        emit Enforced(subject, target, evidence, Check.MAIN);
 
-        policy.enforce(subject, abi.encode(0x0), Check.MAIN);
+        policy.enforce(subject, evidence, Check.MAIN);
 
         vm.stopPrank();
     }
@@ -543,10 +563,10 @@ contract AdvancedPolicy is Test {
 
         vm.startPrank(target);
 
-        policySkipped.enforce(subject, abi.encode(0x0), Check.MAIN);
+        policySkipped.enforce(subject, evidence, Check.MAIN);
 
         vm.expectRevert(abi.encodeWithSelector(IAdvancedPolicy.MainCheckAlreadyEnforced.selector));
-        policySkipped.enforce(subject, abi.encode(0x0), Check.MAIN);
+        policySkipped.enforce(subject, evidence, Check.MAIN);
 
         vm.stopPrank();
     }
@@ -560,10 +580,10 @@ contract AdvancedPolicy is Test {
         vm.stopPrank();
 
         vm.startPrank(target);
-        policy.enforce(subject, abi.encode(0x0), Check.PRE);
+        policy.enforce(subject, evidence, Check.PRE);
 
         vm.expectRevert(abi.encodeWithSelector(IAdvancedPolicy.MainCheckNotEnforced.selector));
-        policy.enforce(subject, abi.encode(0x0), Check.POST);
+        policy.enforce(subject, evidence, Check.POST);
 
         vm.stopPrank();
     }
@@ -578,7 +598,7 @@ contract AdvancedPolicy is Test {
         vm.startPrank(subject);
 
         vm.expectRevert(abi.encodeWithSelector(IPolicy.TargetOnly.selector));
-        policy.enforce(subject, abi.encode(0x0), Check.POST);
+        policy.enforce(subject, evidence, Check.POST);
 
         vm.stopPrank();
     }
@@ -592,11 +612,11 @@ contract AdvancedPolicy is Test {
         vm.stopPrank();
 
         vm.startPrank(target);
-        policy.enforce(subject, abi.encode(0x0), Check.PRE);
-        policy.enforce(subject, abi.encode(0x0), Check.MAIN);
+        policy.enforce(subject, evidence, Check.PRE);
+        policy.enforce(subject, evidence, Check.MAIN);
 
         vm.expectRevert(abi.encodeWithSelector(IERC721Errors.ERC721NonexistentToken.selector, uint256(1)));
-        policy.enforce(subject, abi.encode(0x1), Check.POST);
+        policy.enforce(subject, wrongEvidence, Check.POST);
 
         vm.stopPrank();
     }
@@ -611,10 +631,10 @@ contract AdvancedPolicy is Test {
 
         vm.startPrank(target);
 
-        policySkipped.enforce(subject, abi.encode(0x0), Check.MAIN);
+        policySkipped.enforce(subject, evidence, Check.MAIN);
 
         vm.expectRevert(abi.encodeWithSelector(IAdvancedPolicy.CannotPostCheckWhenSkipped.selector));
-        policySkipped.enforce(subject, abi.encode(0x0), Check.POST);
+        policySkipped.enforce(subject, evidence, Check.POST);
 
         vm.stopPrank();
     }
@@ -629,11 +649,11 @@ contract AdvancedPolicy is Test {
 
         vm.startPrank(target);
 
-        policy.enforce(subject, abi.encode(0x0), Check.PRE);
-        policy.enforce(subject, abi.encode(0x0), Check.MAIN);
+        policy.enforce(subject, evidence, Check.PRE);
+        policy.enforce(subject, evidence, Check.MAIN);
 
         vm.expectRevert(abi.encodeWithSelector(IPolicy.UnsuccessfulCheck.selector));
-        policy.enforce(notOwner, abi.encode(0x0), Check.POST);
+        policy.enforce(notOwner, evidence, Check.POST);
 
         vm.stopPrank();
     }
@@ -648,13 +668,13 @@ contract AdvancedPolicy is Test {
 
         vm.startPrank(target);
 
-        policy.enforce(subject, abi.encode(0x0), Check.PRE);
-        policy.enforce(subject, abi.encode(0x0), Check.MAIN);
+        policy.enforce(subject, evidence, Check.PRE);
+        policy.enforce(subject, evidence, Check.MAIN);
 
         vm.expectEmit(true, true, true, true);
-        emit Enforced(subject, target, abi.encode(0x0), Check.POST);
+        emit Enforced(subject, target, evidence, Check.POST);
 
-        policy.enforce(subject, abi.encode(0x0), Check.POST);
+        policy.enforce(subject, evidence, Check.POST);
 
         vm.stopPrank();
     }
@@ -669,12 +689,12 @@ contract AdvancedPolicy is Test {
 
         vm.startPrank(target);
 
-        policy.enforce(subject, abi.encode(0x0), Check.PRE);
-        policy.enforce(subject, abi.encode(0x0), Check.MAIN);
-        policy.enforce(subject, abi.encode(0x0), Check.POST);
+        policy.enforce(subject, evidence, Check.PRE);
+        policy.enforce(subject, evidence, Check.MAIN);
+        policy.enforce(subject, evidence, Check.POST);
 
         vm.expectRevert(abi.encodeWithSelector(IPolicy.AlreadyEnforced.selector));
-        policy.enforce(subject, abi.encode(0x0), Check.POST);
+        policy.enforce(subject, evidence, Check.POST);
 
         vm.stopPrank();
     }
@@ -689,7 +709,7 @@ contract AdvancedPolicy is Test {
         vm.startPrank(subject);
 
         vm.expectRevert(abi.encodeWithSelector(IPolicy.TargetOnly.selector));
-        policyHarness.exposed__enforce(subject, abi.encode(0x0), Check.PRE);
+        policyHarness.exposed__enforce(subject, evidence, Check.PRE);
 
         vm.stopPrank();
     }
@@ -704,7 +724,7 @@ contract AdvancedPolicy is Test {
         vm.startPrank(target);
 
         vm.expectRevert(abi.encodeWithSelector(IERC721Errors.ERC721NonexistentToken.selector, uint256(0)));
-        policyHarness.exposed__enforce(subject, abi.encode(0x0), Check.PRE);
+        policyHarness.exposed__enforce(subject, evidence, Check.PRE);
 
         vm.stopPrank();
     }
@@ -720,7 +740,7 @@ contract AdvancedPolicy is Test {
         vm.startPrank(target);
 
         vm.expectRevert(abi.encodeWithSelector(IAdvancedPolicy.CannotPreCheckWhenSkipped.selector));
-        policyHarnessSkipped.exposed__enforce(subject, abi.encode(0x0), Check.PRE);
+        policyHarnessSkipped.exposed__enforce(subject, evidence, Check.PRE);
 
         vm.stopPrank();
     }
@@ -736,7 +756,7 @@ contract AdvancedPolicy is Test {
         vm.startPrank(target);
 
         vm.expectRevert(abi.encodeWithSelector(IPolicy.UnsuccessfulCheck.selector));
-        policyHarness.exposed__enforce(notOwner, abi.encode(0x0), Check.PRE);
+        policyHarness.exposed__enforce(notOwner, evidence, Check.PRE);
 
         vm.stopPrank();
     }
@@ -752,9 +772,9 @@ contract AdvancedPolicy is Test {
         vm.startPrank(target);
 
         vm.expectEmit(true, true, true, true);
-        emit Enforced(subject, target, abi.encode(0x0), Check.PRE);
+        emit Enforced(subject, target, evidence, Check.PRE);
 
-        policyHarness.exposed__enforce(subject, abi.encode(0x0), Check.PRE);
+        policyHarness.exposed__enforce(subject, evidence, Check.PRE);
 
         vm.stopPrank();
     }
@@ -769,10 +789,10 @@ contract AdvancedPolicy is Test {
 
         vm.startPrank(target);
 
-        policyHarness.exposed__enforce(subject, abi.encode(0x0), Check.PRE);
+        policyHarness.exposed__enforce(subject, evidence, Check.PRE);
 
         vm.expectRevert(abi.encodeWithSelector(IPolicy.AlreadyEnforced.selector));
-        policyHarness.exposed__enforce(subject, abi.encode(0x0), Check.PRE);
+        policyHarness.exposed__enforce(subject, evidence, Check.PRE);
 
         vm.stopPrank();
     }
@@ -787,7 +807,7 @@ contract AdvancedPolicy is Test {
         vm.startPrank(subject);
 
         vm.expectRevert(abi.encodeWithSelector(IPolicy.TargetOnly.selector));
-        policyHarness.exposed__enforce(subject, abi.encode(0x0), Check.MAIN);
+        policyHarness.exposed__enforce(subject, evidence, Check.MAIN);
 
         vm.stopPrank();
     }
@@ -802,7 +822,7 @@ contract AdvancedPolicy is Test {
         vm.startPrank(target);
 
         vm.expectRevert(abi.encodeWithSelector(IPolicy.UnsuccessfulCheck.selector));
-        policyHarness.exposed__enforce(subject, abi.encode(0x0), Check.MAIN);
+        policyHarness.exposed__enforce(subject, evidence, Check.MAIN);
 
         vm.stopPrank();
     }
@@ -818,7 +838,7 @@ contract AdvancedPolicy is Test {
         vm.startPrank(target);
 
         vm.expectRevert(abi.encodeWithSelector(IAdvancedPolicy.PreCheckNotEnforced.selector));
-        policyHarness.exposed__enforce(subject, abi.encode(0x0), Check.MAIN);
+        policyHarness.exposed__enforce(subject, evidence, Check.MAIN);
 
         vm.stopPrank();
     }
@@ -833,12 +853,12 @@ contract AdvancedPolicy is Test {
 
         vm.startPrank(target);
 
-        policyHarness.exposed__enforce(subject, abi.encode(0x0), Check.PRE);
+        policyHarness.exposed__enforce(subject, evidence, Check.PRE);
 
         vm.expectEmit(true, true, true, true);
-        emit Enforced(subject, target, abi.encode(0x0), Check.MAIN);
+        emit Enforced(subject, target, evidence, Check.MAIN);
 
-        policyHarness.exposed__enforce(subject, abi.encode(0x0), Check.MAIN);
+        policyHarness.exposed__enforce(subject, evidence, Check.MAIN);
 
         vm.stopPrank();
     }
@@ -853,17 +873,17 @@ contract AdvancedPolicy is Test {
 
         vm.startPrank(target);
 
-        policyHarness.exposed__enforce(subject, abi.encode(0x0), Check.PRE);
+        policyHarness.exposed__enforce(subject, evidence, Check.PRE);
 
         vm.expectEmit(true, true, true, true);
-        emit Enforced(subject, target, abi.encode(0x0), Check.MAIN);
+        emit Enforced(subject, target, evidence, Check.MAIN);
 
-        policyHarness.exposed__enforce(subject, abi.encode(0x0), Check.MAIN);
+        policyHarness.exposed__enforce(subject, evidence, Check.MAIN);
 
         vm.expectEmit(true, true, true, true);
-        emit Enforced(subject, target, abi.encode(0x0), Check.MAIN);
+        emit Enforced(subject, target, evidence, Check.MAIN);
 
-        policyHarness.exposed__enforce(subject, abi.encode(0x0), Check.MAIN);
+        policyHarness.exposed__enforce(subject, evidence, Check.MAIN);
 
         vm.stopPrank();
     }
@@ -878,10 +898,10 @@ contract AdvancedPolicy is Test {
 
         vm.startPrank(target);
 
-        policyHarnessSkipped.exposed__enforce(subject, abi.encode(0x0), Check.MAIN);
+        policyHarnessSkipped.exposed__enforce(subject, evidence, Check.MAIN);
 
         vm.expectRevert(abi.encodeWithSelector(IAdvancedPolicy.MainCheckAlreadyEnforced.selector));
-        policyHarnessSkipped.exposed__enforce(subject, abi.encode(0x0), Check.MAIN);
+        policyHarnessSkipped.exposed__enforce(subject, evidence, Check.MAIN);
 
         vm.stopPrank();
     }
@@ -895,10 +915,10 @@ contract AdvancedPolicy is Test {
         vm.stopPrank();
 
         vm.startPrank(target);
-        policyHarness.exposed__enforce(subject, abi.encode(0x0), Check.PRE);
+        policyHarness.exposed__enforce(subject, evidence, Check.PRE);
 
         vm.expectRevert(abi.encodeWithSelector(IAdvancedPolicy.MainCheckNotEnforced.selector));
-        policyHarness.exposed__enforce(subject, abi.encode(0x0), Check.POST);
+        policyHarness.exposed__enforce(subject, evidence, Check.POST);
 
         vm.stopPrank();
     }
@@ -913,7 +933,7 @@ contract AdvancedPolicy is Test {
         vm.startPrank(subject);
 
         vm.expectRevert(abi.encodeWithSelector(IPolicy.TargetOnly.selector));
-        policyHarness.exposed__enforce(subject, abi.encode(0x0), Check.POST);
+        policyHarness.exposed__enforce(subject, evidence, Check.POST);
 
         vm.stopPrank();
     }
@@ -927,11 +947,11 @@ contract AdvancedPolicy is Test {
         vm.stopPrank();
 
         vm.startPrank(target);
-        policyHarness.exposed__enforce(subject, abi.encode(0x0), Check.PRE);
-        policyHarness.exposed__enforce(subject, abi.encode(0x0), Check.MAIN);
+        policyHarness.exposed__enforce(subject, evidence, Check.PRE);
+        policyHarness.exposed__enforce(subject, evidence, Check.MAIN);
 
         vm.expectRevert(abi.encodeWithSelector(IERC721Errors.ERC721NonexistentToken.selector, uint256(1)));
-        policyHarness.exposed__enforce(subject, abi.encode(0x1), Check.POST);
+        policyHarness.exposed__enforce(subject, wrongEvidence, Check.POST);
 
         vm.stopPrank();
     }
@@ -946,10 +966,10 @@ contract AdvancedPolicy is Test {
 
         vm.startPrank(target);
 
-        policyHarnessSkipped.exposed__enforce(subject, abi.encode(0x0), Check.MAIN);
+        policyHarnessSkipped.exposed__enforce(subject, evidence, Check.MAIN);
 
         vm.expectRevert(abi.encodeWithSelector(IAdvancedPolicy.CannotPostCheckWhenSkipped.selector));
-        policyHarnessSkipped.exposed__enforce(subject, abi.encode(0x0), Check.POST);
+        policyHarnessSkipped.exposed__enforce(subject, evidence, Check.POST);
 
         vm.stopPrank();
     }
@@ -964,11 +984,11 @@ contract AdvancedPolicy is Test {
 
         vm.startPrank(target);
 
-        policyHarness.exposed__enforce(subject, abi.encode(0x0), Check.PRE);
-        policyHarness.exposed__enforce(subject, abi.encode(0x0), Check.MAIN);
+        policyHarness.exposed__enforce(subject, evidence, Check.PRE);
+        policyHarness.exposed__enforce(subject, evidence, Check.MAIN);
 
         vm.expectRevert(abi.encodeWithSelector(IPolicy.UnsuccessfulCheck.selector));
-        policyHarness.exposed__enforce(notOwner, abi.encode(0x0), Check.POST);
+        policyHarness.exposed__enforce(notOwner, evidence, Check.POST);
 
         vm.stopPrank();
     }
@@ -983,13 +1003,13 @@ contract AdvancedPolicy is Test {
 
         vm.startPrank(target);
 
-        policyHarness.exposed__enforce(subject, abi.encode(0x0), Check.PRE);
-        policyHarness.exposed__enforce(subject, abi.encode(0x0), Check.MAIN);
+        policyHarness.exposed__enforce(subject, evidence, Check.PRE);
+        policyHarness.exposed__enforce(subject, evidence, Check.MAIN);
 
         vm.expectEmit(true, true, true, true);
-        emit Enforced(subject, target, abi.encode(0x0), Check.POST);
+        emit Enforced(subject, target, evidence, Check.POST);
 
-        policyHarness.exposed__enforce(subject, abi.encode(0x0), Check.POST);
+        policyHarness.exposed__enforce(subject, evidence, Check.POST);
 
         vm.stopPrank();
     }
@@ -1004,12 +1024,12 @@ contract AdvancedPolicy is Test {
 
         vm.startPrank(target);
 
-        policyHarness.exposed__enforce(subject, abi.encode(0x0), Check.PRE);
-        policyHarness.exposed__enforce(subject, abi.encode(0x0), Check.MAIN);
-        policyHarness.exposed__enforce(subject, abi.encode(0x0), Check.POST);
+        policyHarness.exposed__enforce(subject, evidence, Check.PRE);
+        policyHarness.exposed__enforce(subject, evidence, Check.MAIN);
+        policyHarness.exposed__enforce(subject, evidence, Check.POST);
 
         vm.expectRevert(abi.encodeWithSelector(IPolicy.AlreadyEnforced.selector));
-        policyHarness.exposed__enforce(subject, abi.encode(0x0), Check.POST);
+        policyHarness.exposed__enforce(subject, evidence, Check.POST);
 
         vm.stopPrank();
     }
@@ -1024,6 +1044,7 @@ contract Voting is Test {
     AdvancedERC721Checker internal checker;
     AdvancedERC721Policy internal policy;
     AdvancedVoting internal voting;
+    address[] internal verifiers;
 
     address public deployer = vm.addr(0x1);
     address public subject = vm.addr(0x2);
@@ -1033,7 +1054,10 @@ contract Voting is Test {
         vm.startPrank(deployer);
 
         nft = new NFT();
-        checker = new AdvancedERC721Checker(nft, 1, 0, 10);
+        verifiers = new address[](1);
+        verifiers[0] = address(nft);
+
+        checker = new AdvancedERC721Checker(verifiers, 1, 0, 10);
         policy = new AdvancedERC721Policy(checker, false, false, true);
         voting = new AdvancedVoting(policy);
 

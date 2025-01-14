@@ -32,12 +32,12 @@ describe("Base", () => {
                 await ethers.getContractFactory("BaseERC721CheckerHarness")
 
             const nft: NFT = await NFTFactory.deploy()
-            const checker: BaseERC721Checker = await BaseERC721CheckerFactory.connect(deployer).deploy(
+            const checker: BaseERC721Checker = await BaseERC721CheckerFactory.connect(deployer).deploy([
                 await nft.getAddress()
-            )
+            ])
             const checkerHarness: BaseERC721CheckerHarness = await BaseERC721CheckerHarnessFactory.connect(
                 deployer
-            ).deploy(await nft.getAddress())
+            ).deploy([await nft.getAddress()])
 
             // mint 0 for subject.
             await nft.connect(deployer).mint(subjectAddress)
@@ -71,22 +71,21 @@ describe("Base", () => {
                 const { nft, checker, target, subjectAddress, invalidNFTId } =
                     await loadFixture(deployBaseCheckerFixture)
 
-                await expect(checker.connect(target).check(subjectAddress, invalidNFTId)).to.be.revertedWithCustomError(
-                    nft,
-                    "ERC721NonexistentToken"
-                )
+                await expect(
+                    checker.connect(target).check(subjectAddress, [invalidNFTId])
+                ).to.be.revertedWithCustomError(nft, "ERC721NonexistentToken")
             })
 
             it("returns false when subject not owner", async () => {
                 const { checker, target, notOwnerAddress, validNFTId } = await loadFixture(deployBaseCheckerFixture)
 
-                expect(await checker.connect(target).check(notOwnerAddress, validNFTId)).to.be.equal(false)
+                expect(await checker.connect(target).check(notOwnerAddress, [validNFTId])).to.be.equal(false)
             })
 
             it("succeeds when valid", async () => {
                 const { checker, target, subjectAddress, validNFTId } = await loadFixture(deployBaseCheckerFixture)
 
-                expect(await checker.connect(target).check(subjectAddress, validNFTId)).to.be.equal(true)
+                expect(await checker.connect(target).check(subjectAddress, [validNFTId])).to.be.equal(true)
             })
         })
 
@@ -96,7 +95,7 @@ describe("Base", () => {
                     await loadFixture(deployBaseCheckerFixture)
 
                 await expect(
-                    checkerHarness.connect(target).exposed__check(subjectAddress, invalidNFTId)
+                    checkerHarness.connect(target).exposed__check(subjectAddress, [invalidNFTId])
                 ).to.be.revertedWithCustomError(nft, "ERC721NonexistentToken")
             })
 
@@ -104,7 +103,7 @@ describe("Base", () => {
                 const { checkerHarness, target, notOwnerAddress, validNFTId } =
                     await loadFixture(deployBaseCheckerFixture)
 
-                expect(await checkerHarness.connect(target).exposed__check(notOwnerAddress, validNFTId)).to.be.equal(
+                expect(await checkerHarness.connect(target).exposed__check(notOwnerAddress, [validNFTId])).to.be.equal(
                     false
                 )
             })
@@ -113,7 +112,7 @@ describe("Base", () => {
                 const { checkerHarness, target, subjectAddress, validNFTId } =
                     await loadFixture(deployBaseCheckerFixture)
 
-                expect(await checkerHarness.connect(target).exposed__check(subjectAddress, validNFTId)).to.be.equal(
+                expect(await checkerHarness.connect(target).exposed__check(subjectAddress, [validNFTId])).to.be.equal(
                     true
                 )
             })
@@ -137,9 +136,9 @@ describe("Base", () => {
             const nft: NFT = await NFTFactory.deploy()
             const iERC721Errors: IERC721Errors = await ethers.getContractAt("IERC721Errors", await nft.getAddress())
 
-            const checker: BaseERC721Checker = await BaseERC721CheckerFactory.connect(deployer).deploy(
+            const checker: BaseERC721Checker = await BaseERC721CheckerFactory.connect(deployer).deploy([
                 await nft.getAddress()
-            )
+            ])
             const policy: BaseERC721Policy = await BaseERC721PolicyFactory.connect(deployer).deploy(
                 await checker.getAddress()
             )
@@ -240,7 +239,7 @@ describe("Base", () => {
 
                 await policy.setTarget(await target.getAddress())
 
-                await expect(policy.connect(subject).enforce(subjectAddress, ZeroHash)).to.be.revertedWithCustomError(
+                await expect(policy.connect(subject).enforce(subjectAddress, [ZeroHash])).to.be.revertedWithCustomError(
                     policy,
                     "TargetOnly"
                 )
@@ -253,7 +252,7 @@ describe("Base", () => {
                 await policy.setTarget(await target.getAddress())
 
                 await expect(
-                    policy.connect(target).enforce(subjectAddress, invalidEncodedNFTId)
+                    policy.connect(target).enforce(subjectAddress, [invalidEncodedNFTId])
                 ).to.be.revertedWithCustomError(iERC721Errors, "ERC721NonexistentToken")
             })
 
@@ -264,7 +263,7 @@ describe("Base", () => {
                 await policy.setTarget(await target.getAddress())
 
                 expect(
-                    policy.connect(target).enforce(notOwnerAddress, validEncodedNFTId)
+                    policy.connect(target).enforce(notOwnerAddress, [validEncodedNFTId])
                 ).to.be.revertedWithCustomError(policy, "UnsuccessfulCheck")
             })
 
@@ -275,7 +274,7 @@ describe("Base", () => {
 
                 await policy.setTarget(await target.getAddress())
 
-                const tx = await policy.connect(target).enforce(subjectAddress, validEncodedNFTId)
+                const tx = await policy.connect(target).enforce(subjectAddress, [validEncodedNFTId])
                 const receipt = await tx.wait()
                 const event = BaseERC721PolicyFactory.interface.parseLog(
                     receipt?.logs[0] as unknown as { topics: string[]; data: string }
@@ -290,7 +289,7 @@ describe("Base", () => {
                 expect(receipt?.status).to.eq(1)
                 expect(event.args.subject).to.eq(subjectAddress)
                 expect(event.args.target).to.eq(targetAddress)
-                expect(event.args.evidence).to.eq(validEncodedNFTId)
+                expect(event.args.evidence[0]).to.eq(validEncodedNFTId)
                 expect(await policy.enforced(targetAddress, subjectAddress)).to.be.equal(true)
             })
 
@@ -299,10 +298,10 @@ describe("Base", () => {
 
                 await policy.setTarget(await target.getAddress())
 
-                await policy.connect(target).enforce(subjectAddress, validEncodedNFTId)
+                await policy.connect(target).enforce(subjectAddress, [validEncodedNFTId])
 
                 await expect(
-                    policy.connect(target).enforce(subjectAddress, validEncodedNFTId)
+                    policy.connect(target).enforce(subjectAddress, [validEncodedNFTId])
                 ).to.be.revertedWithCustomError(policy, "AlreadyEnforced")
             })
         })
@@ -314,7 +313,7 @@ describe("Base", () => {
                 await policyHarness.setTarget(await target.getAddress())
 
                 await expect(
-                    policyHarness.connect(subject).exposed__enforce(subjectAddress, ZeroHash)
+                    policyHarness.connect(subject).exposed__enforce(subjectAddress, [ZeroHash])
                 ).to.be.revertedWithCustomError(policyHarness, "TargetOnly")
             })
 
@@ -325,7 +324,7 @@ describe("Base", () => {
                 await policyHarness.setTarget(await target.getAddress())
 
                 await expect(
-                    policyHarness.connect(target).exposed__enforce(subjectAddress, invalidEncodedNFTId)
+                    policyHarness.connect(target).exposed__enforce(subjectAddress, [invalidEncodedNFTId])
                 ).to.be.revertedWithCustomError(iERC721Errors, "ERC721NonexistentToken")
             })
 
@@ -336,7 +335,7 @@ describe("Base", () => {
                 await policyHarness.setTarget(await target.getAddress())
 
                 expect(
-                    policyHarness.connect(target).exposed__enforce(notOwnerAddress, validEncodedNFTId)
+                    policyHarness.connect(target).exposed__enforce(notOwnerAddress, [validEncodedNFTId])
                 ).to.be.revertedWithCustomError(policyHarness, "UnsuccessfulCheck")
             })
 
@@ -347,7 +346,7 @@ describe("Base", () => {
 
                 await policyHarness.setTarget(await target.getAddress())
 
-                const tx = await policyHarness.connect(target).exposed__enforce(subjectAddress, validEncodedNFTId)
+                const tx = await policyHarness.connect(target).exposed__enforce(subjectAddress, [validEncodedNFTId])
                 const receipt = await tx.wait()
                 const event = BaseERC721PolicyFactory.interface.parseLog(
                     receipt?.logs[0] as unknown as { topics: string[]; data: string }
@@ -362,7 +361,7 @@ describe("Base", () => {
                 expect(receipt?.status).to.eq(1)
                 expect(event.args.subject).to.eq(subjectAddress)
                 expect(event.args.target).to.eq(targetAddress)
-                expect(event.args.evidence).to.eq(validEncodedNFTId)
+                expect(event.args.evidence[0]).to.eq(validEncodedNFTId)
                 expect(await policyHarness.enforced(targetAddress, subjectAddress)).to.be.equal(true)
             })
 
@@ -372,10 +371,10 @@ describe("Base", () => {
 
                 await policyHarness.setTarget(await target.getAddress())
 
-                await policyHarness.connect(target).exposed__enforce(subjectAddress, validEncodedNFTId)
+                await policyHarness.connect(target).exposed__enforce(subjectAddress, [validEncodedNFTId])
 
                 await expect(
-                    policyHarness.connect(target).enforce(subjectAddress, validEncodedNFTId)
+                    policyHarness.connect(target).enforce(subjectAddress, [validEncodedNFTId])
                 ).to.be.revertedWithCustomError(policyHarness, "AlreadyEnforced")
             })
         })
@@ -397,9 +396,9 @@ describe("Base", () => {
             const nft: NFT = await NFTFactory.deploy()
             const iERC721Errors: IERC721Errors = await ethers.getContractAt("IERC721Errors", await nft.getAddress())
 
-            const checker: BaseERC721Checker = await BaseERC721CheckerFactory.connect(deployer).deploy(
+            const checker: BaseERC721Checker = await BaseERC721CheckerFactory.connect(deployer).deploy([
                 await nft.getAddress()
-            )
+            ])
             const policy: BaseERC721Policy = await BaseERC721PolicyFactory.connect(deployer).deploy(
                 await checker.getAddress()
             )
@@ -586,9 +585,9 @@ describe("Base", () => {
 
                 const nft: NFT = await NFTFactory.deploy()
 
-                const checker: BaseERC721Checker = await BaseERC721CheckerFactory.connect(deployer).deploy(
+                const checker: BaseERC721Checker = await BaseERC721CheckerFactory.connect(deployer).deploy([
                     await nft.getAddress()
-                )
+                ])
                 const policy: BaseERC721Policy = await BaseERC721PolicyFactory.connect(deployer).deploy(
                     await checker.getAddress()
                 )
