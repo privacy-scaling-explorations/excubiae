@@ -17,4 +17,12 @@ contract BaseERC721CheckerHarness is BaseERC721Checker {
     function exposed__check(address subject, bytes[] calldata evidence) public view returns (bool) {
         return _check(subject, evidence);
     }
+
+    /// @notice Test exposure for _getVerifierAtIndex method.
+    /// @param index The index of the verifier in the array.
+    /// @return The address of the verifier at the specified index.
+    /// @custom:throws VerifierNotFound if no address have been specified at given index.
+    function exposed__getVerifierAtIndex(uint256 index) public view returns (address) {
+        return _getVerifierAtIndex(index);
+    }
 }

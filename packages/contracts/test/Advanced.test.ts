@@ -3,6 +3,8 @@ import { ethers } from "hardhat"
 import { AbiCoder, Signer, ZeroAddress, ZeroHash } from "ethers"
 import { loadFixture } from "@nomicfoundation/hardhat-toolbox/network-helpers"
 import {
+    BaseERC721Checker,
+    BaseERC721Checker__factory,
     AdvancedERC721Checker,
     AdvancedERC721Checker__factory,
     AdvancedERC721CheckerHarness,
@@ -26,36 +28,47 @@ describe("Advanced", () => {
             const notOwnerAddress: string = await notOwner.getAddress()
 
             const NFTFactory: NFT__factory = await ethers.getContractFactory("NFT")
+            const BaseERC721CheckerFactory: BaseERC721Checker__factory =
+                await ethers.getContractFactory("BaseERC721Checker")
             const AdvancedERC721CheckerFactory: AdvancedERC721Checker__factory =
                 await ethers.getContractFactory("AdvancedERC721Checker")
             const AdvancedERC721CheckerHarnessFactory: AdvancedERC721CheckerHarness__factory =
                 await ethers.getContractFactory("AdvancedERC721CheckerHarness")
 
-            const nft: NFT = await NFTFactory.deploy()
-
-            const checker: AdvancedERC721Checker = await AdvancedERC721CheckerFactory.connect(deployer).deploy(
-                [await nft.getAddress()],
+            const signupNft: NFT = await NFTFactory.deploy()
+            const rewardNft: NFT = await NFTFactory.deploy()
+            const baseChecker: BaseERC721Checker = await BaseERC721CheckerFactory.connect(deployer).deploy([
+                await signupNft.getAddress()
+            ])
+            const advancedChecker: AdvancedERC721Checker = await AdvancedERC721CheckerFactory.connect(deployer).deploy(
+                [await signupNft.getAddress(), await rewardNft.getAddress(), await baseChecker.getAddress()],
                 1,
                 0,
                 10
             )
 
-            const checkerHarness: AdvancedERC721CheckerHarness = await AdvancedERC721CheckerHarnessFactory.connect(
-                deployer
-            ).deploy([await nft.getAddress()], 1, 0, 10)
+            const advancedCheckerHarness: AdvancedERC721CheckerHarness =
+                await AdvancedERC721CheckerHarnessFactory.connect(deployer).deploy(
+                    [await signupNft.getAddress(), await rewardNft.getAddress(), await baseChecker.getAddress()],
+                    1,
+                    0,
+                    10
+                )
 
             // mint 0 for subject.
-            await nft.connect(deployer).mint(subjectAddress)
+            await signupNft.connect(deployer).mint(subjectAddress)
 
             // encoded token ids.
             const validNFTId = AbiCoder.defaultAbiCoder().encode(["uint256"], [0])
             const invalidNFTId = AbiCoder.defaultAbiCoder().encode(["uint256"], [1])
 
             return {
-                nft,
-                checker,
+                signupNft,
+                rewardNft,
+                baseChecker,
+                advancedChecker,
+                advancedCheckerHarness,
                 deployer,
-                checkerHarness,
                 target,
                 subject,
                 subjectAddress,
@@ -67,151 +80,181 @@ describe("Advanced", () => {
 
         describe("constructor", () => {
             it("deploys correctly", async () => {
-                const { checker } = await loadFixture(deployAdvancedCheckerFixture)
+                const { advancedChecker } = await loadFixture(deployAdvancedCheckerFixture)
 
-                expect(checker).to.not.eq(undefined)
+                expect(advancedChecker).to.not.eq(undefined)
             })
         })
 
         describe("check", () => {
             describe("pre check", () => {
                 it("reverts when evidence invalid", async () => {
-                    const { nft, checker, target, subjectAddress, invalidNFTId } =
+                    const { rewardNft, advancedChecker, target, subjectAddress, invalidNFTId } =
                         await loadFixture(deployAdvancedCheckerFixture)
 
                     await expect(
-                        checker.connect(target).check(subjectAddress, [invalidNFTId], 0)
-                    ).to.be.revertedWithCustomError(nft, "ERC721NonexistentToken")
+                        advancedChecker.connect(target).check(subjectAddress, [invalidNFTId], 0)
+                    ).to.be.revertedWithCustomError(rewardNft, "ERC721NonexistentToken")
                 })
 
                 it("returns false when not owner", async () => {
-                    const { checker, target, notOwnerAddress, validNFTId } =
+                    const { advancedChecker, target, notOwnerAddress, validNFTId } =
                         await loadFixture(deployAdvancedCheckerFixture)
 
-                    expect(await checker.connect(target).check(notOwnerAddress, [validNFTId], 0)).to.be.equal(false)
+                    expect(await advancedChecker.connect(target).check(notOwnerAddress, [validNFTId], 0)).to.be.equal(
+                        false
+                    )
                 })
 
                 it("succeeds when valid", async () => {
-                    const { checker, target, subjectAddress, validNFTId } =
+                    const { advancedChecker, target, subjectAddress, validNFTId } =
                         await loadFixture(deployAdvancedCheckerFixture)
 
-                    expect(await checker.connect(target).check(subjectAddress, [validNFTId], 0)).to.be.equal(true)
+                    expect(await advancedChecker.connect(target).check(subjectAddress, [validNFTId], 0)).to.be.equal(
+                        true
+                    )
                 })
             })
             describe("main check", () => {
                 it("returns false when balance insufficient", async () => {
-                    const { checker, target, notOwnerAddress, validNFTId } =
+                    const { advancedChecker, target, notOwnerAddress, validNFTId } =
                         await loadFixture(deployAdvancedCheckerFixture)
 
-                    expect(await checker.connect(target).check(notOwnerAddress, [validNFTId], 1)).to.be.equal(false)
+                    expect(await advancedChecker.connect(target).check(notOwnerAddress, [validNFTId], 1)).to.be.equal(
+                        false
+                    )
                 })
 
                 it("succeeds when balance sufficient", async () => {
-                    const { checker, target, subjectAddress, validNFTId } =
+                    const { advancedChecker, target, subjectAddress, validNFTId } =
                         await loadFixture(deployAdvancedCheckerFixture)
 
-                    expect(await checker.connect(target).check(subjectAddress, [validNFTId], 1)).to.be.equal(true)
+                    expect(await advancedChecker.connect(target).check(subjectAddress, [validNFTId], 1)).to.be.equal(
+                        true
+                    )
                 })
             })
             describe("post check", () => {
-                it("reverts when evidence invalid", async () => {
-                    const { nft, checker, target, subjectAddress, invalidNFTId } =
+                it("reverts when already rewarded", async () => {
+                    const { rewardNft, advancedChecker, target, subjectAddress, invalidNFTId } =
                         await loadFixture(deployAdvancedCheckerFixture)
 
-                    await expect(
-                        checker.connect(target).check(subjectAddress, [invalidNFTId], 2)
-                    ).to.be.revertedWithCustomError(nft, "ERC721NonexistentToken")
-                })
+                    await rewardNft.mint(subjectAddress)
 
-                it("returns false when not in range", async () => {
-                    const { checker, target, notOwnerAddress, validNFTId } =
-                        await loadFixture(deployAdvancedCheckerFixture)
-
-                    expect(await checker.connect(target).check(notOwnerAddress, [validNFTId], 2)).to.be.equal(false)
+                    expect(await advancedChecker.connect(target).check(subjectAddress, [invalidNFTId], 2)).to.be.equal(
+                        false
+                    )
                 })
 
                 it("succeeds when in valid range", async () => {
-                    const { checker, target, subjectAddress, validNFTId } =
+                    const { advancedChecker, target, subjectAddress, validNFTId } =
                         await loadFixture(deployAdvancedCheckerFixture)
 
-                    expect(await checker.connect(target).check(subjectAddress, [validNFTId], 2)).to.be.equal(true)
+                    expect(await advancedChecker.connect(target).check(subjectAddress, [validNFTId], 2)).to.be.equal(
+                        true
+                    )
                 })
+            })
+        })
+
+        describe("getVerifierAtIndex", () => {
+            it("returns correct verifier address", async () => {
+                const { advancedChecker, signupNft } = await loadFixture(deployAdvancedCheckerFixture)
+                expect(await advancedChecker.getVerifierAtIndex(0)).to.equal(await signupNft.getAddress())
+            })
+
+            it("reverts when index out of bounds", async () => {
+                const { advancedChecker } = await loadFixture(deployAdvancedCheckerFixture)
+                await expect(advancedChecker.getVerifierAtIndex(5)).to.be.revertedWithCustomError(
+                    advancedChecker,
+                    "VerifierNotFound"
+                )
+            })
+        })
+
+        describe("internal getVerifierAtIndex", () => {
+            it("returns correct verifier address", async () => {
+                const { advancedCheckerHarness, signupNft } = await loadFixture(deployAdvancedCheckerFixture)
+                expect(await advancedCheckerHarness.exposed__getVerifierAtIndex(0)).to.equal(
+                    await signupNft.getAddress()
+                )
+            })
+
+            it("reverts when index out of bounds", async () => {
+                const { advancedCheckerHarness } = await loadFixture(deployAdvancedCheckerFixture)
+                await expect(advancedCheckerHarness.exposed__getVerifierAtIndex(5)).to.be.revertedWithCustomError(
+                    advancedCheckerHarness,
+                    "VerifierNotFound"
+                )
             })
         })
 
         describe("internal checks", () => {
             describe("pre check", () => {
                 it("reverts when evidence invalid", async () => {
-                    const { nft, checkerHarness, target, subjectAddress, invalidNFTId } =
+                    const { signupNft, advancedCheckerHarness, target, subjectAddress, invalidNFTId } =
                         await loadFixture(deployAdvancedCheckerFixture)
 
                     await expect(
-                        checkerHarness.connect(target).exposed__check(subjectAddress, [invalidNFTId], 0)
-                    ).to.be.revertedWithCustomError(nft, "ERC721NonexistentToken")
+                        advancedCheckerHarness.connect(target).exposed__check(subjectAddress, [invalidNFTId], 0)
+                    ).to.be.revertedWithCustomError(signupNft, "ERC721NonexistentToken")
                 })
 
                 it("returns false when not owner", async () => {
-                    const { checkerHarness, target, notOwnerAddress, validNFTId } =
+                    const { advancedCheckerHarness, target, notOwnerAddress, validNFTId } =
                         await loadFixture(deployAdvancedCheckerFixture)
 
                     expect(
-                        await checkerHarness.connect(target).exposed__check(notOwnerAddress, [validNFTId], 0)
+                        await advancedCheckerHarness.connect(target).exposed__check(notOwnerAddress, [validNFTId], 0)
                     ).to.be.equal(false)
                 })
 
                 it("succeeds when valid", async () => {
-                    const { checkerHarness, target, subjectAddress, validNFTId } =
+                    const { advancedCheckerHarness, target, subjectAddress, validNFTId } =
                         await loadFixture(deployAdvancedCheckerFixture)
 
                     expect(
-                        await checkerHarness.connect(target).exposed__check(subjectAddress, [validNFTId], 0)
+                        await advancedCheckerHarness.connect(target).exposed__check(subjectAddress, [validNFTId], 0)
                     ).to.be.equal(true)
                 })
             })
             describe("main check", () => {
                 it("returns false when balance insufficient", async () => {
-                    const { checkerHarness, target, notOwnerAddress, validNFTId } =
+                    const { advancedCheckerHarness, target, notOwnerAddress, validNFTId } =
                         await loadFixture(deployAdvancedCheckerFixture)
 
                     expect(
-                        await checkerHarness.connect(target).exposed__check(notOwnerAddress, [validNFTId], 1)
+                        await advancedCheckerHarness.connect(target).exposed__check(notOwnerAddress, [validNFTId], 1)
                     ).to.be.equal(false)
                 })
 
                 it("succeeds when balance sufficient", async () => {
-                    const { checkerHarness, target, subjectAddress, validNFTId } =
+                    const { advancedCheckerHarness, target, subjectAddress, validNFTId } =
                         await loadFixture(deployAdvancedCheckerFixture)
 
                     expect(
-                        await checkerHarness.connect(target).exposed__check(subjectAddress, [validNFTId], 1)
+                        await advancedCheckerHarness.connect(target).exposed__check(subjectAddress, [validNFTId], 1)
                     ).to.be.equal(true)
                 })
             })
             describe("post check", () => {
                 it("reverts when evidence invalid", async () => {
-                    const { nft, checkerHarness, target, subjectAddress, invalidNFTId } =
+                    const { rewardNft, advancedCheckerHarness, target, subjectAddress, invalidNFTId } =
                         await loadFixture(deployAdvancedCheckerFixture)
 
-                    await expect(
-                        checkerHarness.connect(target).exposed__check(subjectAddress, [invalidNFTId], 2)
-                    ).to.be.revertedWithCustomError(nft, "ERC721NonexistentToken")
-                })
-
-                it("returns false when not in range", async () => {
-                    const { checkerHarness, target, notOwnerAddress, validNFTId } =
-                        await loadFixture(deployAdvancedCheckerFixture)
+                    await rewardNft.mint(subjectAddress)
 
                     expect(
-                        await checkerHarness.connect(target).exposed__check(notOwnerAddress, [validNFTId], 2)
+                        await advancedCheckerHarness.connect(target).check(subjectAddress, [invalidNFTId], 2)
                     ).to.be.equal(false)
                 })
 
                 it("succeeds when in valid range", async () => {
-                    const { checkerHarness, target, subjectAddress, validNFTId } =
+                    const { advancedCheckerHarness, target, subjectAddress, validNFTId } =
                         await loadFixture(deployAdvancedCheckerFixture)
 
                     expect(
-                        await checkerHarness.connect(target).exposed__check(subjectAddress, [validNFTId], 2)
+                        await advancedCheckerHarness.connect(target).exposed__check(subjectAddress, [validNFTId], 2)
                     ).to.be.equal(true)
                 })
             })
@@ -219,78 +262,71 @@ describe("Advanced", () => {
 
         describe("internal checkPre", () => {
             it("reverts when evidence invalid", async () => {
-                const { nft, checkerHarness, target, subjectAddress, invalidNFTId } =
+                const { signupNft, advancedCheckerHarness, target, subjectAddress, invalidNFTId } =
                     await loadFixture(deployAdvancedCheckerFixture)
 
                 await expect(
-                    checkerHarness.connect(target).exposed__checkPre(subjectAddress, [invalidNFTId])
-                ).to.be.revertedWithCustomError(nft, "ERC721NonexistentToken")
+                    advancedCheckerHarness.connect(target).exposed__checkPre(subjectAddress, [invalidNFTId])
+                ).to.be.revertedWithCustomError(signupNft, "ERC721NonexistentToken")
             })
 
             it("returns false when not owner", async () => {
-                const { checkerHarness, target, notOwnerAddress, validNFTId } =
+                const { advancedCheckerHarness, target, notOwnerAddress, validNFTId } =
                     await loadFixture(deployAdvancedCheckerFixture)
 
                 expect(
-                    await checkerHarness.connect(target).exposed__checkPre(notOwnerAddress, [validNFTId])
+                    await advancedCheckerHarness.connect(target).exposed__checkPre(notOwnerAddress, [validNFTId])
                 ).to.be.equal(false)
             })
 
             it("succeeds when valid", async () => {
-                const { checkerHarness, target, subjectAddress, validNFTId } =
+                const { advancedCheckerHarness, target, subjectAddress, validNFTId } =
                     await loadFixture(deployAdvancedCheckerFixture)
 
                 expect(
-                    await checkerHarness.connect(target).exposed__checkPre(subjectAddress, [validNFTId])
+                    await advancedCheckerHarness.connect(target).exposed__checkPre(subjectAddress, [validNFTId])
                 ).to.be.equal(true)
             })
         })
 
         describe("internal checkMain", () => {
             it("returns false when balance insufficient", async () => {
-                const { checkerHarness, target, notOwnerAddress, validNFTId } =
+                const { advancedCheckerHarness, target, notOwnerAddress, validNFTId } =
                     await loadFixture(deployAdvancedCheckerFixture)
 
                 expect(
-                    await checkerHarness.connect(target).exposed__checkMain(notOwnerAddress, [validNFTId])
+                    await advancedCheckerHarness.connect(target).exposed__checkMain(notOwnerAddress, [validNFTId])
                 ).to.be.equal(false)
             })
 
             it("succeeds when balance sufficient", async () => {
-                const { checkerHarness, target, subjectAddress, validNFTId } =
+                const { advancedCheckerHarness, target, subjectAddress, validNFTId } =
                     await loadFixture(deployAdvancedCheckerFixture)
 
                 expect(
-                    await checkerHarness.connect(target).exposed__checkMain(subjectAddress, [validNFTId])
+                    await advancedCheckerHarness.connect(target).exposed__checkMain(subjectAddress, [validNFTId])
                 ).to.be.equal(true)
             })
         })
 
         describe("internal checkPost", () => {
             it("reverts when evidence invalid", async () => {
-                const { nft, checkerHarness, target, subjectAddress, invalidNFTId } =
+                const { rewardNft, advancedCheckerHarness, target, subjectAddress, invalidNFTId } =
                     await loadFixture(deployAdvancedCheckerFixture)
 
-                await expect(
-                    checkerHarness.connect(target).exposed__checkPost(subjectAddress, [invalidNFTId])
-                ).to.be.revertedWithCustomError(nft, "ERC721NonexistentToken")
-            })
-
-            it("returns false when not in range", async () => {
-                const { checkerHarness, target, notOwnerAddress, validNFTId } =
-                    await loadFixture(deployAdvancedCheckerFixture)
+                await rewardNft.mint(subjectAddress)
 
                 expect(
-                    await checkerHarness.connect(target).exposed__checkPost(notOwnerAddress, [validNFTId])
+                    await advancedCheckerHarness.connect(target).exposed__checkPost(subjectAddress, [invalidNFTId])
                 ).to.be.equal(false)
             })
 
             it("succeeds when in valid range", async () => {
-                const { checkerHarness, target, subjectAddress, validNFTId } =
+                const { advancedCheckerHarness, target, subjectAddress, validNFTId } =
                     await loadFixture(deployAdvancedCheckerFixture)
 
                 expect(
-                    await checkerHarness.connect(target).exposed__checkPost(subjectAddress, [validNFTId])
+                    await advancedCheckerHarness.connect(target).exposed__checkPost(subjectAddress, [validNFTId])
                 ).to.be.equal(true)
             })
         })
@@ -303,6 +339,8 @@ describe("Advanced", () => {
             const notOwnerAddress: string = await notOwner.getAddress()
 
             const NFTFactory: NFT__factory = await ethers.getContractFactory("NFT")
+            const BaseERC721CheckerFactory: BaseERC721Checker__factory =
+                await ethers.getContractFactory("BaseERC721Checker")
             const AdvancedERC721CheckerFactory: AdvancedERC721Checker__factory =
                 await ethers.getContractFactory("AdvancedERC721Checker")
             const AdvancedERC721PolicyFactory: AdvancedERC721Policy__factory =
@@ -310,51 +348,68 @@ describe("Advanced", () => {
             const AdvancedERC721PolicyHarnessFactory: AdvancedERC721PolicyHarness__factory =
                 await ethers.getContractFactory("AdvancedERC721PolicyHarness")
 
-            const nft: NFT = await NFTFactory.deploy()
-            const iERC721Errors: IERC721Errors = await ethers.getContractAt("IERC721Errors", await nft.getAddress())
-
-            const checker: AdvancedERC721Checker = await AdvancedERC721CheckerFactory.connect(deployer).deploy(
-                [await nft.getAddress()],
+            const signupNft: NFT = await NFTFactory.deploy()
+            const rewardNft: NFT = await NFTFactory.deploy()
+            const signupIERC721Errors: IERC721Errors = await ethers.getContractAt(
+                "IERC721Errors",
+                await signupNft.getAddress()
+            )
+            const rewardIERC721Errors: IERC721Errors = await ethers.getContractAt(
+                "IERC721Errors",
+                await rewardNft.getAddress()
+            )
+            const baseChecker: BaseERC721Checker = await BaseERC721CheckerFactory.connect(deployer).deploy([
+                await signupNft.getAddress()
+            ])
+            const advancedChecker: AdvancedERC721Checker = await AdvancedERC721CheckerFactory.connect(deployer).deploy(
+                [await signupNft.getAddress(), await rewardNft.getAddress(), await baseChecker.getAddress()],
                 1,
                 0,
                 10
             )
 
-            const checkerSkippedPrePostNoMultMain: AdvancedERC721Checker = await AdvancedERC721CheckerFactory.connect(
-                deployer
-            ).deploy([await nft.getAddress()], 1, 0, 10)
+            const advancedCheckerSkippedPrePostNoMultMain: AdvancedERC721Checker =
+                await AdvancedERC721CheckerFactory.connect(deployer).deploy(
+                    [await signupNft.getAddress(), await rewardNft.getAddress(), await baseChecker.getAddress()],
+                    1,
+                    0,
+                    10
+                )
 
             const policy: AdvancedERC721Policy = await AdvancedERC721PolicyFactory.connect(deployer).deploy(
-                await checker.getAddress(),
+                await advancedChecker.getAddress(),
                 false,
                 false,
                 true
             )
             const policySkipped: AdvancedERC721Policy = await AdvancedERC721PolicyFactory.connect(deployer).deploy(
-                await checkerSkippedPrePostNoMultMain.getAddress(),
+                await advancedCheckerSkippedPrePostNoMultMain.getAddress(),
                 true,
                 true,
                 false
             )
             const policyHarness: AdvancedERC721PolicyHarness = await AdvancedERC721PolicyHarnessFactory.connect(
                 deployer
-            ).deploy(await checker.getAddress(), false, false, true)
+            ).deploy(await advancedChecker.getAddress(), false, false, true)
             const policyHarnessSkipped: AdvancedERC721PolicyHarness = await AdvancedERC721PolicyHarnessFactory.connect(
                 deployer
-            ).deploy(await checkerSkippedPrePostNoMultMain.getAddress(), true, true, false)
+            ).deploy(await advancedCheckerSkippedPrePostNoMultMain.getAddress(), true, true, false)
 
             // mint 0 for subject.
-            await nft.connect(deployer).mint(subjectAddress)
+            await signupNft.connect(deployer).mint(subjectAddress)
 
             // encoded token ids.
             const validEncodedNFTId = AbiCoder.defaultAbiCoder().encode(["uint256"], [0])
             const invalidEncodedNFTId = AbiCoder.defaultAbiCoder().encode(["uint256"], [1])
 
             return {
-                iERC721Errors,
+                signupIERC721Errors,
+                rewardIERC721Errors,
                 AdvancedERC721PolicyFactory,
-                nft,
-                checker,
+                signupNft,
+                rewardNft,
+                advancedChecker,
+                advancedCheckerSkippedPrePostNoMultMain,
                 policyHarness,
                 policyHarnessSkipped,
                 policy,
@@ -446,14 +501,14 @@ describe("Advanced", () => {
                 })
 
                 it("reverts when evidence invalid", async () => {
-                    const { iERC721Errors, policy, target, subjectAddress, invalidEncodedNFTId } =
+                    const { rewardIERC721Errors, policy, target, subjectAddress, invalidEncodedNFTId } =
                         await loadFixture(deployAdvancedPolicyFixture)
 
                     await policy.setTarget(await target.getAddress())
 
                     await expect(
                         policy.connect(target).enforce(subjectAddress, [invalidEncodedNFTId], 0)
-                    ).to.be.revertedWithCustomError(iERC721Errors, "ERC721NonexistentToken")
+                    ).to.be.revertedWithCustomError(rewardIERC721Errors, "ERC721NonexistentToken")
                 })
 
                 it("reverts when pre-check skipped", async () => {
@@ -647,17 +702,19 @@ describe("Advanced", () => {
                     ).to.be.revertedWithCustomError(policy, "TargetOnly")
                 })
 
-                it("reverts when evidence invalid", async () => {
-                    const { iERC721Errors, policy, target, subjectAddress, validEncodedNFTId, invalidEncodedNFTId } =
+                it("reverts when already rewarded", async () => {
+                    const { rewardNft, policy, target, subjectAddress, validEncodedNFTId, invalidEncodedNFTId } =
                         await loadFixture(deployAdvancedPolicyFixture)
 
                     await policy.setTarget(await target.getAddress())
                     await policy.connect(target).enforce(subjectAddress, [validEncodedNFTId], 0)
                     await policy.connect(target).enforce(subjectAddress, [validEncodedNFTId], 1)
 
+                    await rewardNft.mint(subjectAddress)
+
                     await expect(
                         policy.connect(target).enforce(subjectAddress, [invalidEncodedNFTId], 2)
-                    ).to.be.revertedWithCustomError(iERC721Errors, "ERC721NonexistentToken")
+                    ).to.be.revertedWithCustomError(policy, "UnsuccessfulCheck")
                 })
 
                 it("reverts when post-check skipped", async () => {
@@ -745,14 +802,14 @@ describe("Advanced", () => {
                 })
 
                 it("reverts when evidence invalid", async () => {
-                    const { iERC721Errors, policyHarness, target, subjectAddress, invalidEncodedNFTId } =
+                    const { rewardIERC721Errors, policyHarness, target, subjectAddress, invalidEncodedNFTId } =
                         await loadFixture(deployAdvancedPolicyFixture)
 
                     await policyHarness.setTarget(await target.getAddress())
 
                     await expect(
                         policyHarness.connect(target).exposed__enforce(subjectAddress, [invalidEncodedNFTId], 0)
-                    ).to.be.revertedWithCustomError(iERC721Errors, "ERC721NonexistentToken")
+                    ).to.be.revertedWithCustomError(rewardIERC721Errors, "ERC721NonexistentToken")
                 })
 
                 it("reverts when pre-check skipped", async () => {
@@ -950,22 +1007,18 @@ describe("Advanced", () => {
                 })
 
                 it("reverts when evidence invalid", async () => {
-                    const {
-                        iERC721Errors,
-                        policyHarness,
-                        target,
-                        subjectAddress,
-                        validEncodedNFTId,
-                        invalidEncodedNFTId
-                    } = await loadFixture(deployAdvancedPolicyFixture)
+                    const { rewardNft, policyHarness, target, subjectAddress, validEncodedNFTId, invalidEncodedNFTId } =
+                        await loadFixture(deployAdvancedPolicyFixture)
 
                     await policyHarness.setTarget(await target.getAddress())
                     await policyHarness.connect(target).exposed__enforce(subjectAddress, [validEncodedNFTId], 0)
                     await policyHarness.connect(target).exposed__enforce(subjectAddress, [validEncodedNFTId], 1)
 
+                    await rewardNft.mint(subjectAddress)
+
                     await expect(
-                        policyHarness.connect(target).exposed__enforce(subjectAddress, [invalidEncodedNFTId], 2)
-                    ).to.be.revertedWithCustomError(iERC721Errors, "ERC721NonexistentToken")
+                        policyHarness.connect(target).enforce(subjectAddress, [invalidEncodedNFTId], 2)
+                    ).to.be.revertedWithCustomError(policyHarness, "UnsuccessfulCheck")
                 })
 
                 it("reverts when post-check skipped", async () => {
@@ -1047,24 +1100,36 @@ describe("Advanced", () => {
             const notOwnerAddress: string = await notOwner.getAddress()
 
             const NFTFactory: NFT__factory = await ethers.getContractFactory("NFT")
+            const BaseERC721CheckerFactory: BaseERC721Checker__factory =
+                await ethers.getContractFactory("BaseERC721Checker")
             const AdvancedERC721CheckerFactory: AdvancedERC721Checker__factory =
                 await ethers.getContractFactory("AdvancedERC721Checker")
             const AdvancedERC721PolicyFactory: AdvancedERC721Policy__factory =
                 await ethers.getContractFactory("AdvancedERC721Policy")
             const AdvancedVotingFactory: AdvancedVoting__factory = await ethers.getContractFactory("AdvancedVoting")
 
-            const nft: NFT = await NFTFactory.deploy()
-            const iERC721Errors: IERC721Errors = await ethers.getContractAt("IERC721Errors", await nft.getAddress())
-
-            const checker: AdvancedERC721Checker = await AdvancedERC721CheckerFactory.connect(deployer).deploy(
-                [await nft.getAddress()],
+            const signupNft: NFT = await NFTFactory.deploy()
+            const rewardNft: NFT = await NFTFactory.deploy()
+            const signupIERC721Errors: IERC721Errors = await ethers.getContractAt(
+                "IERC721Errors",
+                await signupNft.getAddress()
+            )
+            const rewardIERC721Errors: IERC721Errors = await ethers.getContractAt(
+                "IERC721Errors",
+                await rewardNft.getAddress()
+            )
+            const baseChecker: BaseERC721Checker = await BaseERC721CheckerFactory.connect(deployer).deploy([
+                await signupNft.getAddress()
+            ])
+            const advancedChecker: AdvancedERC721Checker = await AdvancedERC721CheckerFactory.connect(deployer).deploy(
+                [await signupNft.getAddress(), await rewardNft.getAddress(), await baseChecker.getAddress()],
                 1,
                 0,
                 10
             )
 
             const policy: AdvancedERC721Policy = await AdvancedERC721PolicyFactory.connect(deployer).deploy(
-                await checker.getAddress(),
+                await advancedChecker.getAddress(),
                 false,
                 false,
                 true
@@ -1075,7 +1140,7 @@ describe("Advanced", () => {
             )
 
             // mint 0 for subject.
-            await nft.connect(deployer).mint(subjectAddress)
+            await signupNft.connect(deployer).mint(subjectAddress)
 
             // encoded token ids.
             const validNFTId = 0
@@ -1084,9 +1149,13 @@ describe("Advanced", () => {
             const invalidEncodedNFTId = AbiCoder.defaultAbiCoder().encode(["uint256"], [invalidNFTId])
 
             return {
-                iERC721Errors,
+                signupIERC721Errors,
+                rewardIERC721Errors,
                 AdvancedVotingFactory,
-                nft,
+                AdvancedERC721PolicyFactory,
+                signupNft,
+                rewardNft,
+                advancedChecker,
                 voting,
                 policy,
                 subject,
@@ -1122,13 +1191,13 @@ describe("Advanced", () => {
             })
 
             it("reverts when evidence invalid", async () => {
-                const { iERC721Errors, voting, policy, subject, invalidNFTId } =
+                const { signupIERC721Errors, voting, policy, subject, invalidNFTId } =
                     await loadFixture(deployAdvancedVotingFixture)
 
                 await policy.setTarget(await voting.getAddress())
 
                 await expect(voting.connect(subject).register(invalidNFTId)).to.be.revertedWithCustomError(
-                    iERC721Errors,
+                    signupIERC721Errors,
                     "ERC721NonexistentToken"
                 )
             })
@@ -1262,7 +1331,7 @@ describe("Advanced", () => {
             })
         })
 
-        describe("reward", () => {
+        describe("eligibility", () => {
             it("reverts when caller not target", async () => {
                 const { voting, policy, subject, notOwner, validNFTId } = await loadFixture(deployAdvancedVotingFixture)
 
@@ -1274,46 +1343,47 @@ describe("Advanced", () => {
                 )
             })
 
-            it("reverts when evidence invalid", async () => {
-                const { iERC721Errors, voting, policy, subject, validNFTId, invalidNFTId } =
+            it("reverts when already owns reward token", async () => {
+                const { rewardNft, voting, policy, subject, validNFTId } =
                     await loadFixture(deployAdvancedVotingFixture)
 
                 await policy.setTarget(await voting.getAddress())
                 await voting.connect(subject).register(validNFTId)
                 await voting.connect(subject).vote(0)
 
-                await expect(voting.connect(subject).reward(invalidNFTId)).to.be.revertedWithCustomError(
-                    iERC721Errors,
-                    "ERC721NonexistentToken"
+                await rewardNft.mint(subject)
+
+                await expect(voting.connect(subject).eligible()).to.be.revertedWithCustomError(
+                    policy,
+                    "UnsuccessfulCheck"
                 )
             })
 
             it("reverts when check fails", async () => {
-                const { nft, deployer, voting, policy, notOwner, subject, validNFTId } =
+                const { signupNft, rewardNft, deployer, voting, policy, notOwner, subject, validNFTId } =
                     await loadFixture(deployAdvancedVotingFixture)
 
                 await policy.setTarget(await voting.getAddress())
-                await nft.connect(deployer).mint(notOwner)
+                await signupNft.connect(deployer).mint(notOwner)
                 await voting.connect(subject).register(validNFTId)
                 await voting.connect(subject).vote(0)
                 await voting.connect(notOwner).register(1)
                 await voting.connect(notOwner).vote(0)
 
-                await expect(voting.connect(subject).reward(1)).to.be.revertedWithCustomError(
+                await rewardNft.connect(deployer).mint(subject)
+
+                await expect(voting.connect(subject).eligible()).to.be.revertedWithCustomError(
                     policy,
                     "UnsuccessfulCheck"
                 )
             })
 
             it("reverts when not registered", async () => {
-                const { voting, policy, notOwner, validNFTId } = await loadFixture(deployAdvancedVotingFixture)
+                const { voting, policy, notOwner } = await loadFixture(deployAdvancedVotingFixture)
 
                 await policy.setTarget(await notOwner.getAddress())
 
-                await expect(voting.connect(notOwner).reward(validNFTId)).to.be.revertedWithCustomError(
-                    voting,
-                    "NotRegistered"
-                )
+                await expect(voting.connect(notOwner).eligible()).to.be.revertedWithCustomError(voting, "NotRegistered")
             })
 
             it("reverts when not voted", async () => {
@@ -1322,13 +1392,10 @@ describe("Advanced", () => {
                 await policy.setTarget(await voting.getAddress())
                 await voting.connect(subject).register(validNFTId)
 
-                await expect(voting.connect(subject).reward(validNFTId)).to.be.revertedWithCustomError(
-                    voting,
-                    "NotVoted"
-                )
+                await expect(voting.connect(subject).eligible()).to.be.revertedWithCustomError(voting, "NotVoted")
             })
 
-            it("claims reward successfully", async () => {
+            it("verifies eligibility successfully", async () => {
                 const { AdvancedVotingFactory, voting, policy, subject, subjectAddress, validNFTId } =
                     await loadFixture(deployAdvancedVotingFixture)
                 const targetAddress = await voting.getAddress()
@@ -1337,7 +1404,7 @@ describe("Advanced", () => {
                 await voting.connect(subject).register(validNFTId)
                 await voting.connect(subject).vote(0)
 
-                const tx = await voting.connect(subject).reward(validNFTId)
+                const tx = await voting.connect(subject).eligible()
                 const receipt = await tx.wait()
                 const event = AdvancedVotingFactory.interface.parseLog(
                     receipt?.logs[1] as unknown as { topics: string[]; data: string }
@@ -1356,17 +1423,17 @@ describe("Advanced", () => {
                 expect(await voting.voteCounts(1)).to.be.equal(0)
             })
 
-            it("reverts when already claimed", async () => {
+            it("reverts when already eligible", async () => {
                 const { voting, policy, subject, validNFTId } = await loadFixture(deployAdvancedVotingFixture)
 
                 await policy.setTarget(await voting.getAddress())
                 await voting.connect(subject).register(validNFTId)
                 await voting.connect(subject).vote(0)
-                await voting.connect(subject).reward(validNFTId)
+                await voting.connect(subject).eligible()
 
-                await expect(voting.connect(subject).reward(validNFTId)).to.be.revertedWithCustomError(
+                await expect(voting.connect(subject).eligible()).to.be.revertedWithCustomError(
                     voting,
-                    "AlreadyClaimed"
+                    "AlreadyEligible"
                 )
             })
         })
@@ -1375,23 +1442,30 @@ describe("Advanced", () => {
                 const [deployer]: Signer[] = await ethers.getSigners()
 
                 const NFTFactory: NFT__factory = await ethers.getContractFactory("NFT")
+                const BaseERC721CheckerFactory: BaseERC721Checker__factory =
+                    await ethers.getContractFactory("BaseERC721Checker")
                 const AdvancedERC721CheckerFactory: AdvancedERC721Checker__factory =
                     await ethers.getContractFactory("AdvancedERC721Checker")
                 const AdvancedERC721PolicyFactory: AdvancedERC721Policy__factory =
                     await ethers.getContractFactory("AdvancedERC721Policy")
                 const AdvancedVotingFactory: AdvancedVoting__factory = await ethers.getContractFactory("AdvancedVoting")
 
-                const nft: NFT = await NFTFactory.deploy()
-
-                const checker: AdvancedERC721Checker = await AdvancedERC721CheckerFactory.connect(deployer).deploy(
-                    [await nft.getAddress()],
+                const signupNft: NFT = await NFTFactory.deploy()
+                const rewardNft: NFT = await NFTFactory.deploy()
+                const baseChecker: BaseERC721Checker = await BaseERC721CheckerFactory.connect(deployer).deploy([
+                    await signupNft.getAddress()
+                ])
+                const advancedChecker: AdvancedERC721Checker = await AdvancedERC721CheckerFactory.connect(
+                    deployer
+                ).deploy(
+                    [await signupNft.getAddress(), await rewardNft.getAddress(), await baseChecker.getAddress()],
                     1,
                     0,
-                    20
+                    10
                 )
 
                 const policy: AdvancedERC721Policy = await AdvancedERC721PolicyFactory.connect(deployer).deploy(
-                    await checker.getAddress(),
+                    await advancedChecker.getAddress(),
                     false,
                     false,
                     true
@@ -1409,7 +1483,7 @@ describe("Advanced", () => {
                     const voterAddress = await voter.getAddress()
 
                     // mint for voter.
-                    await nft.connect(deployer).mint(voterAddress)
+                    await signupNft.connect(deployer).mint(voterAddress)
 
                     // register.
                     await voting.connect(voter).register(tokenId)
@@ -1418,7 +1492,7 @@ describe("Advanced", () => {
                     await voting.connect(voter).vote(tokenId % 2)
 
                     // reward.
-                    await voting.connect(voter).reward(tokenId)
+                    await voting.connect(voter).eligible()
 
                     expect((await policy.enforced(targetAddress, voterAddress))[0]).to.be.equal(true)
                     expect((await policy.enforced(targetAddress, voterAddress))[1]).to.be.equal(1)

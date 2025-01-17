@@ -20,17 +20,19 @@ abstract contract Checker is IChecker {
         verifiers = _verifiers;
     }
 
-    /// @notice Retrieves the list of third-party verifiers' addresses.
-    /// @return Array of addresses for the necessary verification contracts.
-    function getVerifiers() internal view returns (address[] memory) {
-        return verifiers;
-    }
-
     /// @notice Retrieves the verifier address at a specific index.
     /// @param index The index of the verifier in the array.
     /// @return The address of the verifier at the specified index.
     /// @custom:throws VerifierNotFound if no address have been specified at given index.
-    function getVerifierAtIndex(uint256 index) internal view returns (address) {
+    function getVerifierAtIndex(uint256 index) external view returns (address) {
+        return _getVerifierAtIndex(index);
+    }
+
+    /// @notice Internal implementation of verifier address retrieval at a specific index.
+    /// @param index The index of the verifier in the array.
+    /// @return The address of the verifier at the specified index.
+    /// @custom:throws VerifierNotFound if no address have been specified at given index.
+    function _getVerifierAtIndex(uint256 index) internal view returns (address) {
         if (index >= verifiers.length) revert VerifierNotFound();
 
         return verifiers[index];

@@ -5,73 +5,77 @@ import {AdvancedPolicy} from "../../AdvancedPolicy.sol";
 import {Check} from "../../interfaces/IAdvancedPolicy.sol";
 
 /// @title AdvancedVoting.
-/// @notice Multi-phase voting system with NFT validation and rewards.
-/// @dev Implements a three-phase voting process:
-///      1. Registration (PRE): Validates initial NFT ownership.
-///      2. Voting (MAIN): Validates voting power and records vote.
-///      3. Rewards (POST): Validates and distributes NFT rewards.
+/// @notice Advanced voting system with NFT-based phases and eligibility verification.
+/// @dev Implements a three-phase governance process using NFT validation:
+///      1. Registration: Validates ownership of signup NFT (under-the-hood uses the BaseERC721Checker).
+///      2. Voting: Validates token balances and records votes (single token = single vote).
+///      3. Eligibility: Validates criteria for governance participation benefits.
 contract AdvancedVoting {
-    /// @notice Events for tracking system state changes.
+    /// @notice Emitted on successful phase completion.
+    /// @param voter Address that completed the phase.
     event Registered(address voter);
+    /// @param option Selected voting option (0 or 1).
     event Voted(address voter, uint8 option);
-    event RewardClaimed(address voter, uint256 rewardId);
+    /// @param voter Address that met eligibility criteria.
+    event Eligible(address voter);
 
-    /// @notice System error conditions.
-    error NotRegistered();
-    error NotVoted();
-    error AlreadyClaimed();
-    error InvalidOption();
-    error NotOwnerOfReward();
+    /// @notice Validation error states.
+    /// @dev Thrown when phase requirements not met.
+    error NotRegistered(); // Pre-check (registration) not completed.
+    error NotVoted(); // Main check (voting) not completed.
+    error AlreadyEligible(); // Post check (eligibility) already verified.
+    error InvalidOption(); // Vote option out of valid range.
+    error NotEligible(); // Eligibility criteria not met.
 
-    /// @notice Policy contract for validation checks.
+    /// @notice Policy contract managing multi-phase validation.
+    /// @dev Handles all NFT-based checks through aggregated verifiers.
     AdvancedPolicy public immutable POLICY;
 
-    /// @notice Tracks total votes per option.
-    /// @dev Maps option ID => vote count.
+    /// @notice Vote tracking per option.
+    /// @dev Maps option ID (0 or 1) to total votes received.
     mapping(uint8 => uint256) public voteCounts;
 
-    /// @notice Sets up voting system with policy contract.
-    /// @param _policy Contract handling validation logic.
+    /// @notice Initializes voting system.
+    /// @param _policy Advanced policy contract with configured verifiers.
     constructor(AdvancedPolicy _policy) {
         POLICY = _policy;
     }
 
-    /// @notice First phase - Register voter with NFT ownership proof.
-    /// @dev Enforces PRE check through policy contract.
-    /// @param tokenId NFT used for registration.
-    /// @custom:requirements Caller must own the NFT with tokenId.
-    /// @custom:emits Registered on successful registration.
+    /// @notice Registration phase handler.
+    /// @dev Validates signup NFT ownership using BaseERC721Checker.
+    /// @param tokenId ID of the signup NFT to validate.
+    /// @custom:requirements
+    /// - Token must exist.
+    /// - Caller must be token owner.
+    /// - Token ID must be within valid range.
+    /// @custom:emits Registered when registration succeeds.
     function register(uint256 tokenId) external {
-        // Encode token ID for policy verification.
         bytes[] memory _evidence = new bytes[](1);
         _evidence[0] = abi.encode(tokenId);
 
-        // Verify NFT ownership through policy's PRE check.
         POLICY.enforce(msg.sender, _evidence, Check.PRE);
 
         emit Registered(msg.sender);
     }
 
-    /// @notice Second phase - Cast vote after registration.
-    /// @dev Enforces MAIN check and updates vote counts.
-    /// @param option Vote choice (0 or 1).
+    /// @notice Voting phase handler.
+    /// @dev Validates voting power and records vote choice.
+    /// @param option Binary choice (0 or 1).
     /// @custom:requirements
-    /// - Caller must be registered (passed PRE check).
+    /// - Registration must be completed.
     /// - Option must be valid (0 or 1).
-    /// @custom:emits Voted on successful vote cast.
+    /// - Token balance must meet requirements.
+    /// @custom:emits Voted when vote is recorded.
     function vote(uint8 option) external {
-        // Check registration status (PRE check completion).
         (bool pre, , ) = POLICY.enforced(address(this), msg.sender);
-
         if (!pre) revert NotRegistered();
         if (option >= 2) revert InvalidOption();
 
-        // Verify voting power through policy's MAIN check.
         bytes[] memory _evidence = new bytes[](1);
         _evidence[0] = abi.encode(option);
+
         POLICY.enforce(msg.sender, _evidence, Check.MAIN);
 
-        // Increment vote count safely.
         unchecked {
             voteCounts[option]++;
         }
@@ -79,27 +83,23 @@ contract AdvancedVoting {
         emit Voted(msg.sender, option);
     }
 
-    /// @notice Final phase - Claim NFT reward after voting.
-    /// @dev Enforces POST check for reward distribution.
-    /// @param rewardId Identifier of NFT reward to claim.
+    /// @notice Eligibility verification phase.
+    /// @dev Validates completion of governance process and checks eligibility criteria.
     /// @custom:requirements
     /// - Caller must be registered (passed PRE check).
     /// - Caller must have voted (passed MAIN check).
-    /// - Caller must not have claimed before (no POST check).
-    /// @custom:emits RewardClaimed on successful claim.
-    function reward(uint256 rewardId) external {
-        // Verify completion of previous phases.
+    /// - Caller must not be already verified (no POST check).
+    /// - Caller must meet eligibility criteria (no existing benefits).
+    /// @custom:emits Eligible when verification succeeds.
+    function eligible() external {
         (bool pre, uint8 main, bool post) = POLICY.enforced(address(this), msg.sender);
 
         if (!pre) revert NotRegistered();
         if (main == 0) revert NotVoted();
-        if (post) revert AlreadyClaimed();
+        if (post) revert AlreadyEligible();
 
-        // Verify reward eligibility through policy's POST check.
-        bytes[] memory _evidence = new bytes[](1);
-        _evidence[0] = abi.encode(rewardId);
-        POLICY.enforce(msg.sender, _evidence, Check.POST);
+        POLICY.enforce(msg.sender, new bytes[](1), Check.POST);
 
-        emit RewardClaimed(msg.sender, rewardId);
+        emit Eligible(msg.sender);
     }
 }

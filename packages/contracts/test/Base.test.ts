@@ -66,6 +66,33 @@ describe("Base", () => {
             })
         })
 
+        describe("getVerifierAtIndex", () => {
+            it("returns correct verifier address", async () => {
+                const { checker, nft } = await loadFixture(deployBaseCheckerFixture)
+                expect(await checker.getVerifierAtIndex(0)).to.equal(await nft.getAddress())
+            })
+
+            it("reverts when index out of bounds", async () => {
+                const { checker } = await loadFixture(deployBaseCheckerFixture)
+                await expect(checker.getVerifierAtIndex(1)).to.be.revertedWithCustomError(checker, "VerifierNotFound")
+            })
+        })
+
+        describe("internal getVerifierAtIndex", () => {
+            it("returns correct verifier address", async () => {
+                const { checkerHarness, nft } = await loadFixture(deployBaseCheckerFixture)
+                expect(await checkerHarness.exposed__getVerifierAtIndex(0)).to.equal(await nft.getAddress())
+            })
+
+            it("reverts when index out of bounds", async () => {
+                const { checkerHarness } = await loadFixture(deployBaseCheckerFixture)
+                await expect(checkerHarness.exposed__getVerifierAtIndex(1)).to.be.revertedWithCustomError(
+                    checkerHarness,
+                    "VerifierNotFound"
+                )
+            })
+        })
+
         describe("check", () => {
             it("reverts when evidence is invalid", async () => {
                 const { nft, checker, target, subjectAddress, invalidNFTId } =

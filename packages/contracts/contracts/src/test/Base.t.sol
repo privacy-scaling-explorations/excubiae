@@ -9,6 +9,7 @@ import {BaseVoting} from "./base/BaseVoting.sol";
 import {BaseERC721CheckerHarness} from "./wrappers/BaseERC721CheckerHarness.sol";
 import {BaseERC721PolicyHarness} from "./wrappers/BaseERC721PolicyHarness.sol";
 import {IPolicy} from "../interfaces/IPolicy.sol";
+import {IChecker} from "../interfaces/IChecker.sol";
 import {IERC721Errors} from "@openzeppelin/contracts/interfaces/draft-IERC6093.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
@@ -38,6 +39,24 @@ contract BaseChecker is Test {
         evidence[0] = abi.encode(0);
 
         vm.stopPrank();
+    }
+
+    function test_getVerifierAtIndex_ReturnsCorrectAddress() public view {
+        assertEq(checker.getVerifierAtIndex(0), address(nft));
+    }
+
+    function test_getVerifierAtIndex_RevertWhen_VerifierNotFound() public {
+        vm.expectRevert(abi.encodeWithSelector(IChecker.VerifierNotFound.selector));
+        checker.getVerifierAtIndex(1);
+    }
+
+    function test_getVerifierAtIndex_internal_ReturnsCorrectAddress() public view {
+        assertEq(checkerHarness.exposed__getVerifierAtIndex(0), address(nft));
+    }
+
+    function test_getVerifierAtIndex_internal_RevertWhen_VerifierNotFound() public {
+        vm.expectRevert(abi.encodeWithSelector(IChecker.VerifierNotFound.selector));
+        checkerHarness.exposed__getVerifierAtIndex(1);
     }
 
     function test_checker_whenTokenDoesNotExist_reverts() public {

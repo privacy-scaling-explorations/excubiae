@@ -14,7 +14,7 @@ contract BaseERC721Checker is BaseChecker {
     /// @notice Initializes with ERC721 contract.
     /// @param _verifiers Array of addresses for existing verification contracts.
     constructor(address[] memory _verifiers) BaseChecker(_verifiers) {
-        NFT = IERC721(getVerifierAtIndex(0));
+        NFT = IERC721(_getVerifierAtIndex(0));
     }
 
     /// @notice Validates token ownership.
