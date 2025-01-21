@@ -18,8 +18,8 @@ abstract contract BasePolicy is Policy, IBasePolicy {
     BaseChecker public immutable BASE_CHECKER;
 
     /// @notice Tracks enforcement status for each subject per target.
-    /// @dev Maps target => subject => enforcement status.
-    mapping(address => mapping(address => bool)) public enforced;
+    /// @dev Maps subject => enforcement status.
+    mapping(address => bool) public enforced;
 
     /// @notice Initializes the contract with a BaseChecker instance.
     /// @param _baseChecker Address of the BaseChecker contract.
@@ -48,10 +48,10 @@ abstract contract BasePolicy is Policy, IBasePolicy {
     function _enforce(address subject, bytes[] memory evidence) internal {
         bool checked = BASE_CHECKER.check(subject, evidence);
 
-        if (enforced[msg.sender][subject]) revert AlreadyEnforced();
+        if (enforced[subject]) revert AlreadyEnforced();
         if (!checked) revert UnsuccessfulCheck();
 
-        enforced[msg.sender][subject] = checked;
+        enforced[subject] = checked;
 
         emit Enforced(subject, target, evidence);
     }

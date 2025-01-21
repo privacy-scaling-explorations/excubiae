@@ -58,7 +58,7 @@ contract BaseVoting {
     /// @custom:emits Voted on successful vote cast.
     function vote(uint8 option) external {
         // Verify registration and voting status.
-        if (!POLICY.enforced(address(this), msg.sender)) revert NotRegistered();
+        if (!POLICY.enforced(msg.sender)) revert NotRegistered();
         if (hasVoted[msg.sender]) revert AlreadyVoted();
         if (option >= 2) revert InvalidOption();
 

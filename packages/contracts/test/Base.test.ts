@@ -317,7 +317,7 @@ describe("Base", () => {
                 expect(event.args.subject).to.eq(subjectAddress)
                 expect(event.args.target).to.eq(targetAddress)
                 expect(event.args.evidence[0]).to.eq(validEncodedNFTId)
-                expect(await policy.enforced(targetAddress, subjectAddress)).to.be.equal(true)
+                expect(await policy.enforced(subjectAddress)).to.be.equal(true)
             })
 
             it("reverts when already enforced", async () => {
@@ -389,7 +389,7 @@ describe("Base", () => {
                 expect(event.args.subject).to.eq(subjectAddress)
                 expect(event.args.target).to.eq(targetAddress)
                 expect(event.args.evidence[0]).to.eq(validEncodedNFTId)
-                expect(await policyHarness.enforced(targetAddress, subjectAddress)).to.be.equal(true)
+                expect(await policyHarness.enforced(subjectAddress)).to.be.equal(true)
             })
 
             it("reverts when already enforced", async () => {
@@ -520,7 +520,7 @@ describe("Base", () => {
 
                 expect(receipt?.status).to.eq(1)
                 expect(event.args.voter).to.eq(subjectAddress)
-                expect(await policy.enforced(targetAddress, subjectAddress)).to.be.equal(true)
+                expect(await policy.enforced(subjectAddress)).to.be.equal(true)
                 expect(await voting.hasVoted(subjectAddress)).to.be.equal(false)
                 expect(await voting.voteCounts(0)).to.be.equal(0)
                 expect(await voting.voteCounts(1)).to.be.equal(0)

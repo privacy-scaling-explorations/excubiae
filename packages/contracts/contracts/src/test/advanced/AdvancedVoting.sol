@@ -67,7 +67,7 @@ contract AdvancedVoting {
     /// - Token balance must meet requirements.
     /// @custom:emits Voted when vote is recorded.
     function vote(uint8 option) external {
-        (bool pre, , ) = POLICY.enforced(address(this), msg.sender);
+        (bool pre, , ) = POLICY.enforced(msg.sender);
         if (!pre) revert NotRegistered();
         if (option >= 2) revert InvalidOption();
 
@@ -92,7 +92,7 @@ contract AdvancedVoting {
     /// - Caller must meet eligibility criteria (no existing benefits).
     /// @custom:emits Eligible when verification succeeds.
     function eligible() external {
-        (bool pre, uint8 main, bool post) = POLICY.enforced(address(this), msg.sender);
+        (bool pre, uint8 main, bool post) = POLICY.enforced(msg.sender);
 
         if (!pre) revert NotRegistered();
         if (main == 0) revert NotVoted();

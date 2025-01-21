@@ -558,7 +558,7 @@ describe("Advanced", () => {
                     expect(event.args.target).to.eq(targetAddress)
                     expect(event.args.evidence[0]).to.eq(validEncodedNFTId)
                     expect(event.args.checkType).to.eq(0)
-                    expect((await policy.enforced(targetAddress, subjectAddress))[0]).to.be.equal(true)
+                    expect((await policy.enforced(subjectAddress))[0]).to.be.equal(true)
                 })
 
                 it("reverts when pre already enforced", async () => {
@@ -625,7 +625,7 @@ describe("Advanced", () => {
                     expect(event.args.target).to.eq(targetAddress)
                     expect(event.args.evidence[0]).to.eq(validEncodedNFTId)
                     expect(event.args.checkType).to.eq(1)
-                    expect((await policy.enforced(targetAddress, subjectAddress))[1]).to.be.equal(1)
+                    expect((await policy.enforced(subjectAddress))[1]).to.be.equal(1)
                 })
 
                 it("executes multiple mains when allowed", async () => {
@@ -655,7 +655,7 @@ describe("Advanced", () => {
                     expect(event.args.target).to.eq(targetAddress)
                     expect(event.args.evidence[0]).to.eq(validEncodedNFTId)
                     expect(event.args.checkType).to.eq(1)
-                    expect((await policy.enforced(targetAddress, subjectAddress))[1]).to.be.equal(2)
+                    expect((await policy.enforced(subjectAddress))[1]).to.be.equal(2)
                 })
 
                 it("executes multiple mains when allowed", async () => {
@@ -769,7 +769,7 @@ describe("Advanced", () => {
                     expect(event.args.target).to.eq(targetAddress)
                     expect(event.args.evidence[0]).to.eq(validEncodedNFTId)
                     expect(event.args.checkType).to.eq(2)
-                    expect((await policy.enforced(targetAddress, subjectAddress))[2]).to.be.equal(true)
+                    expect((await policy.enforced(subjectAddress))[2]).to.be.equal(true)
                 })
 
                 it("reverts when post already enforced", async () => {
@@ -859,7 +859,7 @@ describe("Advanced", () => {
                     expect(event.args.subject).to.eq(subjectAddress)
                     expect(event.args.target).to.eq(targetAddress)
                     expect(event.args.evidence[0]).to.eq(validEncodedNFTId)
-                    expect((await policyHarness.enforced(targetAddress, subjectAddress))[0]).to.be.equal(true)
+                    expect((await policyHarness.enforced(subjectAddress))[0]).to.be.equal(true)
                 })
 
                 it("reverts when pre already enforced", async () => {
@@ -926,7 +926,7 @@ describe("Advanced", () => {
                     expect(event.args.subject).to.eq(subjectAddress)
                     expect(event.args.target).to.eq(targetAddress)
                     expect(event.args.evidence[0]).to.eq(validEncodedNFTId)
-                    expect((await policyHarness.enforced(targetAddress, subjectAddress))[1]).to.be.equal(1)
+                    expect((await policyHarness.enforced(subjectAddress))[1]).to.be.equal(1)
                 })
 
                 it("executes multiple mains when allowed", async () => {
@@ -956,7 +956,7 @@ describe("Advanced", () => {
                     expect(event.args.subject).to.eq(subjectAddress)
                     expect(event.args.target).to.eq(targetAddress)
                     expect(event.args.evidence[0]).to.eq(validEncodedNFTId)
-                    expect((await policyHarness.enforced(targetAddress, subjectAddress))[1]).to.be.equal(2)
+                    expect((await policyHarness.enforced(subjectAddress))[1]).to.be.equal(2)
                 })
 
                 it("executes multiple mains when allowed", async () => {
@@ -1073,7 +1073,7 @@ describe("Advanced", () => {
                     expect(event.args.subject).to.eq(subjectAddress)
                     expect(event.args.target).to.eq(targetAddress)
                     expect(event.args.evidence[0]).to.eq(validEncodedNFTId)
-                    expect((await policyHarness.enforced(targetAddress, subjectAddress))[2]).to.be.equal(true)
+                    expect((await policyHarness.enforced(subjectAddress))[2]).to.be.equal(true)
                 })
 
                 it("reverts when post already enforced", async () => {
@@ -1232,8 +1232,8 @@ describe("Advanced", () => {
 
                 expect(receipt?.status).to.eq(1)
                 expect(event.args.voter).to.eq(subjectAddress)
-                expect((await policy.enforced(targetAddress, subjectAddress))[0]).to.be.equal(true)
-                expect((await policy.enforced(targetAddress, subjectAddress))[1]).to.be.equal(0n)
+                expect((await policy.enforced(subjectAddress))[0]).to.be.equal(true)
+                expect((await policy.enforced(subjectAddress))[1]).to.be.equal(0n)
                 expect(await voting.voteCounts(0)).to.be.equal(0)
                 expect(await voting.voteCounts(1)).to.be.equal(0)
             })
@@ -1294,8 +1294,8 @@ describe("Advanced", () => {
                 expect(receipt?.status).to.eq(1)
                 expect(event.args.voter).to.eq(subjectAddress)
                 expect(event.args.option).to.eq(option)
-                expect((await policy.enforced(targetAddress, subjectAddress))[0]).to.be.equal(true)
-                expect((await policy.enforced(targetAddress, subjectAddress))[1]).to.be.equal(1n)
+                expect((await policy.enforced(subjectAddress))[0]).to.be.equal(true)
+                expect((await policy.enforced(subjectAddress))[1]).to.be.equal(1n)
                 expect(await voting.voteCounts(0)).to.be.equal(1)
                 expect(await voting.voteCounts(1)).to.be.equal(0)
             })
@@ -1324,8 +1324,8 @@ describe("Advanced", () => {
                 expect(receipt?.status).to.eq(1)
                 expect(event.args.voter).to.eq(subjectAddress)
                 expect(event.args.option).to.eq(option)
-                expect((await policy.enforced(targetAddress, subjectAddress))[0]).to.be.equal(true)
-                expect((await policy.enforced(targetAddress, subjectAddress))[1]).to.be.equal(2n)
+                expect((await policy.enforced(subjectAddress))[0]).to.be.equal(true)
+                expect((await policy.enforced(subjectAddress))[1]).to.be.equal(2n)
                 expect(await voting.voteCounts(0)).to.be.equal(2)
                 expect(await voting.voteCounts(1)).to.be.equal(0)
             })
@@ -1416,9 +1416,9 @@ describe("Advanced", () => {
 
                 expect(receipt?.status).to.eq(1)
                 expect(event.args.voter).to.eq(subjectAddress)
-                expect((await policy.enforced(targetAddress, subjectAddress))[0]).to.be.equal(true)
-                expect((await policy.enforced(targetAddress, subjectAddress))[1]).to.be.equal(1n)
-                expect((await policy.enforced(targetAddress, subjectAddress))[2]).to.be.equal(true)
+                expect((await policy.enforced(subjectAddress))[0]).to.be.equal(true)
+                expect((await policy.enforced(subjectAddress))[1]).to.be.equal(1n)
+                expect((await policy.enforced(subjectAddress))[2]).to.be.equal(true)
                 expect(await voting.voteCounts(0)).to.be.equal(1)
                 expect(await voting.voteCounts(1)).to.be.equal(0)
             })
@@ -1494,9 +1494,9 @@ describe("Advanced", () => {
                     // reward.
                     await voting.connect(voter).eligible()
 
-                    expect((await policy.enforced(targetAddress, voterAddress))[0]).to.be.equal(true)
-                    expect((await policy.enforced(targetAddress, voterAddress))[1]).to.be.equal(1)
-                    expect((await policy.enforced(targetAddress, voterAddress))[2]).to.be.equal(true)
+                    expect((await policy.enforced(voterAddress))[0]).to.be.equal(true)
+                    expect((await policy.enforced(voterAddress))[1]).to.be.equal(1)
+                    expect((await policy.enforced(voterAddress))[2]).to.be.equal(true)
                 }
             })
         })

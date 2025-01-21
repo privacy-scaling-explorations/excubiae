@@ -23,8 +23,8 @@ abstract contract AdvancedPolicy is IAdvancedPolicy, Policy {
     bool public immutable ALLOW_MULTIPLE_MAIN;
 
     /// @notice Tracks validation status for each subject per target.
-    /// @dev Maps target => subject => CheckStatus.
-    mapping(address => mapping(address => CheckStatus)) public enforced;
+    /// @dev Maps subject => CheckStatus.
+    mapping(address => CheckStatus) public enforced;
 
     /// @notice Initializes contract with an AdvancedChecker instance and checks configs.
     /// @param _advancedChecker Address of the AdvancedChecker contract.
@@ -64,7 +64,7 @@ abstract contract AdvancedPolicy is IAdvancedPolicy, Policy {
             revert UnsuccessfulCheck();
         }
 
-        CheckStatus storage status = enforced[msg.sender][subject];
+        CheckStatus storage status = enforced[subject];
 
         // Handle PRE check.
         if (checkType == Check.PRE) {
