@@ -2,7 +2,7 @@
 pragma solidity ^0.8.20;
 
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
-import {IPolicy} from "./interfaces/IPolicy.sol";
+import {IPolicy} from "../interfaces/IPolicy.sol";
 
 /// @title Policy
 /// @notice Implements a base policy contract that protects access to a target contract

@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import {IBasePolicy} from "./interfaces/IBasePolicy.sol";
+import {IBasePolicy} from "../interfaces/IBasePolicy.sol";
 import {Policy} from "./Policy.sol";
-import {BaseChecker} from "./BaseChecker.sol";
+import {BaseChecker} from "../checker/BaseChecker.sol";
 
 /// @title BasePolicy
 /// @notice Abstract base contract for implementing specific policy checks.

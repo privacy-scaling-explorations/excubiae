@@ -9,12 +9,12 @@ import {AdvancedERC721Policy} from "./advanced/AdvancedERC721Policy.sol";
 import {AdvancedVoting} from "./advanced/AdvancedVoting.sol";
 import {AdvancedERC721CheckerHarness} from "./wrappers/AdvancedERC721CheckerHarness.sol";
 import {AdvancedERC721PolicyHarness} from "./wrappers/AdvancedERC721PolicyHarness.sol";
-import {IChecker} from "../interfaces/IChecker.sol";
-import {IPolicy} from "../interfaces/IPolicy.sol";
-import {IAdvancedPolicy} from "../interfaces/IAdvancedPolicy.sol";
+import {IChecker} from "../core/interfaces/IChecker.sol";
+import {IPolicy} from "../core/interfaces/IPolicy.sol";
+import {IAdvancedPolicy} from "../core/interfaces/IAdvancedPolicy.sol";
 import {IERC721Errors} from "@openzeppelin/contracts/interfaces/draft-IERC6093.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
-import {Check} from "../interfaces/IAdvancedChecker.sol";
+import {Check} from "../core/interfaces/IAdvancedChecker.sol";
 
 contract AdvancedChecker is Test {
     NFT internal signupNft;

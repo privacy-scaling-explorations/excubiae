@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 import {AdvancedERC721Policy} from "../advanced/AdvancedERC721Policy.sol";
 import {AdvancedERC721Checker} from "../advanced/AdvancedERC721Checker.sol";
-import {Check} from "../../interfaces/IAdvancedChecker.sol";
+import {Check} from "../../core/interfaces/IAdvancedChecker.sol";
 
 /// @title AdvancedERC721PolicyHarness.
 /// @notice Test harness for AdvancedERC721Policy internal methods.

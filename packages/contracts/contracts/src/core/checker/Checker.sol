@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import {IChecker} from "./interfaces/IChecker.sol";
+import {IChecker} from "../interfaces/IChecker.sol";
 
 /// @title Checker
 /// @notice Abstract base contract for implementing attribute verification logic.

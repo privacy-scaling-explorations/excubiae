@@ -2,8 +2,8 @@
 pragma solidity ^0.8.20;
 
 import {Policy} from "./Policy.sol";
-import {IAdvancedPolicy, Check} from "./interfaces/IAdvancedPolicy.sol";
-import {AdvancedChecker, CheckStatus} from "./AdvancedChecker.sol";
+import {IAdvancedPolicy, Check} from "../interfaces/IAdvancedPolicy.sol";
+import {AdvancedChecker, CheckStatus} from "../checker/AdvancedChecker.sol";
 
 /// @title AdvancedPolicy.
 /// @notice Implements advanced policy checks with pre, main, and post validation stages.

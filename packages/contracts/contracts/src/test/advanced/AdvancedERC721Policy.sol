@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import {AdvancedPolicy} from "../../AdvancedPolicy.sol";
+import {AdvancedPolicy} from "../../core/policy/AdvancedPolicy.sol";
 import {AdvancedERC721Checker} from "./AdvancedERC721Checker.sol";
 
 /// @title AdvancedERC721Policy.

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import {IBaseChecker} from "./interfaces/IBaseChecker.sol";
+import {IBaseChecker} from "../interfaces/IBaseChecker.sol";
 import {Checker} from "./Checker.sol";
 
 /// @title BaseChecker

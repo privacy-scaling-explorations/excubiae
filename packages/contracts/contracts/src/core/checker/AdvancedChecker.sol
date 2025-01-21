@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import {IAdvancedChecker, Check, CheckStatus} from "./interfaces/IAdvancedChecker.sol";
+import {IAdvancedChecker, Check, CheckStatus} from "../interfaces/IAdvancedChecker.sol";
 import {Checker} from "./Checker.sol";
 
 /// @title AdvancedChecker.
