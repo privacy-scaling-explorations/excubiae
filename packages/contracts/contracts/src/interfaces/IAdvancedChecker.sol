@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
+import {IChecker} from "./IChecker.sol";
+
 /// @title Check.
 /// @notice Defines validation phases in the AdvancedChecker system.
 /// @custom:values PRE - Pre-condition validation.
@@ -26,11 +28,11 @@ struct CheckStatus {
 /// @title IAdvancedChecker.
 /// @notice Defines multi-phase validation system interface.
 /// @dev Implement this for custom validation logic with pre/main/post checks.
-interface IAdvancedChecker {
+interface IAdvancedChecker is IChecker {
     /// @notice Validates subject against specified check type.
     /// @param subject Address to validate.
     /// @param evidence Validation data.
     /// @param checkType Check phase to execute.
     /// @return checked True if validation passes.
-    function check(address subject, bytes calldata evidence, Check checkType) external view returns (bool checked);
+    function check(address subject, bytes[] calldata evidence, Check checkType) external view returns (bool checked);
 }

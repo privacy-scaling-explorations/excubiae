@@ -27,12 +27,12 @@ interface IAdvancedPolicy is IPolicy {
     /// @param target Protected contract address.
     /// @param evidence Validation data.
     /// @param checkType Type of check performed.
-    event Enforced(address indexed subject, address indexed target, bytes evidence, Check checkType);
+    event Enforced(address indexed subject, address indexed target, bytes[] evidence, Check checkType);
 
     /// @notice Enforces validation check on subject.
     /// @dev Delegates to appropriate check method based on checkType.
     /// @param subject Address to validate.
     /// @param evidence Validation data.
     /// @param checkType Check phase to execute.
-    function enforce(address subject, bytes calldata evidence, Check checkType) external;
+    function enforce(address subject, bytes[] calldata evidence, Check checkType) external;
 }

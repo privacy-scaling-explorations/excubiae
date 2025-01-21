@@ -39,10 +39,11 @@ contract BaseVoting {
     /// @custom:emits Registered on successful registration.
     function register(uint256 tokenId) external {
         // Encode token ID for policy verification.
-        bytes memory evidence = abi.encode(tokenId);
+        bytes[] memory _evidence = new bytes[](1);
+        _evidence[0] = abi.encode(tokenId);
 
         // Verify NFT ownership.
-        POLICY.enforce(msg.sender, evidence);
+        POLICY.enforce(msg.sender, _evidence);
 
         emit Registered(msg.sender);
     }

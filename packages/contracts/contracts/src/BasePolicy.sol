@@ -35,7 +35,7 @@ abstract contract BasePolicy is Policy, IBasePolicy {
     /// @custom:throws AlreadyEnforced if check was previously enforced.
     /// @custom:throws UnsuccessfulCheck if the check fails.
     /// @custom:emits Enforced when check succeeds.
-    function enforce(address subject, bytes calldata evidence) external override onlyTarget {
+    function enforce(address subject, bytes[] calldata evidence) external override onlyTarget {
         _enforce(subject, evidence);
     }
 
@@ -45,7 +45,7 @@ abstract contract BasePolicy is Policy, IBasePolicy {
     /// @param evidence Additional data required for verification.
     /// @custom:throws AlreadyEnforced if already enforced for this subject.
     /// @custom:throws UnsuccessfulCheck if BASE_CHECKER.check returns false.
-    function _enforce(address subject, bytes calldata evidence) internal {
+    function _enforce(address subject, bytes[] memory evidence) internal {
         bool checked = BASE_CHECKER.check(subject, evidence);
 
         if (enforced[msg.sender][subject]) revert AlreadyEnforced();

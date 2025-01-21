@@ -12,18 +12,18 @@ contract BaseERC721Checker is BaseChecker {
     IERC721 public immutable NFT;
 
     /// @notice Initializes with ERC721 contract.
-    /// @param _nft ERC721 contract address.
-    constructor(IERC721 _nft) {
-        NFT = IERC721(_nft);
+    /// @param _verifiers Array of addresses for existing verification contracts.
+    constructor(address[] memory _verifiers) BaseChecker(_verifiers) {
+        NFT = IERC721(_getVerifierAtIndex(0));
     }
 
     /// @notice Validates token ownership.
     /// @param subject Address to check.
     /// @param evidence Encoded tokenId.
     /// @return True if subject owns token.
-    function _check(address subject, bytes memory evidence) internal view override returns (bool) {
+    function _check(address subject, bytes[] calldata evidence) internal view override returns (bool) {
         super._check(subject, evidence);
-        uint256 tokenId = abi.decode(evidence, (uint256));
+        uint256 tokenId = abi.decode(evidence[0], (uint256));
         return NFT.ownerOf(tokenId) == subject;
     }
 }
