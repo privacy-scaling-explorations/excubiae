@@ -7,9 +7,7 @@ import {Checker} from "./Checker.sol";
 /// @title AdvancedChecker.
 /// @notice Multi-phase validation checker with pre, main, and post checks.
 /// @dev Base contract for implementing complex validation logic with configurable check phases.
-abstract contract AdvancedChecker is IAdvancedChecker, Checker {
-    constructor(address[] memory _verifiers) Checker(_verifiers) {}
-
+abstract contract AdvancedChecker is Checker, IAdvancedChecker {
     /// @notice Entry point for validation checks.
     /// @param subject Address to validate.
     /// @param evidence Validation data.

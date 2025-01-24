@@ -3,47 +3,57 @@ pragma solidity ^0.8.20;
 
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {IPolicy} from "../interfaces/IPolicy.sol";
+import {LibClone} from "solady/src/utils/LibClone.sol";
 
-/// @title Policy
-/// @notice Implements a base policy contract that protects access to a target contract
-/// @dev Inherits from OpenZeppelin's Ownable and implements IPolicy interface
-///
-/// This contract serves as a base for implementing specific policy checks that must be
-/// satisfied before interacting with a protected target contract. It provides core
-/// functionality for managing the protected target address and access control.
 abstract contract Policy is IPolicy, Ownable(msg.sender) {
-    /// @notice The policy-protected contract address.
-    /// @dev This address can only be set once by the owner.
-    /// For example, the target is a Semaphore group that requires the subject
-    /// to meet certain criteria in order to join the group.
+    /// @notice One-time initialization guard.
+    bool private _initialized;
+
+    /// @notice The “gatekeeped” contract address set once by the owner (if at all).
     address internal target;
 
-    /// @notice Restricts function access to only the target contract.
-    /// @dev Throws TargetOnly error if called by any other address.
-    modifier onlyTarget() {
-        if (msg.sender != target) revert TargetOnly();
-        _;
+    /**
+     * @notice The base init. By default, transfers ownership to `msg.sender` (i.e., the caller).
+     * @dev If you want the factory to always be the owner, you just have the factory call this function,
+     *      so `msg.sender` is the factory in that transaction.
+     */
+    function initialize() public virtual {
+        if (_initialized) revert AlreadyInitialized();
+        _initialized = true;
+
+        // By default, set the owner to the caller (likely the factory).
+        // this is not the zero address as above!
+        _transferOwnership(msg.sender);
     }
 
-    /// @notice Sets the target contract address.
-    /// @dev Can only be called once by the owner.
-    /// @param _target Address of the contract to be protected by this policy.
-    /// @custom:throws ZeroAddress if _target is the zero address.
-    /// @custom:throws TargetAlreadySet if target has already been set.
-    /// @custom:emits TargetSet when target is successfully set.
+    function _getAppendedBytes() internal view returns (bytes memory) {
+        return LibClone.argsOnClone(address(this));
+    }
+
+    /**
+     * @notice Only the owner can call `setTarget` once.
+     * @param _target The contract to be protected by this policy.
+     */
     function setTarget(address _target) external virtual onlyOwner {
         if (_target == address(0)) revert ZeroAddress();
         if (target != address(0)) revert TargetAlreadySet();
 
         target = _target;
-
         emit TargetSet(_target);
     }
 
-    /// @notice Retrieves the current target contract address.
-    /// @return address The address of the policy-protected contract.
-    /// @dev Returns zero address if target hasn't been set yet.
-    function getTarget() public view returns (address) {
+    /**
+     * @notice A helper getter for the `target`.
+     */
+    function getTarget() external view returns (address) {
         return target;
+    }
+
+    /**
+     * @notice A modifier that restricts a function to only be called by `target`.
+     */
+    modifier onlyTarget() {
+        if (msg.sender != target) revert TargetOnly();
+        _;
     }
 }

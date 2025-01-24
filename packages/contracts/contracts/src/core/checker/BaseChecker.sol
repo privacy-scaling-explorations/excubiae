@@ -9,8 +9,6 @@ import {Checker} from "./Checker.sol";
 /// @dev Provides a standardized interface for implementing custom validation logic
 /// through the internal _check method.
 abstract contract BaseChecker is Checker, IBaseChecker {
-    constructor(address[] memory _verifiers) Checker(_verifiers) {}
-
     /// @notice Validates evidence for a given subject address.
     /// @dev External view function that delegates to internal _check implementation.
     /// @param subject Address to validate.

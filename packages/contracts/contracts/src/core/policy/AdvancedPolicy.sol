@@ -1,64 +1,60 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import {Policy} from "./Policy.sol";
 import {IAdvancedPolicy, Check} from "../interfaces/IAdvancedPolicy.sol";
 import {AdvancedChecker, CheckStatus} from "../checker/AdvancedChecker.sol";
+import {Policy} from "./Policy.sol";
+import {LibClone} from "solady/src/utils/LibClone.sol";
 
-/// @title AdvancedPolicy.
+/// @title AdvancedPolicy
 /// @notice Implements advanced policy checks with pre, main, and post validation stages.
-/// @dev Extends Policy contract with multi-stage validation capabilities.
+/// @dev Extends Policy with multi-stage validation. Now clone-friendly with `initialize()`.
 abstract contract AdvancedPolicy is IAdvancedPolicy, Policy {
-    /// @notice Reference to the validation checker contract.
-    /// @dev Immutable to ensure checker cannot be changed after deployment.
-    AdvancedChecker public immutable ADVANCED_CHECKER;
+    /// @notice Reference to the validation checker contract. Stored, not immutable.
+    AdvancedChecker public ADVANCED_CHECKER;
 
     /// @notice Controls whether pre-condition checks are required.
-    bool public immutable SKIP_PRE;
+    bool public SKIP_PRE;
 
     /// @notice Controls whether post-condition checks are required.
-    bool public immutable SKIP_POST;
+    bool public SKIP_POST;
 
     /// @notice Controls whether main check can be executed multiple times.
-    bool public immutable ALLOW_MULTIPLE_MAIN;
+    bool public ALLOW_MULTIPLE_MAIN;
 
     /// @notice Tracks validation status for each subject per target.
-    /// @dev Maps subject => CheckStatus.
     mapping(address => CheckStatus) public enforced;
 
-    /// @notice Initializes contract with an AdvancedChecker instance and checks configs.
-    /// @param _advancedChecker Address of the AdvancedChecker contract.
-    /// @param _skipPre Skip pre-condition validation.
-    /// @param _skipPost Skip post-condition validation.
-    /// @param _allowMultipleMain Allow multiple main validations.
-    constructor(AdvancedChecker _advancedChecker, bool _skipPre, bool _skipPost, bool _allowMultipleMain) {
-        ADVANCED_CHECKER = _advancedChecker;
-        SKIP_PRE = _skipPre;
-        SKIP_POST = _skipPost;
-        ALLOW_MULTIPLE_MAIN = _allowMultipleMain;
+    /**
+     * @notice Initialize function for minimal proxy clones.
+     *         Decodes appended bytes for (AdvancedChecker, skipPre, skipPost, allowMultipleMain).
+     */
+    function initialize() public virtual override {
+        // 1. Call Policy’s initialize to set ownership and `_initialized`.
+        super.initialize();
+
+        // 2. Decode the appended bytes for the advanced config.
+        bytes memory data = _getAppendedBytes();
+        (address sender, address advCheckerAddr, bool skipPre, bool skipPost, bool allowMultipleMain) = abi.decode(
+            data,
+            (address, address, bool, bool, bool)
+        );
+
+        _transferOwnership(sender);
+
+        ADVANCED_CHECKER = AdvancedChecker(advCheckerAddr);
+        SKIP_PRE = skipPre;
+        SKIP_POST = skipPost;
+        ALLOW_MULTIPLE_MAIN = allowMultipleMain;
     }
 
-    /// @notice Enforces policy check for a subject.
-    /// @dev Only callable by target contract.
-    /// @param subject Address to validate.
-    /// @param evidence Validation data.
-    /// @param checkType Type of check (PRE, MAIN, POST).
+    /// @notice Enforces a policy check for a subject, handling multi-stage logic.
+    /// @dev Only callable by the target contract.
     function enforce(address subject, bytes[] calldata evidence, Check checkType) external override onlyTarget {
         _enforce(subject, evidence, checkType);
     }
 
-    /// @notice Internal check enforcement logic.
-    /// @dev Handles different check types and their dependencies.
-    /// @param subject Address to validate.
-    /// @param evidence Validation data.
-    /// @param checkType Type of check to perform.
-    /// @custom:throws CannotPreCheckWhenSkipped If PRE check attempted when skipped.
-    /// @custom:throws CannotPostCheckWhenSkipped If POST check attempted when skipped.
-    /// @custom:throws UnsuccessfulCheck If validation fails.
-    /// @custom:throws AlreadyEnforced If check was already completed.
-    /// @custom:throws PreCheckNotEnforced If PRE check is required but not done.
-    /// @custom:throws MainCheckNotEnforced If MAIN check is required but not done.
-    /// @custom:throws MainCheckAlreadyEnforced If multiple MAIN checks not allowed.
+    /// @notice Internal check enforcement logic for advanced multi-stage checks.
     function _enforce(address subject, bytes[] calldata evidence, Check checkType) internal {
         if (!ADVANCED_CHECKER.check(subject, evidence, checkType)) {
             revert UnsuccessfulCheck();
@@ -66,32 +62,19 @@ abstract contract AdvancedPolicy is IAdvancedPolicy, Policy {
 
         CheckStatus storage status = enforced[subject];
 
-        // Handle PRE check.
         if (checkType == Check.PRE) {
             if (SKIP_PRE) revert CannotPreCheckWhenSkipped();
-            if (status.pre) {
-                revert AlreadyEnforced();
-            }
-
+            if (status.pre) revert AlreadyEnforced();
             status.pre = true;
         } else if (checkType == Check.POST) {
-            // Handle POST check.
             if (SKIP_POST) revert CannotPostCheckWhenSkipped();
-            if (status.main == 0) {
-                revert MainCheckNotEnforced();
-            }
-            if (status.post) {
-                revert AlreadyEnforced();
-            }
+            if (status.main == 0) revert MainCheckNotEnforced();
+            if (status.post) revert AlreadyEnforced();
             status.post = true;
         } else {
-            // Handle MAIN check.
-            if (!SKIP_PRE && !status.pre) {
-                revert PreCheckNotEnforced();
-            }
-            if (!ALLOW_MULTIPLE_MAIN && status.main > 0) {
-                revert MainCheckAlreadyEnforced();
-            }
+            // MAIN check
+            if (!SKIP_PRE && !status.pre) revert PreCheckNotEnforced();
+            if (!ALLOW_MULTIPLE_MAIN && status.main > 0) revert MainCheckAlreadyEnforced();
             status.main += 1;
         }
 
