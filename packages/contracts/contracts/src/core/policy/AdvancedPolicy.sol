@@ -29,9 +29,9 @@ abstract contract AdvancedPolicy is IAdvancedPolicy, Policy {
      * @notice Initialize function for minimal proxy clones.
      *         Decodes appended bytes for (AdvancedChecker, skipPre, skipPost, allowMultipleMain).
      */
-    function initialize() public virtual override {
+    function _initialize() internal virtual override {
         // 1. Call Policy’s initialize to set ownership and `_initialized`.
-        super.initialize();
+        super._initialize();
 
         // 2. Decode the appended bytes for the advanced config.
         bytes memory data = _getAppendedBytes();

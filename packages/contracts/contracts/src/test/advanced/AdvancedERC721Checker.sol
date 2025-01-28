@@ -25,9 +25,9 @@ contract AdvancedERC721Checker is AdvancedChecker {
     uint256 public minTokenId;
     uint256 public maxTokenId;
 
-    function initialize() public virtual override {
+    function _initialize() internal override {
         // 1. Call super to handle `_initialized` check.
-        super.initialize();
+        super._initialize();
 
         // 2. Retrieve appended bytes from the clone.
         bytes memory data = _getAppendedBytes();

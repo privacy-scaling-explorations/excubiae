@@ -2,12 +2,12 @@
 pragma solidity ^0.8.20;
 
 import {IAdvancedChecker, Check, CheckStatus} from "../interfaces/IAdvancedChecker.sol";
-import {Checker} from "./Checker.sol";
+import {Clone} from "../proxy/Clone.sol";
 
 /// @title AdvancedChecker.
 /// @notice Multi-phase validation checker with pre, main, and post checks.
 /// @dev Base contract for implementing complex validation logic with configurable check phases.
-abstract contract AdvancedChecker is Checker, IAdvancedChecker {
+abstract contract AdvancedChecker is Clone, IAdvancedChecker {
     /// @notice Entry point for validation checks.
     /// @param subject Address to validate.
     /// @param evidence Validation data.

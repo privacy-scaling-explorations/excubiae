@@ -22,9 +22,9 @@ abstract contract BasePolicy is Policy, IBasePolicy {
      * @notice Initializes the contract with a BaseChecker instance, reading from appended bytes.
      *         Replaces the old constructor-based approach.
      */
-    function initialize() public virtual override {
+    function _initialize() internal virtual override {
         // 1. Call the base `Policy.initialize()` to set ownership / handle `_initialized`.
-        super.initialize();
+        super._initialize();
 
         // 2. Decode the appended bytes to get the BaseChecker address (and anything else you might need).
         bytes memory data = _getAppendedBytes();

@@ -2,13 +2,13 @@
 pragma solidity ^0.8.20;
 
 import {IBaseChecker} from "../interfaces/IBaseChecker.sol";
-import {Checker} from "./Checker.sol";
+import {Clone} from "../proxy/Clone.sol";
 
 /// @title BaseChecker
 /// @notice Abstract base contract for implementing validation checks.
 /// @dev Provides a standardized interface for implementing custom validation logic
 /// through the internal _check method.
-abstract contract BaseChecker is Checker, IBaseChecker {
+abstract contract BaseChecker is Clone, IBaseChecker {
     /// @notice Validates evidence for a given subject address.
     /// @dev External view function that delegates to internal _check implementation.
     /// @param subject Address to validate.

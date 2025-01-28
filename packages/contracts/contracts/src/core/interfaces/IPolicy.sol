@@ -14,7 +14,6 @@ interface IPolicy {
     error TargetOnly();
     error TargetAlreadySet();
     error AlreadyEnforced();
-    error AlreadyInitialized();
 
     /// @notice Returns policy trait identifier.
     /// @return Policy trait string (e.g., "Semaphore").

@@ -2,7 +2,6 @@
 pragma solidity ^0.8.20;
 
 import {BaseChecker} from "../../core/checker/BaseChecker.sol";
-import {Checker} from "../../core/checker/Checker.sol";
 import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
 /// @title BaseERC721Checker.
@@ -12,9 +11,9 @@ contract BaseERC721Checker is BaseChecker {
     /// @notice NFT contract reference.
     IERC721 public nft;
 
-    function initialize() public virtual override {
+    function _initialize() internal override {
         // 1. Call super to handle `_initialized` check.
-        super.initialize();
+        super._initialize();
 
         // 2. Retrieve appended bytes from the clone.
         bytes memory data = _getAppendedBytes();
