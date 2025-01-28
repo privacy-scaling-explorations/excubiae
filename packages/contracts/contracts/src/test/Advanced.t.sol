@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import {Test} from "forge-std/src/Test.sol";
+import {Test, Vm} from "forge-std/src/Test.sol";
 import {NFT} from "./utils/NFT.sol";
 import {BaseERC721Checker} from "./base/BaseERC721Checker.sol";
 import {AdvancedERC721Checker} from "./advanced/AdvancedERC721Checker.sol";
@@ -23,6 +23,8 @@ import {Check} from "../core/interfaces/IAdvancedChecker.sol";
 // @todo add edge cases
 
 contract AdvancedChecker is Test {
+    event CloneDeployed(address indexed clone);
+
     NFT internal signupNft;
     NFT internal rewardNft;
     BaseERC721Checker internal baseChecker;
@@ -39,31 +41,27 @@ contract AdvancedChecker is Test {
 
     function setUp() public virtual {
         vm.startPrank(deployer);
-
         signupNft = new NFT();
         rewardNft = new NFT();
-
         signupNft.mint(subject);
-
         baseFactory = new BaseERC721CheckerFactory();
         advancedFactory = new AdvancedERC721CheckerFactory();
 
-        address baseClone = baseFactory.createERC721Checker(address(signupNft));
+        // For first deploy - capture the event
+        vm.recordLogs();
+        baseFactory.deploy(address(signupNft));
+        Vm.Log[] memory entries = vm.getRecordedLogs();
+        address baseClone = address(uint160(uint256(entries[0].topics[1])));
         baseChecker = BaseERC721Checker(baseClone);
 
-        address advancedClone = advancedFactory.createERC721Checker(
-            address(signupNft),
-            address(rewardNft),
-            address(baseChecker),
-            1,
-            0,
-            10
-        );
-
+        // For second deploy - capture the event
+        vm.recordLogs();
+        advancedFactory.deploy(address(signupNft), address(rewardNft), address(baseChecker), 1, 0, 10);
+        entries = vm.getRecordedLogs();
+        address advancedClone = address(uint160(uint256(entries[0].topics[1])));
         advancedChecker = AdvancedERC721Checker(advancedClone);
 
         evidence[0] = abi.encode(0);
-
         vm.stopPrank();
     }
 
@@ -331,22 +329,29 @@ contract AdvancedPolicy is Test {
         baseFactory = new BaseERC721CheckerFactory();
         advancedFactory = new AdvancedERC721CheckerFactory();
 
-        address baseClone = baseFactory.createERC721Checker(address(signupNft));
+        // For first deploy - capture the event
+        vm.recordLogs();
+        baseFactory.deploy(address(signupNft));
+        Vm.Log[] memory entries = vm.getRecordedLogs();
+        address baseClone = address(uint160(uint256(entries[0].topics[1])));
         baseChecker = BaseERC721Checker(baseClone);
 
-        address advancedClone = advancedFactory.createERC721Checker(
-            address(signupNft),
-            address(rewardNft),
-            address(baseChecker),
-            1,
-            0,
-            10
-        );
+        // For second deploy - capture the event
+        vm.recordLogs();
+        advancedFactory.deploy(address(signupNft), address(rewardNft), address(baseChecker), 1, 0, 10);
+        entries = vm.getRecordedLogs();
+        address advancedClone = address(uint160(uint256(entries[0].topics[1])));
+        advancedChecker = AdvancedERC721Checker(advancedClone);
 
         advancedChecker = AdvancedERC721Checker(advancedClone);
 
         policyFactory = new AdvancedERC721PolicyFactory();
-        address policyClone = policyFactory.createERC721Policy(address(advancedChecker), false, false, false);
+
+        // For first deploy - capture the event
+        vm.recordLogs();
+        policyFactory.deploy(address(advancedChecker), false, false, false);
+        entries = vm.getRecordedLogs();
+        address policyClone = address(uint160(uint256(entries[0].topics[1])));
         policy = AdvancedERC721Policy(policyClone);
 
         evidence[0] = abi.encode(0);
@@ -1075,22 +1080,29 @@ contract Voting is Test {
         baseFactory = new BaseERC721CheckerFactory();
         advancedFactory = new AdvancedERC721CheckerFactory();
 
-        address baseClone = baseFactory.createERC721Checker(address(signupNft));
+        // For first deploy - capture the event
+        vm.recordLogs();
+        baseFactory.deploy(address(signupNft));
+        Vm.Log[] memory entries = vm.getRecordedLogs();
+        address baseClone = address(uint160(uint256(entries[0].topics[1])));
         baseChecker = BaseERC721Checker(baseClone);
 
-        address advancedClone = advancedFactory.createERC721Checker(
-            address(signupNft),
-            address(rewardNft),
-            address(baseChecker),
-            1,
-            0,
-            10
-        );
+        // For second deploy - capture the event
+        vm.recordLogs();
+        advancedFactory.deploy(address(signupNft), address(rewardNft), address(baseChecker), 1, 0, 10);
+        entries = vm.getRecordedLogs();
+        address advancedClone = address(uint160(uint256(entries[0].topics[1])));
+        advancedChecker = AdvancedERC721Checker(advancedClone);
 
         advancedChecker = AdvancedERC721Checker(advancedClone);
 
         policyFactory = new AdvancedERC721PolicyFactory();
-        address policyClone = policyFactory.createERC721Policy(address(advancedChecker), false, false, false);
+
+        // For first deploy - capture the event
+        vm.recordLogs();
+        policyFactory.deploy(address(advancedChecker), false, false, false);
+        entries = vm.getRecordedLogs();
+        address policyClone = address(uint160(uint256(entries[0].topics[1])));
         policy = AdvancedERC721Policy(policyClone);
 
         evidence[0] = abi.encode(0);

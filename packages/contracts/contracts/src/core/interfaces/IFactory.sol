@@ -6,10 +6,9 @@ import {LibClone} from "solady/src/utils/LibClone.sol";
 /// @title IFactory
 /// @notice Base interface for Excubiae factories
 interface IFactory {
-    /// @notice Emitted when a new clone is deployed
-    /// @param instance Address of the deployed clone
-    event CloneDeployed(address indexed instance);
+    error InitializationFailed();
 
-    /// @notice Returns the implementation contract address
-    function implementation() external view returns (address);
+    /// @notice Emitted when a new clone is deployed
+    /// @param clone Address of the deployed clone
+    event CloneDeployed(address indexed clone);
 }

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import {Test} from "forge-std/src/Test.sol";
+import {Test, Vm} from "forge-std/src/Test.sol";
 import {NFT} from "./utils/NFT.sol";
 import {BaseERC721Checker} from "./base/BaseERC721Checker.sol";
 import {BaseERC721CheckerFactory} from "./base/BaseERC721CheckerFactory.sol";
@@ -37,8 +37,13 @@ contract BaseChecker is Test {
         nft.mint(subject);
 
         factory = new BaseERC721CheckerFactory();
-        address clone = factory.createERC721Checker(address(nft));
-        checker = BaseERC721Checker(clone);
+
+        // For first deploy - capture the event
+        vm.recordLogs();
+        factory.deploy(address(nft));
+        Vm.Log[] memory entries = vm.getRecordedLogs();
+        address baseClone = address(uint160(uint256(entries[0].topics[1])));
+        checker = BaseERC721Checker(baseClone);
 
         evidence[0] = abi.encode(0);
 
@@ -152,11 +157,20 @@ contract BasePolicy is Test {
         nft.mint(subject);
 
         checkerFactory = new BaseERC721CheckerFactory();
-        address checkerClone = checkerFactory.createERC721Checker(address(nft));
+        policyFactory = new BaseERC721PolicyFactory();
+
+        // For first deploy - capture the event
+        vm.recordLogs();
+        checkerFactory.deploy(address(nft));
+        Vm.Log[] memory entries = vm.getRecordedLogs();
+        address checkerClone = address(uint160(uint256(entries[0].topics[1])));
         checker = BaseERC721Checker(checkerClone);
 
-        policyFactory = new BaseERC721PolicyFactory();
-        address policyClone = policyFactory.createERC721Policy(address(checker));
+        // For second deploy - capture the event
+        vm.recordLogs();
+        policyFactory.deploy(address(checker));
+        entries = vm.getRecordedLogs();
+        address policyClone = address(uint160(uint256(entries[0].topics[1])));
         policy = BaseERC721Policy(policyClone);
 
         evidence[0] = abi.encode(0);
@@ -410,13 +424,21 @@ contract Voting is Test {
         nft.mint(subject);
 
         checkerFactory = new BaseERC721CheckerFactory();
-        address checkerClone = checkerFactory.createERC721Checker(address(nft));
+        policyFactory = new BaseERC721PolicyFactory();
+
+        // For first deploy - capture the event
+        vm.recordLogs();
+        checkerFactory.deploy(address(nft));
+        Vm.Log[] memory entries = vm.getRecordedLogs();
+        address checkerClone = address(uint160(uint256(entries[0].topics[1])));
         checker = BaseERC721Checker(checkerClone);
 
-        policyFactory = new BaseERC721PolicyFactory();
-        address policyClone = policyFactory.createERC721Policy(address(checker));
+        // For second deploy - capture the event
+        vm.recordLogs();
+        policyFactory.deploy(address(checker));
+        entries = vm.getRecordedLogs();
+        address policyClone = address(uint160(uint256(entries[0].topics[1])));
         policy = BaseERC721Policy(policyClone);
-
         voting = new BaseVoting(policy);
 
         vm.stopPrank();
