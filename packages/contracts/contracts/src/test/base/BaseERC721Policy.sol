@@ -3,15 +3,13 @@ pragma solidity ^0.8.20;
 
 import {BasePolicy} from "../../core/policy/BasePolicy.sol";
 
-/**
- * @title BaseERC721Policy
- * @notice Policy enforcer for ERC721 token validation, built on top of BasePolicy.
- * @dev In a minimal proxy context, we remove the constructor arguments and use `initialize()`.
- */
+/// @title BaseERC721Policy
+/// @notice Policy contract enforcing NFT-based validation.
+/// @dev Extends BasePolicy to add specific behavior for ERC721 token validation.
 contract BaseERC721Policy is BasePolicy {
-    /**
-     * @notice A sample policy identifier.
-     */
+    /// @notice Returns a trait identifier for the policy.
+    /// @dev Used to identify the policy type.
+    /// @return The trait string "BaseERC721".
     function trait() external pure returns (string memory) {
         return "BaseERC721";
     }
