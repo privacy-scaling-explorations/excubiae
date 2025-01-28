@@ -4,15 +4,17 @@ pragma solidity ^0.8.20;
 import {IAdvancedChecker, Check, CheckStatus} from "../interfaces/IAdvancedChecker.sol";
 import {Clone} from "../proxy/Clone.sol";
 
-/// @title AdvancedChecker.
-/// @notice Multi-phase validation checker with pre, main, and post checks.
-/// @dev Base contract for implementing complex validation logic with configurable check phases.
+/// @title AdvancedChecker
+/// @notice Abstract contract for multi-phase validation (PRE, MAIN, POST).
+/// @dev Implements advanced validation by routing checks to appropriate phases.
+///      This is intended to be extended for complex validation systems.
 abstract contract AdvancedChecker is Clone, IAdvancedChecker {
-    /// @notice Entry point for validation checks.
-    /// @param subject Address to validate.
-    /// @param evidence Validation data.
-    /// @param checkType Type of check (PRE, MAIN, POST).
-    /// @return checked Validation result.
+    /// @notice Validates a subject's evidence for a specific check phase.
+    /// @dev External entry point for validation checks, delegating logic to `_check`.
+    /// @param subject The address to validate.
+    /// @param evidence An array of custom validation data.
+    /// @param checkType The phase of validation to execute (PRE, MAIN, POST).
+    /// @return checked Boolean indicating whether the validation passed.
     function check(
         address subject,
         bytes[] calldata evidence,
@@ -21,12 +23,12 @@ abstract contract AdvancedChecker is Clone, IAdvancedChecker {
         return _check(subject, evidence, checkType);
     }
 
-    /// @notice Core validation logic router.
-    /// @dev Directs to appropriate check based on type and configuration.
-    /// @param subject Address to validate.
-    /// @param evidence Validation data.
-    /// @param checkType Check type to perform.
-    /// @return checked Validation result.
+    /// @notice Core validation logic dispatcher.
+    /// @dev Routes validation calls to specific phase methods (_checkPre, _checkMain, _checkPost).
+    /// @param subject The address to validate.
+    /// @param evidence An array of custom validation data.
+    /// @param checkType The phase of validation to execute.
+    /// @return checked Boolean indicating whether the validation passed.
     function _check(address subject, bytes[] calldata evidence, Check checkType) internal view returns (bool checked) {
         if (checkType == Check.PRE) {
             return _checkPre(subject, evidence);
@@ -39,24 +41,24 @@ abstract contract AdvancedChecker is Clone, IAdvancedChecker {
         return _checkMain(subject, evidence);
     }
 
-    /// @notice Pre-condition validation implementation.
-    /// @dev Override to implement pre-check logic.
-    /// @param subject Address to validate.
-    /// @param evidence Validation data.
-    /// @return checked Validation result.
+    /// @notice Pre-condition validation logic.
+    /// @dev Derived contracts should override this to implement pre-check validation.
+    /// @param subject The address to validate.
+    /// @param evidence An array of custom validation data.
+    /// @return checked Boolean indicating whether the validation passed.
     function _checkPre(address subject, bytes[] calldata evidence) internal view virtual returns (bool checked) {}
 
-    /// @notice Main validation implementation.
-    /// @dev Override to implement main check logic.
-    /// @param subject Address to validate.
-    /// @param evidence Validation data.
-    /// @return checked Validation result.
+    /// @notice Main validation logic.
+    /// @dev Derived contracts should override this to implement main check validation.
+    /// @param subject The address to validate.
+    /// @param evidence An array of custom validation data.
+    /// @return checked Boolean indicating whether the validation passed.
     function _checkMain(address subject, bytes[] calldata evidence) internal view virtual returns (bool checked) {}
 
-    /// @notice Post-condition validation implementation.
-    /// @dev Override to implement post-check logic.
-    /// @param subject Address to validate.
-    /// @param evidence Validation data.
-    /// @return checked Validation result.
+    /// @notice Post-condition validation logic.
+    /// @dev Derived contracts should override this to implement post-check validation.
+    /// @param subject The address to validate.
+    /// @param evidence An array of custom validation data.
+    /// @return checked Boolean indicating whether the validation passed.
     function _checkPost(address subject, bytes[] calldata evidence) internal view virtual returns (bool checked) {}
 }

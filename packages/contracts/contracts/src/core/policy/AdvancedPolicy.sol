@@ -7,10 +7,10 @@ import {Policy} from "./Policy.sol";
 import {LibClone} from "solady/src/utils/LibClone.sol";
 
 /// @title AdvancedPolicy
-/// @notice Implements advanced policy checks with pre, main, and post validation stages.
-/// @dev Extends Policy with multi-stage validation. Now clone-friendly with `initialize()`.
+/// @notice Implements multi-stage policy checks with pre, main, and post validation stages.
+/// @dev Extends Policy and provides advanced enforcement logic with an AdvancedChecker.
 abstract contract AdvancedPolicy is IAdvancedPolicy, Policy {
-    /// @notice Reference to the validation checker contract. Stored, not immutable.
+    /// @notice Reference to the AdvancedChecker contract used for validation.
     AdvancedChecker public ADVANCED_CHECKER;
 
     /// @notice Controls whether pre-condition checks are required.
@@ -22,18 +22,14 @@ abstract contract AdvancedPolicy is IAdvancedPolicy, Policy {
     /// @notice Controls whether main check can be executed multiple times.
     bool public ALLOW_MULTIPLE_MAIN;
 
-    /// @notice Tracks validation status for each subject per target.
+    /// @notice Tracks enforcement status for each subject for each phase.
     mapping(address => CheckStatus) public enforced;
 
-    /**
-     * @notice Initialize function for minimal proxy clones.
-     *         Decodes appended bytes for (AdvancedChecker, skipPre, skipPost, allowMultipleMain).
-     */
+    /// @notice Initializes the contract with appended bytes data for configuration.
+    /// @dev Decodes AdvancedChecker address and sets the owner.
     function _initialize() internal virtual override {
-        // 1. Call Policy’s initialize to set ownership and `_initialized`.
         super._initialize();
 
-        // 2. Decode the appended bytes for the advanced config.
         bytes memory data = _getAppendedBytes();
         (address sender, address advCheckerAddr, bool skipPre, bool skipPost, bool allowMultipleMain) = abi.decode(
             data,
@@ -48,18 +44,20 @@ abstract contract AdvancedPolicy is IAdvancedPolicy, Policy {
         ALLOW_MULTIPLE_MAIN = allowMultipleMain;
     }
 
-    /// @notice Enforces a policy check for a subject, handling multi-stage logic.
-    /// @dev Only callable by the target contract.
+    /// @notice Enforces a multi-stage policy check.
+    /// @dev Handles pre, main, and post validation stages. Only callable by the target contract.
+    /// @param subject Address to enforce the policy on.
+    /// @param evidence Evidence required for validation.
+    /// @param checkType The type of check performed (PRE, MAIN, POST).
     function enforce(address subject, bytes[] calldata evidence, Check checkType) external override onlyTarget {
         _enforce(subject, evidence, checkType);
     }
 
-    /// @notice Internal check enforcement logic for advanced multi-stage checks.
+    /// @notice Internal implementation of multi-stage enforcement logic.
+    /// @param subject Address to enforce the policy on.
+    /// @param evidence Evidence required for validation.
+    /// @param checkType The type of check performed (PRE, MAIN, POST).
     function _enforce(address subject, bytes[] calldata evidence, Check checkType) internal {
-        if (!ADVANCED_CHECKER.check(subject, evidence, checkType)) {
-            revert UnsuccessfulCheck();
-        }
-
         CheckStatus storage status = enforced[subject];
 
         if (checkType == Check.PRE) {
@@ -72,11 +70,12 @@ abstract contract AdvancedPolicy is IAdvancedPolicy, Policy {
             if (status.post) revert AlreadyEnforced();
             status.post = true;
         } else {
-            // MAIN check
             if (!SKIP_PRE && !status.pre) revert PreCheckNotEnforced();
             if (!ALLOW_MULTIPLE_MAIN && status.main > 0) revert MainCheckAlreadyEnforced();
             status.main += 1;
         }
+
+        if (!ADVANCED_CHECKER.check(subject, evidence, checkType)) revert UnsuccessfulCheck();
 
         emit Enforced(subject, target, evidence, checkType);
     }

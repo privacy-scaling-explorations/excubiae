@@ -1,26 +1,39 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-/// @title IPolicy.
-/// @notice Core policy interface for protected contract management.
+/// @title IPolicy
+/// @notice Core interface for managing policies that protect specific contracts.
+/// @dev Provides methods for setting and retrieving the protected contract and enforcing checks.
 interface IPolicy {
-    /// @notice Emitted when target contract is set.
+    /// @notice Emitted when the target contract is successfully set.
+    /// @param target Address of the protected contract.
     event TargetSet(address indexed target);
 
-    /// @notice Core error conditions.
+    /// @notice Error thrown when a zero address is provided where not allowed.
     error ZeroAddress();
+
+    /// @notice Error thrown when a validation check fails.
     error UnsuccessfulCheck();
+
+    /// @notice Error thrown when the target contract is not set.
     error TargetNotSet();
+
+    /// @notice Error thrown when a function is restricted to calls from the target contract.
     error TargetOnly();
+
+    /// @notice Error thrown when attempting to set the target more than once.
     error TargetAlreadySet();
+
+    /// @notice Error thrown when a subject is already enforced.
     error AlreadyEnforced();
 
-    /// @notice Returns policy trait identifier.
-    /// @return Policy trait string (e.g., "Semaphore").
+    /// @notice Retrieves the policy trait identifier.
+    /// @dev This is typically used to distinguish policy implementations (e.g., "Semaphore").
+    /// @return The policy trait string.
     function trait() external pure returns (string memory);
 
-    /// @notice Sets protected contract address.
-    /// @dev Owner-only, one-time setting.
-    /// @param _target Protected contract address.
+    /// @notice Sets the contract address to be protected by this policy.
+    /// @dev This function is restricted to the owner and can only be called once.
+    /// @param _target The address of the protected contract.
     function setTarget(address _target) external;
 }

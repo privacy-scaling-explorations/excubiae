@@ -1,36 +1,38 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-/// @title Check.
-/// @notice Defines validation phases in the AdvancedChecker system.
-/// @custom:values PRE - Pre-condition validation.
-///                MAIN - Primary validation.
-///                POST - Post-condition validation.
+/// @title Check
+/// @notice Enum representing validation phases.
+/// @dev Used to identify the specific validation phase in multi-phase systems.
 enum Check {
+    /// Pre-condition validation.
     PRE,
+    /// Primary validation.
     MAIN,
+    /// Post-condition validation.
     POST
 }
 
-/// @notice Tracks validation status for pre, main, and post checks.
-/// @dev Used to maintain check state in AdvancedPolicy.
+/// @notice Tracks the status of validation checks.
+/// @dev Used in AdvancedPolicy to maintain the state of multi-phase checks.
 struct CheckStatus {
-    /// @dev Pre-check completion status.
+    /// @notice Indicates whether the pre-condition check has been completed.
     bool pre;
-    /// @dev Number of completed main checks.
+    /// @notice Tracks the number of main checks completed.
     uint8 main;
-    /// @dev Post-check completion status.
+    /// @notice Indicates whether the post-condition check has been completed.
     bool post;
 }
 
-/// @title IAdvancedChecker.
-/// @notice Defines multi-phase validation system interface.
-/// @dev Implement this for custom validation logic with pre/main/post checks.
+/// @title IAdvancedChecker
+/// @notice Interface defining multi-phase validation capabilities.
+/// @dev Supports PRE, MAIN, and POST validation phases.
 interface IAdvancedChecker {
-    /// @notice Validates subject against specified check type.
-    /// @param subject Address to validate.
-    /// @param evidence Validation data.
-    /// @param checkType Check phase to execute.
-    /// @return checked True if validation passes.
+    /// @notice Validates a subject for a specific check phase.
+    /// @dev Implementations should route to appropriate phase-specific logic.
+    /// @param subject The address to validate.
+    /// @param evidence An array of custom validation data.
+    /// @param checkType The phase of validation to execute (PRE, MAIN, POST).
+    /// @return checked Boolean indicating whether the validation passed.
     function check(address subject, bytes[] calldata evidence, Check checkType) external view returns (bool checked);
 }

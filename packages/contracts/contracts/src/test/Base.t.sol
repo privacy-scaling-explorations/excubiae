@@ -9,7 +9,6 @@ import {BaseERC721PolicyFactory} from "./base/BaseERC721PolicyFactory.sol";
 import {BaseERC721Policy} from "./base/BaseERC721Policy.sol";
 import {BaseVoting} from "./base/BaseVoting.sol";
 import {IPolicy} from "../core/interfaces/IPolicy.sol";
-import {IChecker} from "../core/interfaces/IChecker.sol";
 import {IERC721Errors} from "@openzeppelin/contracts/interfaces/draft-IERC6093.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
