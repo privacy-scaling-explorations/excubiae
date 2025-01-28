@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import {BaseERC721Checker} from "../base/BaseERC721Checker.sol";
+import {BaseERC721Checker} from "../BaseERC721Checker.sol";
 
 /// @title BaseERC721CheckerHarness
 /// @notice Test harness exposing internal methods of `BaseERC721Checker` for testing purposes.

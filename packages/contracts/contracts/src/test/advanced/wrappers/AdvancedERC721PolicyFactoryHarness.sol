@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import {AdvancedERC721PolicyFactory} from "../advanced/AdvancedERC721PolicyFactory.sol";
+import {AdvancedERC721PolicyFactory} from "../AdvancedERC721PolicyFactory.sol";
 
 /// @title AdvancedERC721PolicyFactoryHarness
 /// @notice Test harness exposing internal methods of `AdvancedERC721PolicyFactory` for testing purposes.
