@@ -10,7 +10,7 @@ import {LibClone} from "solady/src/utils/LibClone.sol";
 abstract contract Clone is IClone {
     /// @notice Tracks whether the clone has been initialized.
     /// @dev Prevents re-initialization through the `_initialize` function.
-    bool private _initialized;
+    bool public initialized;
 
     /// @notice Initializes the clone.
     /// @dev Calls the internal `_initialize` function to set up the clone.
@@ -30,8 +30,8 @@ abstract contract Clone is IClone {
     /// @dev Must be overridden by derived contracts to implement custom initialization logic.
     /// Reverts if the clone has already been initialized.
     function _initialize() internal virtual {
-        if (_initialized) revert AlreadyInitialized();
-        _initialized = true;
+        if (initialized) revert AlreadyInitialized();
+        initialized = true;
     }
 
     /// @notice Internal function to retrieve appended arguments from the clone.
