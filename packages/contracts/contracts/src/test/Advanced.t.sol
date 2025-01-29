@@ -9,8 +9,6 @@ import {BaseERC721CheckerFactory} from "./base/BaseERC721CheckerFactory.sol";
 import {AdvancedERC721CheckerFactory} from "./advanced/AdvancedERC721CheckerFactory.sol";
 import {AdvancedERC721Policy} from "./advanced/AdvancedERC721Policy.sol";
 import {AdvancedERC721PolicyFactory} from "./advanced/AdvancedERC721PolicyFactory.sol";
-import {BaseERC721Policy} from "./base/BaseERC721Policy.sol";
-import {BaseVoting} from "./base/BaseVoting.sol";
 import {AdvancedVoting} from "./advanced/AdvancedVoting.sol";
 import {IPolicy} from "../core/interfaces/IPolicy.sol";
 import {IERC721Errors} from "@openzeppelin/contracts/interfaces/draft-IERC6093.sol";
@@ -235,11 +233,11 @@ contract AdvancedPolicy is Test {
         );
     }
 
-    function test_trait_returnsCorrectValue() public view {
+    function test_policy_trait_returnsCorrectValue() public view {
         assertEq(policy.trait(), "AdvancedERC721");
     }
 
-    function test_setTarget_whenCallerNotOwner_reverts() public {
+    function test_policy_setTarget_whenCallerNotOwner_reverts() public {
         vm.startPrank(notOwner);
 
         vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, notOwner));
@@ -248,7 +246,7 @@ contract AdvancedPolicy is Test {
         vm.stopPrank();
     }
 
-    function test_setTarget_whenZeroAddress_reverts() public {
+    function test_policy_setTarget_whenZeroAddress_reverts() public {
         vm.startPrank(deployer);
 
         vm.expectRevert(abi.encodeWithSelector(IPolicy.ZeroAddress.selector));
@@ -257,7 +255,7 @@ contract AdvancedPolicy is Test {
         vm.stopPrank();
     }
 
-    function test_setTarget_whenValid_succeeds() public {
+    function test_policy_setTarget_whenValid_succeeds() public {
         vm.startPrank(deployer);
 
         vm.expectEmit(true, true, true, true);
@@ -268,7 +266,7 @@ contract AdvancedPolicy is Test {
         vm.stopPrank();
     }
 
-    function test_setTarget_whenAlreadySet_reverts() public {
+    function test_policy_setTarget_whenAlreadySet_reverts() public {
         vm.startPrank(deployer);
 
         policy.setTarget(target);
@@ -279,7 +277,7 @@ contract AdvancedPolicy is Test {
         vm.stopPrank();
     }
 
-    function test_enforcePre_whenCallerNotTarget_reverts() public {
+    function test_policy_enforcePre_whenCallerNotTarget_reverts() public {
         vm.startPrank(deployer);
 
         policy.setTarget(target);
@@ -294,7 +292,7 @@ contract AdvancedPolicy is Test {
         vm.stopPrank();
     }
 
-    function test_enforcePre_whenTokenDoesNotExist_reverts() public {
+    function test_policy_enforcePre_whenTokenDoesNotExist_reverts() public {
         vm.startPrank(deployer);
 
         policy.setTarget(target);
@@ -309,7 +307,7 @@ contract AdvancedPolicy is Test {
         vm.stopPrank();
     }
 
-    function test_enforcePre_whenChecksSkipped_reverts() public {
+    function test_policy_enforcePre_whenChecksSkipped_reverts() public {
         vm.startPrank(deployer);
 
         policySkipped.setTarget(target);
@@ -325,7 +323,7 @@ contract AdvancedPolicy is Test {
         vm.stopPrank();
     }
 
-    function test_enforcePre_whenCheckFails_reverts() public {
+    function test_policy_enforcePre_whenCheckFails_reverts() public {
         vm.startPrank(deployer);
 
         policy.setTarget(target);
@@ -341,7 +339,7 @@ contract AdvancedPolicy is Test {
         vm.stopPrank();
     }
 
-    function test_enforcePre_whenValid_succeeds() public {
+    function test_policy_enforcePre_whenValid_succeeds() public {
         vm.startPrank(deployer);
 
         policy.setTarget(target);
@@ -359,7 +357,7 @@ contract AdvancedPolicy is Test {
         vm.stopPrank();
     }
 
-    function test_enforcePre_whenAlreadyEnforced_reverts() public {
+    function test_policy_enforcePre_whenAlreadyEnforced_reverts() public {
         vm.startPrank(deployer);
 
         policy.setTarget(target);
@@ -377,7 +375,7 @@ contract AdvancedPolicy is Test {
         vm.stopPrank();
     }
 
-    function test_enforceMain_whenCallerNotTarget_reverts() public {
+    function test_policy_enforceMain_whenCallerNotTarget_reverts() public {
         vm.startPrank(deployer);
 
         policy.setTarget(target);
@@ -392,7 +390,7 @@ contract AdvancedPolicy is Test {
         vm.stopPrank();
     }
 
-    function test_enforceMain_whenCheckFails_reverts() public {
+    function test_policy_enforceMain_whenCheckFails_reverts() public {
         vm.startPrank(deployer);
 
         policy.setTarget(target);
@@ -420,7 +418,7 @@ contract AdvancedPolicy is Test {
         vm.stopPrank();
     }
 
-    function test_enforceMain_whenPreCheckMissing_reverts() public {
+    function test_policy_enforceMain_whenPreCheckMissing_reverts() public {
         vm.startPrank(deployer);
 
         policy.setTarget(target);
@@ -436,7 +434,7 @@ contract AdvancedPolicy is Test {
         vm.stopPrank();
     }
 
-    function test_enforceMain_whenValid_succeeds() public {
+    function test_policy_enforceMain_whenValid_succeeds() public {
         vm.startPrank(deployer);
 
         policy.setTarget(target);
@@ -456,7 +454,7 @@ contract AdvancedPolicy is Test {
         vm.stopPrank();
     }
 
-    function test_enforceMain_whenMultipleValid_succeeds() public {
+    function test_policy_enforceMain_whenMultipleValid_succeeds() public {
         vm.startPrank(deployer);
 
         policy.setTarget(target);
@@ -481,7 +479,7 @@ contract AdvancedPolicy is Test {
         vm.stopPrank();
     }
 
-    function test_enforceMain_whenMultipleNotAllowed_reverts() public {
+    function test_policy_enforceMain_whenMultipleNotAllowed_reverts() public {
         vm.startPrank(deployer);
 
         policySkipped.setTarget(target);
@@ -499,7 +497,7 @@ contract AdvancedPolicy is Test {
         vm.stopPrank();
     }
 
-    function test_enforcePost_whenPreCheckMissing_reverts() public {
+    function test_policy_enforcePost_whenPreCheckMissing_reverts() public {
         vm.startPrank(deployer);
 
         policy.setTarget(target);
@@ -516,7 +514,7 @@ contract AdvancedPolicy is Test {
         vm.stopPrank();
     }
 
-    function test_enforcePost_whenCallerNotTarget_reverts() public {
+    function test_policy_enforcePost_whenCallerNotTarget_reverts() public {
         vm.startPrank(deployer);
 
         policy.setTarget(target);
@@ -531,7 +529,7 @@ contract AdvancedPolicy is Test {
         vm.stopPrank();
     }
 
-    function test_enforcePost_whenChecksSkipped_reverts() public {
+    function test_policy_enforcePost_whenChecksSkipped_reverts() public {
         vm.startPrank(deployer);
 
         policySkipped.setTarget(target);
@@ -549,7 +547,7 @@ contract AdvancedPolicy is Test {
         vm.stopPrank();
     }
 
-    function test_enforcePost_whenCheckFails_reverts() public {
+    function test_policy_enforcePost_whenCheckFails_reverts() public {
         vm.startPrank(deployer);
 
         policy.setTarget(target);
@@ -570,7 +568,7 @@ contract AdvancedPolicy is Test {
         vm.stopPrank();
     }
 
-    function test_enforcePost_whenValid_succeeds() public {
+    function test_policy_enforcePost_whenValid_succeeds() public {
         vm.startPrank(deployer);
 
         policy.setTarget(target);
@@ -591,7 +589,7 @@ contract AdvancedPolicy is Test {
         vm.stopPrank();
     }
 
-    function test_enforcePost_whenAlreadyEnforced_reverts() public {
+    function test_policy_enforcePost_whenAlreadyEnforced_reverts() public {
         vm.startPrank(deployer);
 
         policy.setTarget(target);
