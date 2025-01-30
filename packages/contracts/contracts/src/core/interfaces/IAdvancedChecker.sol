@@ -4,6 +4,7 @@ pragma solidity ^0.8.20;
 /// @title Check
 /// @notice Enum representing validation phases.
 /// @dev Used to identify the specific validation phase in multi-phase systems.
+/// @dev The PRE and POST checks are optional and may be skipped based on contract settings.
 enum Check {
     /// Pre-condition validation.
     PRE,
