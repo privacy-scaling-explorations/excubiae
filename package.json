@@ -50,7 +50,7 @@
         "format:write": "prettier -w . && yarn workspace excubiae-docs format:write && yarn workspace excubiae-contracts format:forge && yarn workspace excubiae-docs format",
         "lint": "eslint . && yarn workspace excubiae-contracts lint",
         "lint:fix": "eslint . --fix && yarn workspace excubiae-contracts lint:fix",
-        "version:bump": "scripts/version.ts ${0}",
+        "version:bump": "ts-node scripts/version.ts ${0}",
         "version:publish": "scripts/publish.ts",
         "version:release": "changelogithub",
         "clean": "scripts/clean-apps.ts && scripts/clean-packages.ts && rimraf node_modules coverage",
