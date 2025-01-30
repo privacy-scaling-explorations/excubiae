@@ -636,14 +636,14 @@ describe("Advanced", () => {
                 })
 
                 it("reverts when main check already enfored", async () => {
-                    const { advancedPolicySkipped, target, notOwnerAddress, subjectAddress, validEncodedNFTId } =
+                    const { advancedPolicySkipped, target, subjectAddress, validEncodedNFTId } =
                         await loadFixture(deployAdvancedPolicyFixture)
 
                     await advancedPolicySkipped.setTarget(await target.getAddress())
                     await advancedPolicySkipped.connect(target).enforce(subjectAddress, [validEncodedNFTId], 1)
 
                     expect(
-                        advancedPolicySkipped.connect(target).enforce(notOwnerAddress, [validEncodedNFTId], 1)
+                        advancedPolicySkipped.connect(target).enforce(subjectAddress, [validEncodedNFTId], 1)
                     ).to.be.revertedWithCustomError(advancedPolicySkipped, "MainCheckAlreadyEnforced")
                 })
             })
