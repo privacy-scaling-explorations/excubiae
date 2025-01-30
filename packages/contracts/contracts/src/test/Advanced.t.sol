@@ -1,37 +1,38 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import {Test} from "forge-std/src/Test.sol";
+import {Test, Vm} from "forge-std/src/Test.sol";
 import {NFT} from "./utils/NFT.sol";
 import {BaseERC721Checker} from "./base/BaseERC721Checker.sol";
 import {AdvancedERC721Checker} from "./advanced/AdvancedERC721Checker.sol";
+import {BaseERC721CheckerFactory} from "./base/BaseERC721CheckerFactory.sol";
+import {AdvancedERC721CheckerFactory} from "./advanced/AdvancedERC721CheckerFactory.sol";
 import {AdvancedERC721Policy} from "./advanced/AdvancedERC721Policy.sol";
+import {AdvancedERC721PolicyFactory} from "./advanced/AdvancedERC721PolicyFactory.sol";
 import {AdvancedVoting} from "./advanced/AdvancedVoting.sol";
-import {AdvancedERC721CheckerHarness} from "./wrappers/AdvancedERC721CheckerHarness.sol";
-import {AdvancedERC721PolicyHarness} from "./wrappers/AdvancedERC721PolicyHarness.sol";
-import {IChecker} from "../interfaces/IChecker.sol";
-import {IPolicy} from "../interfaces/IPolicy.sol";
-import {IAdvancedPolicy} from "../interfaces/IAdvancedPolicy.sol";
+import {IPolicy} from "../core/interfaces/IPolicy.sol";
 import {IERC721Errors} from "@openzeppelin/contracts/interfaces/draft-IERC6093.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
-import {Check} from "../interfaces/IAdvancedChecker.sol";
+import {Check} from "../core/interfaces/IAdvancedChecker.sol";
+import {IClone} from "../core/interfaces/IClone.sol";
+import {IAdvancedPolicy} from "../core/interfaces/IAdvancedPolicy.sol";
 
 contract AdvancedChecker is Test {
+    event CloneDeployed(address indexed clone);
+
     NFT internal signupNft;
     NFT internal rewardNft;
     BaseERC721Checker internal baseChecker;
     AdvancedERC721Checker internal advancedChecker;
-    AdvancedERC721CheckerHarness internal advancedCheckerHarness;
+    BaseERC721CheckerFactory internal baseFactory;
+    AdvancedERC721CheckerFactory internal advancedFactory;
 
     address public deployer = vm.addr(0x1);
     address public target = vm.addr(0x2);
     address public subject = vm.addr(0x3);
     address public notOwner = vm.addr(0x4);
 
-    address[] internal baseVerifiers;
-    address[] internal advancedVerifiers;
     bytes[] public evidence = new bytes[](1);
-    bytes[] public wrongEvidence = new bytes[](1);
 
     function setUp() public virtual {
         vm.startPrank(deployer);
@@ -39,40 +40,40 @@ contract AdvancedChecker is Test {
         signupNft = new NFT();
         rewardNft = new NFT();
 
-        baseVerifiers = new address[](1);
-        baseVerifiers[0] = address(signupNft);
-        baseChecker = new BaseERC721Checker(baseVerifiers);
+        baseFactory = new BaseERC721CheckerFactory();
+        advancedFactory = new AdvancedERC721CheckerFactory();
 
-        advancedVerifiers = new address[](3);
-        advancedVerifiers[0] = address(signupNft);
-        advancedVerifiers[1] = address(rewardNft);
-        advancedVerifiers[2] = address(baseChecker);
+        vm.recordLogs();
+        baseFactory.deploy(address(signupNft));
+        Vm.Log[] memory entries = vm.getRecordedLogs();
+        address baseClone = address(uint160(uint256(entries[0].topics[1])));
+        baseChecker = BaseERC721Checker(baseClone);
 
-        advancedChecker = new AdvancedERC721Checker(advancedVerifiers, 1, 0, 10);
-        advancedCheckerHarness = new AdvancedERC721CheckerHarness(advancedVerifiers, 1, 0, 10);
+        vm.recordLogs();
+        advancedFactory.deploy(address(signupNft), address(rewardNft), address(baseChecker), 1, 0, 10);
+        entries = vm.getRecordedLogs();
+        address advancedClone = address(uint160(uint256(entries[0].topics[1])));
+        advancedChecker = AdvancedERC721Checker(advancedClone);
 
         evidence[0] = abi.encode(0);
-        wrongEvidence[0] = abi.encode(1);
 
         vm.stopPrank();
     }
 
-    function test_getVerifierAtIndex_ReturnsCorrectAddress() public view {
-        assertEq(advancedChecker.getVerifierAtIndex(0), address(signupNft));
+    function test_factory_deployAndInitialize() public view {
+        assertEq(advancedChecker.initialized(), true);
     }
 
-    function test_getVerifierAtIndex_RevertWhen_VerifierNotFound() public {
-        vm.expectRevert(abi.encodeWithSelector(IChecker.VerifierNotFound.selector));
-        advancedChecker.getVerifierAtIndex(5);
+    function test_checker_whenAlreadyInitialized_reverts() public {
+        vm.expectRevert(abi.encodeWithSelector(IClone.AlreadyInitialized.selector));
+        advancedChecker.initialize();
     }
 
-    function test_getVerifierAtIndex_internal_ReturnsCorrectAddress() public view {
-        assertEq(advancedCheckerHarness.exposed__getVerifierAtIndex(0), address(signupNft));
-    }
-
-    function test_getVerifierAtIndex_internal_RevertWhen_VerifierNotFound() public {
-        vm.expectRevert(abi.encodeWithSelector(IChecker.VerifierNotFound.selector));
-        advancedCheckerHarness.exposed__getVerifierAtIndex(5);
+    function test_checker_getAppendedBytes() public {
+        assertEq(
+            advancedChecker.getAppendedBytes(),
+            abi.encode(address(signupNft), address(rewardNft), address(baseChecker), 1, 0, 10)
+        );
     }
 
     function test_checkPre_whenTokenDoesNotExist_reverts() public {
@@ -143,144 +144,6 @@ contract AdvancedChecker is Test {
 
         vm.stopPrank();
     }
-
-    function test_checkerPre_whenTokenDoesNotExist_reverts() public {
-        vm.startPrank(target);
-
-        vm.expectRevert(abi.encodeWithSelector(IERC721Errors.ERC721NonexistentToken.selector, uint256(0)));
-        advancedCheckerHarness.exposed__check(subject, evidence, Check.PRE);
-
-        vm.stopPrank();
-    }
-
-    function test_checkerPre_whenCallerNotOwner_returnsFalse() public {
-        vm.startPrank(target);
-
-        signupNft.mint(subject);
-
-        assert(!advancedCheckerHarness.exposed__check(notOwner, evidence, Check.PRE));
-
-        vm.stopPrank();
-    }
-
-    function test_checkerPre_whenValid_succeeds() public {
-        vm.startPrank(target);
-
-        signupNft.mint(subject);
-
-        assert(advancedCheckerHarness.exposed__check(subject, evidence, Check.PRE));
-
-        vm.stopPrank();
-    }
-
-    function test_checkerMain_whenCallerHasNoTokens_returnsFalse() public {
-        vm.startPrank(target);
-
-        signupNft.mint(subject);
-
-        assert(!advancedCheckerHarness.exposed__check(notOwner, evidence, Check.MAIN));
-
-        vm.stopPrank();
-    }
-
-    function test_checkerMain_whenCallerHasTokens_succeeds() public {
-        vm.startPrank(target);
-
-        signupNft.mint(subject);
-
-        assert(advancedCheckerHarness.exposed__check(subject, evidence, Check.MAIN));
-
-        vm.stopPrank();
-    }
-
-    function test_checkerPost_whenCallerBalanceGreaterThanZero_returnsFalse() public {
-        vm.startPrank(target);
-
-        rewardNft.mint(subject);
-
-        assert(!advancedCheckerHarness.check(subject, evidence, Check.POST));
-
-        vm.stopPrank();
-    }
-
-    function test_checkerPost_whenValid_succeeds() public {
-        vm.startPrank(target);
-
-        signupNft.mint(subject);
-
-        assert(advancedCheckerHarness.exposed__check(subject, evidence, Check.POST));
-
-        vm.stopPrank();
-    }
-
-    function test_internalPre_whenTokenDoesNotExist_reverts() public {
-        vm.startPrank(target);
-
-        vm.expectRevert(abi.encodeWithSelector(IERC721Errors.ERC721NonexistentToken.selector, uint256(1)));
-        advancedCheckerHarness.exposed__checkPre(subject, wrongEvidence);
-
-        vm.stopPrank();
-    }
-
-    function test_internalPre_whenCallerNotOwner_returnsFalse() public {
-        vm.startPrank(target);
-
-        signupNft.mint(subject);
-
-        assert(!advancedCheckerHarness.exposed__checkPre(notOwner, evidence));
-
-        vm.stopPrank();
-    }
-
-    function test_internalPre_whenValid_succeeds() public {
-        vm.startPrank(target);
-
-        signupNft.mint(subject);
-
-        assert(advancedCheckerHarness.exposed__checkPre(subject, evidence));
-
-        vm.stopPrank();
-    }
-
-    function test_internalMain_whenCallerHasNoTokens_returnsFalse() public {
-        vm.startPrank(target);
-
-        signupNft.mint(subject);
-
-        assert(!advancedCheckerHarness.exposed__checkMain(notOwner, evidence));
-
-        vm.stopPrank();
-    }
-
-    function test_internalMain_whenCallerHasTokens_succeeds() public {
-        vm.startPrank(target);
-
-        signupNft.mint(subject);
-
-        assert(advancedCheckerHarness.exposed__checkMain(subject, evidence));
-
-        vm.stopPrank();
-    }
-
-    function test_internalPost_whenCallerBalanceGreaterThanZero_returnsFalse() public {
-        vm.startPrank(target);
-
-        rewardNft.mint(subject);
-
-        assert(!advancedCheckerHarness.exposed__checkPost(subject, evidence));
-
-        vm.stopPrank();
-    }
-
-    function test_internalPost_whenValid_succeeds() public {
-        vm.startPrank(target);
-
-        signupNft.mint(subject);
-
-        assert(advancedCheckerHarness.exposed__checkPost(subject, evidence));
-
-        vm.stopPrank();
-    }
 }
 
 contract AdvancedPolicy is Test {
@@ -290,20 +153,18 @@ contract AdvancedPolicy is Test {
     NFT internal signupNft;
     NFT internal rewardNft;
     BaseERC721Checker internal baseChecker;
+    BaseERC721CheckerFactory internal baseFactory;
     AdvancedERC721Checker internal advancedChecker;
-    AdvancedERC721Checker internal advancedCheckerSkipped;
+    AdvancedERC721CheckerFactory internal advancedFactory;
     AdvancedERC721Policy internal policy;
     AdvancedERC721Policy internal policySkipped;
-    AdvancedERC721PolicyHarness internal policyHarness;
-    AdvancedERC721PolicyHarness internal policyHarnessSkipped;
+    AdvancedERC721PolicyFactory internal policyFactory;
 
     address public deployer = vm.addr(0x1);
     address public target = vm.addr(0x2);
     address public subject = vm.addr(0x3);
     address public notOwner = vm.addr(0x4);
 
-    address[] internal baseVerifiers;
-    address[] internal advancedVerifiers;
     bytes[] public evidence = new bytes[](1);
     bytes[] public wrongEvidence = new bytes[](1);
 
@@ -313,21 +174,34 @@ contract AdvancedPolicy is Test {
         signupNft = new NFT();
         rewardNft = new NFT();
 
-        baseVerifiers = new address[](1);
-        baseVerifiers[0] = address(signupNft);
-        baseChecker = new BaseERC721Checker(baseVerifiers);
+        baseFactory = new BaseERC721CheckerFactory();
+        advancedFactory = new AdvancedERC721CheckerFactory();
 
-        advancedVerifiers = new address[](3);
-        advancedVerifiers[0] = address(signupNft);
-        advancedVerifiers[1] = address(rewardNft);
-        advancedVerifiers[2] = address(baseChecker);
+        vm.recordLogs();
+        baseFactory.deploy(address(signupNft));
+        Vm.Log[] memory entries = vm.getRecordedLogs();
+        address baseClone = address(uint160(uint256(entries[0].topics[1])));
+        baseChecker = BaseERC721Checker(baseClone);
 
-        advancedChecker = new AdvancedERC721Checker(advancedVerifiers, 1, 0, 10);
-        advancedCheckerSkipped = new AdvancedERC721Checker(advancedVerifiers, 1, 0, 10);
-        policy = new AdvancedERC721Policy(advancedChecker, false, false, true);
-        policyHarness = new AdvancedERC721PolicyHarness(advancedChecker, false, false, true);
-        policySkipped = new AdvancedERC721Policy(advancedCheckerSkipped, true, true, false);
-        policyHarnessSkipped = new AdvancedERC721PolicyHarness(advancedCheckerSkipped, true, true, false);
+        vm.recordLogs();
+        advancedFactory.deploy(address(signupNft), address(rewardNft), address(baseChecker), 1, 0, 10);
+        entries = vm.getRecordedLogs();
+        address advancedClone = address(uint160(uint256(entries[0].topics[1])));
+        advancedChecker = AdvancedERC721Checker(advancedClone);
+
+        policyFactory = new AdvancedERC721PolicyFactory();
+
+        vm.recordLogs();
+        policyFactory.deploy(address(advancedChecker), false, false, true);
+        entries = vm.getRecordedLogs();
+        address policyClone = address(uint160(uint256(entries[0].topics[1])));
+        policy = AdvancedERC721Policy(policyClone);
+
+        vm.recordLogs();
+        policyFactory.deploy(address(advancedChecker), true, true, false);
+        entries = vm.getRecordedLogs();
+        address policyCloneSkipped = address(uint160(uint256(entries[0].topics[1])));
+        policySkipped = AdvancedERC721Policy(policyCloneSkipped);
 
         evidence[0] = abi.encode(0);
         wrongEvidence[0] = abi.encode(1);
@@ -335,11 +209,35 @@ contract AdvancedPolicy is Test {
         vm.stopPrank();
     }
 
-    function test_trait_returnsCorrectValue() public view {
+    function test_factory_deployAndInitialize() public view {
+        assertEq(policy.initialized(), true);
+        assertEq(policySkipped.initialized(), true);
+    }
+
+    function test_policy_whenAlreadyInitialized_reverts() public {
+        vm.expectRevert(abi.encodeWithSelector(IClone.AlreadyInitialized.selector));
+        policy.initialize();
+
+        vm.expectRevert(abi.encodeWithSelector(IClone.AlreadyInitialized.selector));
+        policySkipped.initialize();
+    }
+
+    function test_policy_getAppendedBytes() public {
+        assertEq(
+            policy.getAppendedBytes(),
+            abi.encode(address(deployer), address(advancedChecker), false, false, true)
+        );
+        assertEq(
+            policySkipped.getAppendedBytes(),
+            abi.encode(address(deployer), address(advancedChecker), true, true, false)
+        );
+    }
+
+    function test_policy_trait_returnsCorrectValue() public view {
         assertEq(policy.trait(), "AdvancedERC721");
     }
 
-    function test_setTarget_whenCallerNotOwner_reverts() public {
+    function test_policy_setTarget_whenCallerNotOwner_reverts() public {
         vm.startPrank(notOwner);
 
         vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, notOwner));
@@ -348,7 +246,7 @@ contract AdvancedPolicy is Test {
         vm.stopPrank();
     }
 
-    function test_setTarget_whenZeroAddress_reverts() public {
+    function test_policy_setTarget_whenZeroAddress_reverts() public {
         vm.startPrank(deployer);
 
         vm.expectRevert(abi.encodeWithSelector(IPolicy.ZeroAddress.selector));
@@ -357,7 +255,7 @@ contract AdvancedPolicy is Test {
         vm.stopPrank();
     }
 
-    function test_setTarget_whenValid_succeeds() public {
+    function test_policy_setTarget_whenValid_succeeds() public {
         vm.startPrank(deployer);
 
         vm.expectEmit(true, true, true, true);
@@ -368,7 +266,7 @@ contract AdvancedPolicy is Test {
         vm.stopPrank();
     }
 
-    function test_setTarget_whenAlreadySet_reverts() public {
+    function test_policy_setTarget_whenAlreadySet_reverts() public {
         vm.startPrank(deployer);
 
         policy.setTarget(target);
@@ -379,7 +277,7 @@ contract AdvancedPolicy is Test {
         vm.stopPrank();
     }
 
-    function test_enforcePre_whenCallerNotTarget_reverts() public {
+    function test_policy_enforcePre_whenCallerNotTarget_reverts() public {
         vm.startPrank(deployer);
 
         policy.setTarget(target);
@@ -394,7 +292,7 @@ contract AdvancedPolicy is Test {
         vm.stopPrank();
     }
 
-    function test_enforcePre_whenTokenDoesNotExist_reverts() public {
+    function test_policy_enforcePre_whenTokenDoesNotExist_reverts() public {
         vm.startPrank(deployer);
 
         policy.setTarget(target);
@@ -409,7 +307,7 @@ contract AdvancedPolicy is Test {
         vm.stopPrank();
     }
 
-    function test_enforcePre_whenChecksSkipped_reverts() public {
+    function test_policy_enforcePre_whenChecksSkipped_reverts() public {
         vm.startPrank(deployer);
 
         policySkipped.setTarget(target);
@@ -425,7 +323,7 @@ contract AdvancedPolicy is Test {
         vm.stopPrank();
     }
 
-    function test_enforcePre_whenCheckFails_reverts() public {
+    function test_policy_enforcePre_whenCheckFails_reverts() public {
         vm.startPrank(deployer);
 
         policy.setTarget(target);
@@ -441,7 +339,7 @@ contract AdvancedPolicy is Test {
         vm.stopPrank();
     }
 
-    function test_enforcePre_whenValid_succeeds() public {
+    function test_policy_enforcePre_whenValid_succeeds() public {
         vm.startPrank(deployer);
 
         policy.setTarget(target);
@@ -459,7 +357,7 @@ contract AdvancedPolicy is Test {
         vm.stopPrank();
     }
 
-    function test_enforcePre_whenAlreadyEnforced_reverts() public {
+    function test_policy_enforcePre_whenAlreadyEnforced_reverts() public {
         vm.startPrank(deployer);
 
         policy.setTarget(target);
@@ -477,7 +375,7 @@ contract AdvancedPolicy is Test {
         vm.stopPrank();
     }
 
-    function test_enforceMain_whenCallerNotTarget_reverts() public {
+    function test_policy_enforceMain_whenCallerNotTarget_reverts() public {
         vm.startPrank(deployer);
 
         policy.setTarget(target);
@@ -492,10 +390,23 @@ contract AdvancedPolicy is Test {
         vm.stopPrank();
     }
 
-    function test_enforceMain_whenCheckFails_reverts() public {
+    function test_policy_enforceMain_whenCheckFails_reverts() public {
         vm.startPrank(deployer);
 
         policy.setTarget(target);
+        signupNft.mint(subject);
+
+        vm.stopPrank();
+
+        vm.startPrank(target);
+
+        policy.enforce(subject, evidence, Check.PRE);
+
+        vm.stopPrank();
+
+        vm.startPrank(subject);
+
+        signupNft.transferFrom(subject, target, 0);
 
         vm.stopPrank();
 
@@ -507,7 +418,7 @@ contract AdvancedPolicy is Test {
         vm.stopPrank();
     }
 
-    function test_enforceMain_whenPreCheckMissing_reverts() public {
+    function test_policy_enforceMain_whenPreCheckMissing_reverts() public {
         vm.startPrank(deployer);
 
         policy.setTarget(target);
@@ -523,7 +434,7 @@ contract AdvancedPolicy is Test {
         vm.stopPrank();
     }
 
-    function test_enforceMain_whenValid_succeeds() public {
+    function test_policy_enforceMain_whenValid_succeeds() public {
         vm.startPrank(deployer);
 
         policy.setTarget(target);
@@ -543,7 +454,7 @@ contract AdvancedPolicy is Test {
         vm.stopPrank();
     }
 
-    function test_enforceMain_whenMultipleValid_succeeds() public {
+    function test_policy_enforceMain_whenMultipleValid_succeeds() public {
         vm.startPrank(deployer);
 
         policy.setTarget(target);
@@ -568,7 +479,7 @@ contract AdvancedPolicy is Test {
         vm.stopPrank();
     }
 
-    function test_enforceMain_whenMultipleNotAllowed_reverts() public {
+    function test_policy_enforceMain_whenMultipleNotAllowed_reverts() public {
         vm.startPrank(deployer);
 
         policySkipped.setTarget(target);
@@ -586,7 +497,7 @@ contract AdvancedPolicy is Test {
         vm.stopPrank();
     }
 
-    function test_enforcePost_whenPreCheckMissing_reverts() public {
+    function test_policy_enforcePost_whenPreCheckMissing_reverts() public {
         vm.startPrank(deployer);
 
         policy.setTarget(target);
@@ -603,7 +514,7 @@ contract AdvancedPolicy is Test {
         vm.stopPrank();
     }
 
-    function test_enforcePost_whenCallerNotTarget_reverts() public {
+    function test_policy_enforcePost_whenCallerNotTarget_reverts() public {
         vm.startPrank(deployer);
 
         policy.setTarget(target);
@@ -618,7 +529,7 @@ contract AdvancedPolicy is Test {
         vm.stopPrank();
     }
 
-    function test_enforcePost_whenChecksSkipped_reverts() public {
+    function test_policy_enforcePost_whenChecksSkipped_reverts() public {
         vm.startPrank(deployer);
 
         policySkipped.setTarget(target);
@@ -636,7 +547,7 @@ contract AdvancedPolicy is Test {
         vm.stopPrank();
     }
 
-    function test_enforcePost_whenCheckFails_reverts() public {
+    function test_policy_enforcePost_whenCheckFails_reverts() public {
         vm.startPrank(deployer);
 
         policy.setTarget(target);
@@ -657,7 +568,7 @@ contract AdvancedPolicy is Test {
         vm.stopPrank();
     }
 
-    function test_enforcePost_whenValid_succeeds() public {
+    function test_policy_enforcePost_whenValid_succeeds() public {
         vm.startPrank(deployer);
 
         policy.setTarget(target);
@@ -678,7 +589,7 @@ contract AdvancedPolicy is Test {
         vm.stopPrank();
     }
 
-    function test_enforcePost_whenAlreadyEnforced_reverts() public {
+    function test_policy_enforcePost_whenAlreadyEnforced_reverts() public {
         vm.startPrank(deployer);
 
         policy.setTarget(target);
@@ -694,325 +605,6 @@ contract AdvancedPolicy is Test {
 
         vm.expectRevert(abi.encodeWithSelector(IPolicy.AlreadyEnforced.selector));
         policy.enforce(subject, evidence, Check.POST);
-
-        vm.stopPrank();
-    }
-
-    function test_enforcePreInternal_whenCallerNotTarget_reverts() public {
-        vm.startPrank(deployer);
-
-        policyHarness.setTarget(target);
-
-        vm.stopPrank();
-
-        vm.startPrank(subject);
-
-        vm.expectRevert(abi.encodeWithSelector(IPolicy.TargetOnly.selector));
-        policyHarness.exposed__enforce(subject, evidence, Check.PRE);
-
-        vm.stopPrank();
-    }
-
-    function test_enforcePreInternal_whenTokenDoesNotExist_reverts() public {
-        vm.startPrank(deployer);
-
-        policyHarness.setTarget(target);
-
-        vm.stopPrank();
-
-        vm.startPrank(target);
-
-        vm.expectRevert(abi.encodeWithSelector(IERC721Errors.ERC721NonexistentToken.selector, uint256(0)));
-        policyHarness.exposed__enforce(subject, evidence, Check.PRE);
-
-        vm.stopPrank();
-    }
-
-    function test_enforcePreInternal_whenChecksSkipped_reverts() public {
-        vm.startPrank(deployer);
-
-        policyHarnessSkipped.setTarget(target);
-        signupNft.mint(subject);
-
-        vm.stopPrank();
-
-        vm.startPrank(target);
-
-        vm.expectRevert(abi.encodeWithSelector(IAdvancedPolicy.CannotPreCheckWhenSkipped.selector));
-        policyHarnessSkipped.exposed__enforce(subject, evidence, Check.PRE);
-
-        vm.stopPrank();
-    }
-
-    function test_enforcePreInternal_whenCheckFails_reverts() public {
-        vm.startPrank(deployer);
-
-        policyHarness.setTarget(target);
-        signupNft.mint(subject);
-
-        vm.stopPrank();
-
-        vm.startPrank(target);
-
-        vm.expectRevert(abi.encodeWithSelector(IPolicy.UnsuccessfulCheck.selector));
-        policyHarness.exposed__enforce(notOwner, evidence, Check.PRE);
-
-        vm.stopPrank();
-    }
-
-    function test_enforcePreInternal_whenValid_succeeds() public {
-        vm.startPrank(deployer);
-
-        policyHarness.setTarget(target);
-        signupNft.mint(subject);
-
-        vm.stopPrank();
-
-        vm.startPrank(target);
-
-        vm.expectEmit(true, true, true, true);
-        emit Enforced(subject, target, evidence, Check.PRE);
-
-        policyHarness.exposed__enforce(subject, evidence, Check.PRE);
-
-        vm.stopPrank();
-    }
-
-    function test_enforcePreInternal_whenAlreadyEnforced_reverts() public {
-        vm.startPrank(deployer);
-
-        policyHarness.setTarget(target);
-        signupNft.mint(subject);
-
-        vm.stopPrank();
-
-        vm.startPrank(target);
-
-        policyHarness.exposed__enforce(subject, evidence, Check.PRE);
-
-        vm.expectRevert(abi.encodeWithSelector(IPolicy.AlreadyEnforced.selector));
-        policyHarness.exposed__enforce(subject, evidence, Check.PRE);
-
-        vm.stopPrank();
-    }
-
-    function test_enforceMainInternal_whenCallerNotTarget_reverts() public {
-        vm.startPrank(deployer);
-
-        policyHarness.setTarget(target);
-
-        vm.stopPrank();
-
-        vm.startPrank(subject);
-
-        vm.expectRevert(abi.encodeWithSelector(IPolicy.TargetOnly.selector));
-        policyHarness.exposed__enforce(subject, evidence, Check.MAIN);
-
-        vm.stopPrank();
-    }
-
-    function test_enforceMainInternal_whenCheckFails_reverts() public {
-        vm.startPrank(deployer);
-
-        policyHarness.setTarget(target);
-
-        vm.stopPrank();
-
-        vm.startPrank(target);
-
-        vm.expectRevert(abi.encodeWithSelector(IPolicy.UnsuccessfulCheck.selector));
-        policyHarness.exposed__enforce(subject, evidence, Check.MAIN);
-
-        vm.stopPrank();
-    }
-
-    function test_enforceMainInternal_whenPreCheckMissing_reverts() public {
-        vm.startPrank(deployer);
-
-        policyHarness.setTarget(target);
-        signupNft.mint(subject);
-
-        vm.stopPrank();
-
-        vm.startPrank(target);
-
-        vm.expectRevert(abi.encodeWithSelector(IAdvancedPolicy.PreCheckNotEnforced.selector));
-        policyHarness.exposed__enforce(subject, evidence, Check.MAIN);
-
-        vm.stopPrank();
-    }
-
-    function test_enforceMainInternal_whenValid_succeeds() public {
-        vm.startPrank(deployer);
-
-        policyHarness.setTarget(target);
-        signupNft.mint(subject);
-
-        vm.stopPrank();
-
-        vm.startPrank(target);
-
-        policyHarness.exposed__enforce(subject, evidence, Check.PRE);
-
-        vm.expectEmit(true, true, true, true);
-        emit Enforced(subject, target, evidence, Check.MAIN);
-
-        policyHarness.exposed__enforce(subject, evidence, Check.MAIN);
-
-        vm.stopPrank();
-    }
-
-    function test_enforceMainInternal_whenMultipleValid_succeeds() public {
-        vm.startPrank(deployer);
-
-        policyHarness.setTarget(target);
-        signupNft.mint(subject);
-
-        vm.stopPrank();
-
-        vm.startPrank(target);
-
-        policyHarness.exposed__enforce(subject, evidence, Check.PRE);
-
-        vm.expectEmit(true, true, true, true);
-        emit Enforced(subject, target, evidence, Check.MAIN);
-
-        policyHarness.exposed__enforce(subject, evidence, Check.MAIN);
-
-        vm.expectEmit(true, true, true, true);
-        emit Enforced(subject, target, evidence, Check.MAIN);
-
-        policyHarness.exposed__enforce(subject, evidence, Check.MAIN);
-
-        vm.stopPrank();
-    }
-
-    function test_enforceMainInternal_whenMultipleNotAllowed_reverts() public {
-        vm.startPrank(deployer);
-
-        policyHarnessSkipped.setTarget(target);
-        signupNft.mint(subject);
-
-        vm.stopPrank();
-
-        vm.startPrank(target);
-
-        policyHarnessSkipped.exposed__enforce(subject, evidence, Check.MAIN);
-
-        vm.expectRevert(abi.encodeWithSelector(IAdvancedPolicy.MainCheckAlreadyEnforced.selector));
-        policyHarnessSkipped.exposed__enforce(subject, evidence, Check.MAIN);
-
-        vm.stopPrank();
-    }
-
-    function test_enforcePostInternal_whenPreCheckMissing_reverts() public {
-        vm.startPrank(deployer);
-
-        policyHarness.setTarget(target);
-        signupNft.mint(subject);
-
-        vm.stopPrank();
-
-        vm.startPrank(target);
-        policyHarness.exposed__enforce(subject, evidence, Check.PRE);
-
-        vm.expectRevert(abi.encodeWithSelector(IAdvancedPolicy.MainCheckNotEnforced.selector));
-        policyHarness.exposed__enforce(subject, evidence, Check.POST);
-
-        vm.stopPrank();
-    }
-
-    function test_enforcePostInternal_whenCallerNotTarget_reverts() public {
-        vm.startPrank(deployer);
-
-        policyHarness.setTarget(target);
-
-        vm.stopPrank();
-
-        vm.startPrank(subject);
-
-        vm.expectRevert(abi.encodeWithSelector(IPolicy.TargetOnly.selector));
-        policyHarness.exposed__enforce(subject, evidence, Check.POST);
-
-        vm.stopPrank();
-    }
-
-    function test_enforcePostInternal_whenChecksSkipped_reverts() public {
-        vm.startPrank(deployer);
-
-        policyHarnessSkipped.setTarget(target);
-        signupNft.mint(subject);
-
-        vm.stopPrank();
-
-        vm.startPrank(target);
-
-        policyHarnessSkipped.exposed__enforce(subject, evidence, Check.MAIN);
-
-        vm.expectRevert(abi.encodeWithSelector(IAdvancedPolicy.CannotPostCheckWhenSkipped.selector));
-        policyHarnessSkipped.exposed__enforce(subject, evidence, Check.POST);
-
-        vm.stopPrank();
-    }
-
-    function test_enforcePostInternal_whenCheckFails_reverts() public {
-        vm.startPrank(deployer);
-
-        policyHarness.setTarget(target);
-        signupNft.mint(subject);
-
-        vm.stopPrank();
-
-        vm.startPrank(target);
-
-        policyHarness.exposed__enforce(subject, evidence, Check.PRE);
-        policyHarness.exposed__enforce(subject, evidence, Check.MAIN);
-
-        rewardNft.mint(subject);
-
-        vm.expectRevert(abi.encodeWithSelector(IPolicy.UnsuccessfulCheck.selector));
-        policyHarness.exposed__enforce(subject, evidence, Check.POST);
-
-        vm.stopPrank();
-    }
-
-    function test_enforcePostInternal_whenValid_succeeds() public {
-        vm.startPrank(deployer);
-
-        policyHarness.setTarget(target);
-        signupNft.mint(subject);
-
-        vm.stopPrank();
-
-        vm.startPrank(target);
-
-        policyHarness.exposed__enforce(subject, evidence, Check.PRE);
-        policyHarness.exposed__enforce(subject, evidence, Check.MAIN);
-
-        vm.expectEmit(true, true, true, true);
-        emit Enforced(subject, target, evidence, Check.POST);
-
-        policyHarness.exposed__enforce(subject, evidence, Check.POST);
-
-        vm.stopPrank();
-    }
-
-    function test_enforcePostInternal_whenAlreadyEnforced_reverts() public {
-        vm.startPrank(deployer);
-
-        policyHarness.setTarget(target);
-        signupNft.mint(subject);
-
-        vm.stopPrank();
-
-        vm.startPrank(target);
-
-        policyHarness.exposed__enforce(subject, evidence, Check.PRE);
-        policyHarness.exposed__enforce(subject, evidence, Check.MAIN);
-        policyHarness.exposed__enforce(subject, evidence, Check.POST);
-
-        vm.expectRevert(abi.encodeWithSelector(IPolicy.AlreadyEnforced.selector));
-        policyHarness.exposed__enforce(subject, evidence, Check.POST);
 
         vm.stopPrank();
     }
@@ -1026,16 +618,20 @@ contract Voting is Test {
     NFT internal signupNft;
     NFT internal rewardNft;
     BaseERC721Checker internal baseChecker;
+    BaseERC721CheckerFactory internal baseFactory;
     AdvancedERC721Checker internal advancedChecker;
+    AdvancedERC721CheckerFactory internal advancedFactory;
     AdvancedERC721Policy internal policy;
+    AdvancedERC721PolicyFactory internal policyFactory;
     AdvancedVoting internal voting;
 
     address public deployer = vm.addr(0x1);
-    address public subject = vm.addr(0x2);
-    address public notOwner = vm.addr(0x3);
+    address public target = vm.addr(0x2);
+    address public subject = vm.addr(0x3);
+    address public notOwner = vm.addr(0x4);
 
-    address[] internal baseVerifiers;
-    address[] internal advancedVerifiers;
+    bytes[] public evidence = new bytes[](1);
+    bytes[] public wrongEvidence = new bytes[](1);
 
     function setUp() public virtual {
         vm.startPrank(deployer);
@@ -1043,20 +639,56 @@ contract Voting is Test {
         signupNft = new NFT();
         rewardNft = new NFT();
 
-        baseVerifiers = new address[](1);
-        baseVerifiers[0] = address(signupNft);
-        baseChecker = new BaseERC721Checker(baseVerifiers);
+        baseFactory = new BaseERC721CheckerFactory();
+        advancedFactory = new AdvancedERC721CheckerFactory();
 
-        advancedVerifiers = new address[](3);
-        advancedVerifiers[0] = address(signupNft);
-        advancedVerifiers[1] = address(rewardNft);
-        advancedVerifiers[2] = address(baseChecker);
+        vm.recordLogs();
+        baseFactory.deploy(address(signupNft));
+        Vm.Log[] memory entries = vm.getRecordedLogs();
+        address baseClone = address(uint160(uint256(entries[0].topics[1])));
+        baseChecker = BaseERC721Checker(baseClone);
 
-        advancedChecker = new AdvancedERC721Checker(advancedVerifiers, 1, 0, 10);
-        policy = new AdvancedERC721Policy(advancedChecker, false, false, true);
+        vm.recordLogs();
+        advancedFactory.deploy(address(signupNft), address(rewardNft), address(baseChecker), 1, 0, 10);
+        entries = vm.getRecordedLogs();
+        address advancedClone = address(uint160(uint256(entries[0].topics[1])));
+        advancedChecker = AdvancedERC721Checker(advancedClone);
+
+        policyFactory = new AdvancedERC721PolicyFactory();
+
+        vm.recordLogs();
+        policyFactory.deploy(address(advancedChecker), false, false, true);
+        entries = vm.getRecordedLogs();
+        address policyClone = address(uint160(uint256(entries[0].topics[1])));
+        policy = AdvancedERC721Policy(policyClone);
+
+        evidence[0] = abi.encode(0);
+        wrongEvidence[0] = abi.encode(1);
+
         voting = new AdvancedVoting(policy);
 
         vm.stopPrank();
+    }
+
+    function test_simple() public {
+        assertEq(address(voting.POLICY()), address(policy));
+
+        vm.startPrank(deployer);
+
+        policy.setTarget(address(voting));
+        signupNft.mint(subject);
+
+        vm.stopPrank();
+
+        vm.startPrank(subject);
+
+        voting.register(0);
+        vm.stopPrank();
+    }
+
+    function test_voting_deployed() public view {
+        assertEq(address(voting.POLICY()), address(policy));
+        assertEq(voting.voteCounts(0), 0);
     }
 
     function test_register_whenCallerNotTarget_reverts() public {

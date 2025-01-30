@@ -1,79 +1,77 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import {AdvancedChecker} from "../../AdvancedChecker.sol";
+import {AdvancedChecker} from "../../core/checker/AdvancedChecker.sol";
 import {BaseERC721Checker} from "../base/BaseERC721Checker.sol";
 import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
-/// @title AdvancedERC721Checker.
-/// @notice Multi-phase NFT validation with aggregated verification contracts.
-/// @dev Implements three-phase validation using multiple NFT contracts and external verifiers:
-///      - Pre-check: Basic signup token validation using BaseERC721Checker.
-///      - Main-check: Balance threshold validation for signup token.
-///      - Post-check: Reward eligibility verification for reward token.
+/// @title AdvancedERC721Checker
+/// @notice Multi-phase NFT validation using external contracts and thresholds.
+/// @dev Implements three-phase validation:
+///      - Pre-check: Basic ownership verification using `BaseERC721Checker`.
+///      - Main-check: Ensures a minimum token balance.
+///      - Post-check: Validates reward eligibility.
 contract AdvancedERC721Checker is AdvancedChecker {
-    /// @notice External contracts used for verification.
-    /// @dev Immutable references derived from verifier array positions:
-    ///      - Index 0: Signup NFT contract.
-    ///      - Index 1: Reward NFT contract.
-    ///      - Index 2: Base ERC721 checker contract.
-    IERC721 public immutable SIGNUP_NFT;
-    IERC721 public immutable REWARD_NFT;
-    BaseERC721Checker public immutable BASE_ERC721_CHECKER;
+    /// @notice External verification contracts and thresholds.
+    IERC721 public signupNft;
+    IERC721 public rewardNft;
+    BaseERC721Checker public baseERC721Checker;
 
-    /// @notice Validation thresholds.
-    uint256 public immutable MIN_BALANCE;
-    uint256 public immutable MIN_TOKEN_ID;
-    uint256 public immutable MAX_TOKEN_ID;
+    uint256 public minBalance;
+    uint256 public minTokenId;
+    uint256 public maxTokenId;
 
-    /// @notice Initializes checker with verification chain.
-    /// @dev Orders of verifiers array is crucial:
-    ///      [signupNFT, rewardNFT, baseChecker]
-    /// @param _verifiers Ordered array of verification contract addresses.
-    /// @param _minBalance Required signup token balance.
-    /// @param _minTokenId Lower bound for valid token IDs.
-    /// @param _maxTokenId Upper bound for valid token IDs.
-    constructor(
-        address[] memory _verifiers,
-        uint256 _minBalance,
-        uint256 _minTokenId,
-        uint256 _maxTokenId
-    ) AdvancedChecker(_verifiers) {
-        SIGNUP_NFT = IERC721(_getVerifierAtIndex(0));
-        REWARD_NFT = IERC721(_getVerifierAtIndex(1));
-        BASE_ERC721_CHECKER = BaseERC721Checker(_getVerifierAtIndex(2));
-        MIN_BALANCE = _minBalance;
-        MIN_TOKEN_ID = _minTokenId;
-        MAX_TOKEN_ID = _maxTokenId;
+    /// @notice Initializes the checker with external contract references and thresholds.
+    /// @dev Decodes appended bytes to set state variables.
+    function _initialize() internal override {
+        super._initialize();
+
+        bytes memory data = _getAppendedBytes();
+
+        (
+            address signupNftAddr,
+            address rewardNftAddr,
+            address baseCheckerAddr,
+            uint256 minBalance_,
+            uint256 minTokenId_,
+            uint256 maxTokenId_
+        ) = abi.decode(data, (address, address, address, uint256, uint256, uint256));
+
+        signupNft = IERC721(signupNftAddr);
+        rewardNft = IERC721(rewardNftAddr);
+        baseERC721Checker = BaseERC721Checker(baseCheckerAddr);
+        minBalance = minBalance_;
+        minTokenId = minTokenId_;
+        maxTokenId = maxTokenId_;
     }
 
-    /// @notice Pre-check: Validates initial NFT ownership.
-    /// @dev Delegates basic ownership check to BaseERC721Checker.
+    /// @notice Pre-check: Validates ownership using the base checker.
     /// @param subject Address to validate.
-    /// @param evidence Array containing encoded tokenId.
-    /// @return Validation status from base checker.
+    /// @param evidence Encoded tokenId.
+    /// @return Boolean indicating validation success.
     function _checkPre(address subject, bytes[] calldata evidence) internal view override returns (bool) {
         super._checkPre(subject, evidence);
-        return BASE_ERC721_CHECKER.check(subject, evidence);
+
+        return baseERC721Checker.check(subject, evidence);
     }
 
-    /// @notice Main-check: Validates token balance requirements.
-    /// @dev Ensures subject has exactly MIN_BALANCE tokens.
+    /// @notice Main-check: Ensures token balance meets requirements.
     /// @param subject Address to validate.
-    /// @param evidence Not used in balance check.
-    /// @return True if balance meets requirements.
+    /// @param evidence Not used in this validation.
+    /// @return Boolean indicating validation success.
     function _checkMain(address subject, bytes[] calldata evidence) internal view override returns (bool) {
         super._checkMain(subject, evidence);
-        return SIGNUP_NFT.balanceOf(subject) >= MIN_BALANCE && SIGNUP_NFT.balanceOf(subject) <= MIN_BALANCE;
+
+        return signupNft.balanceOf(subject) >= minBalance;
     }
 
     /// @notice Post-check: Validates reward eligibility.
-    /// @dev Ensures subject doesn't already have reward tokens.
     /// @param subject Address to validate.
-    /// @param evidence Not used in reward check.
-    /// @return True if subject eligible for rewards.
+    /// @param evidence Not used in this validation.
+    /// @return Boolean indicating validation success.
     function _checkPost(address subject, bytes[] calldata evidence) internal view override returns (bool) {
         super._checkPost(subject, evidence);
-        return REWARD_NFT.balanceOf(subject) == 0;
+
+        return rewardNft.balanceOf(subject) == 0;
     }
 }

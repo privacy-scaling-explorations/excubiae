@@ -3107,6 +3107,7 @@ __metadata:
   resolution: "@excubiae/contracts@workspace:packages/contracts/contracts"
   dependencies:
     "@openzeppelin/contracts": "npm:^5.0.2"
+    solady: "npm:^0.0.298"
   languageName: unknown
   linkType: soft
 
@@ -9394,6 +9395,7 @@ __metadata:
     forge-std: "github:foundry-rs/forge-std#v1.9.2"
     hardhat: "npm:^2.22.11"
     hardhat-gas-reporter: "npm:^1.0.8"
+    solady: "npm:^0.0.298"
     solhint: "npm:^5.0.3"
     solidity-coverage: "npm:^0.8.13"
     ts-node: "npm:^10.9.2"
@@ -17721,6 +17723,13 @@ __metadata:
     ip-address: "npm:^9.0.5"
     smart-buffer: "npm:^4.2.0"
   checksum: 10/ffcb622c22481dfcd7589aae71fbfd71ca34334064d181df64bf8b7feaeee19706aba4cffd1de35cc7bbaeeaa0af96be2d7f40fcbc7bc0ab69533a7ae9ffc4fb
+  languageName: node
+  linkType: hard
+
+"solady@npm:^0.0.298":
+  version: 0.0.298
+  resolution: "solady@npm:0.0.298"
+  checksum: 10/b337d65e0f3aadabcb981a6bbf71a4097cc9e0f91afb354a77352a45d933109834568c5e3e3c90c30a29809b95aeb0eb8da4574dbffa18ff451064f52a0fa4a0
   languageName: node
   linkType: hard
 

@@ -1,25 +1,28 @@
-import { expect } from "chai"
-import { ethers } from "hardhat"
 import { AbiCoder, Signer, ZeroAddress, ZeroHash } from "ethers"
+import { ethers } from "hardhat"
+import { expect } from "chai"
 import { loadFixture } from "@nomicfoundation/hardhat-toolbox/network-helpers"
 import {
-    BaseERC721Checker,
+    NFT__factory,
     BaseERC721Checker__factory,
-    AdvancedERC721Checker,
+    BaseERC721CheckerFactory__factory,
+    AdvancedERC721CheckerFactory__factory,
+    NFT,
+    BaseERC721Checker,
+    BaseERC721CheckerFactory,
+    AdvancedERC721CheckerFactory,
+    IERC721Errors,
     AdvancedERC721Checker__factory,
-    AdvancedERC721CheckerHarness,
-    AdvancedERC721CheckerHarness__factory,
+    AdvancedERC721Checker,
+    AdvancedERC721PolicyFactory__factory,
+    AdvancedERC721PolicyFactory,
     AdvancedERC721Policy,
     AdvancedERC721Policy__factory,
-    AdvancedERC721PolicyHarness,
-    AdvancedERC721PolicyHarness__factory,
-    AdvancedVoting,
     AdvancedVoting__factory,
-    IERC721Errors,
-    NFT,
-    NFT__factory
+    AdvancedVoting
 } from "../typechain-types"
 
+/* eslint-disable @typescript-eslint/no-shadow */
 describe("Advanced", () => {
     describe("Checker", () => {
         async function deployAdvancedCheckerFixture() {
@@ -27,307 +30,191 @@ describe("Advanced", () => {
             const subjectAddress: string = await subject.getAddress()
             const notOwnerAddress: string = await notOwner.getAddress()
 
-            const NFTFactory: NFT__factory = await ethers.getContractFactory("NFT")
-            const BaseERC721CheckerFactory: BaseERC721Checker__factory =
-                await ethers.getContractFactory("BaseERC721Checker")
-            const AdvancedERC721CheckerFactory: AdvancedERC721Checker__factory =
-                await ethers.getContractFactory("AdvancedERC721Checker")
-            const AdvancedERC721CheckerHarnessFactory: AdvancedERC721CheckerHarness__factory =
-                await ethers.getContractFactory("AdvancedERC721CheckerHarness")
+            const NFT: NFT__factory = await ethers.getContractFactory("NFT")
+            const BaseERC721CheckerFactory: BaseERC721CheckerFactory__factory =
+                await ethers.getContractFactory("BaseERC721CheckerFactory")
+            const AdvancedERC721CheckerFactory: AdvancedERC721CheckerFactory__factory =
+                await ethers.getContractFactory("AdvancedERC721CheckerFactory")
 
-            const signupNft: NFT = await NFTFactory.deploy()
-            const rewardNft: NFT = await NFTFactory.deploy()
-            const baseChecker: BaseERC721Checker = await BaseERC721CheckerFactory.connect(deployer).deploy([
-                await signupNft.getAddress()
-            ])
-            const advancedChecker: AdvancedERC721Checker = await AdvancedERC721CheckerFactory.connect(deployer).deploy(
-                [await signupNft.getAddress(), await rewardNft.getAddress(), await baseChecker.getAddress()],
+            const signupNft: NFT = await NFT.deploy()
+            const rewardNft: NFT = await NFT.deploy()
+
+            const baseCheckerFactory: BaseERC721CheckerFactory =
+                await BaseERC721CheckerFactory.connect(deployer).deploy()
+
+            const baseCheckerTx = await baseCheckerFactory.deploy(await signupNft.getAddress())
+            const baseCheckerTxReceipt = await baseCheckerTx.wait()
+            const baseCheckerCloneDeployedEvent = BaseERC721CheckerFactory.interface.parseLog(
+                baseCheckerTxReceipt?.logs[0] as unknown as { topics: string[]; data: string }
+            ) as unknown as {
+                args: {
+                    clone: string
+                }
+            }
+
+            const baseChecker: BaseERC721Checker = BaseERC721Checker__factory.connect(
+                baseCheckerCloneDeployedEvent.args.clone,
+                deployer
+            )
+
+            const advancedCheckerFactory: AdvancedERC721CheckerFactory =
+                await AdvancedERC721CheckerFactory.connect(deployer).deploy()
+
+            const advancedCheckerTx = await advancedCheckerFactory.deploy(
+                await signupNft.getAddress(),
+                await rewardNft.getAddress(),
+                await baseChecker.getAddress(),
                 1,
                 0,
                 10
             )
+            const advancedCheckerTxReceipt = await advancedCheckerTx.wait()
+            const advancedCheckerCloneDeployedEvent = AdvancedERC721CheckerFactory.interface.parseLog(
+                advancedCheckerTxReceipt?.logs[0] as unknown as { topics: string[]; data: string }
+            ) as unknown as {
+                args: {
+                    clone: string
+                }
+            }
 
-            const advancedCheckerHarness: AdvancedERC721CheckerHarness =
-                await AdvancedERC721CheckerHarnessFactory.connect(deployer).deploy(
-                    [await signupNft.getAddress(), await rewardNft.getAddress(), await baseChecker.getAddress()],
-                    1,
-                    0,
-                    10
-                )
+            const advancedChecker: AdvancedERC721Checker = AdvancedERC721Checker__factory.connect(
+                advancedCheckerCloneDeployedEvent.args.clone,
+                deployer
+            )
 
             // mint 0 for subject.
             await signupNft.connect(deployer).mint(subjectAddress)
 
             // encoded token ids.
-            const validNFTId = AbiCoder.defaultAbiCoder().encode(["uint256"], [0])
-            const invalidNFTId = AbiCoder.defaultAbiCoder().encode(["uint256"], [1])
+            const validEncodedNFTId = AbiCoder.defaultAbiCoder().encode(["uint256"], [0])
+            const invalidEncodedNFTId = AbiCoder.defaultAbiCoder().encode(["uint256"], [1])
 
             return {
                 signupNft,
                 rewardNft,
                 baseChecker,
                 advancedChecker,
-                advancedCheckerHarness,
                 deployer,
                 target,
                 subject,
                 subjectAddress,
                 notOwnerAddress,
-                validNFTId,
-                invalidNFTId
+                validEncodedNFTId,
+                invalidEncodedNFTId
             }
         }
 
-        describe("constructor", () => {
-            it("deploys correctly", async () => {
+        describe("initialize", () => {
+            it("should deploy and initialize correctly", async () => {
                 const { advancedChecker } = await loadFixture(deployAdvancedCheckerFixture)
 
                 expect(advancedChecker).to.not.eq(undefined)
+                expect(await advancedChecker.initialized()).to.be.eq(true)
+            })
+
+            it("should revert when already initialized", async () => {
+                const { advancedChecker, deployer } = await loadFixture(deployAdvancedCheckerFixture)
+
+                await expect(advancedChecker.connect(deployer).initialize()).to.be.revertedWithCustomError(
+                    advancedChecker,
+                    "AlreadyInitialized"
+                )
+            })
+        })
+
+        describe("getAppendedBytes", () => {
+            it("should append bytes correctly", async () => {
+                const { advancedChecker, signupNft, rewardNft, baseChecker } =
+                    await loadFixture(deployAdvancedCheckerFixture)
+
+                const appendedBytes = await advancedChecker.getAppendedBytes.staticCall()
+
+                const expectedBytes = AbiCoder.defaultAbiCoder()
+                    .encode(
+                        ["address", "address", "address", "uint256", "uint256", "uint256"],
+                        [
+                            await signupNft.getAddress(),
+                            await rewardNft.getAddress(),
+                            await baseChecker.getAddress(),
+                            1,
+                            0,
+                            10
+                        ]
+                    )
+                    .toLowerCase()
+
+                expect(appendedBytes).to.equal(expectedBytes)
             })
         })
 
         describe("check", () => {
             describe("pre check", () => {
                 it("reverts when evidence invalid", async () => {
-                    const { rewardNft, advancedChecker, target, subjectAddress, invalidNFTId } =
+                    const { rewardNft, advancedChecker, target, subjectAddress, invalidEncodedNFTId } =
                         await loadFixture(deployAdvancedCheckerFixture)
 
                     await expect(
-                        advancedChecker.connect(target).check(subjectAddress, [invalidNFTId], 0)
+                        advancedChecker.connect(target).check(subjectAddress, [invalidEncodedNFTId], 0)
                     ).to.be.revertedWithCustomError(rewardNft, "ERC721NonexistentToken")
                 })
 
                 it("returns false when not owner", async () => {
-                    const { advancedChecker, target, notOwnerAddress, validNFTId } =
+                    const { advancedChecker, target, notOwnerAddress, validEncodedNFTId } =
                         await loadFixture(deployAdvancedCheckerFixture)
 
-                    expect(await advancedChecker.connect(target).check(notOwnerAddress, [validNFTId], 0)).to.be.equal(
-                        false
-                    )
+                    expect(
+                        await advancedChecker.connect(target).check(notOwnerAddress, [validEncodedNFTId], 0)
+                    ).to.be.equal(false)
                 })
 
                 it("succeeds when valid", async () => {
-                    const { advancedChecker, target, subjectAddress, validNFTId } =
+                    const { advancedChecker, target, subjectAddress, validEncodedNFTId } =
                         await loadFixture(deployAdvancedCheckerFixture)
 
-                    expect(await advancedChecker.connect(target).check(subjectAddress, [validNFTId], 0)).to.be.equal(
-                        true
-                    )
+                    expect(
+                        await advancedChecker.connect(target).check(subjectAddress, [validEncodedNFTId], 0)
+                    ).to.be.equal(true)
                 })
             })
             describe("main check", () => {
                 it("returns false when balance insufficient", async () => {
-                    const { advancedChecker, target, notOwnerAddress, validNFTId } =
+                    const { advancedChecker, target, notOwnerAddress, validEncodedNFTId } =
                         await loadFixture(deployAdvancedCheckerFixture)
 
-                    expect(await advancedChecker.connect(target).check(notOwnerAddress, [validNFTId], 1)).to.be.equal(
-                        false
-                    )
+                    expect(
+                        await advancedChecker.connect(target).check(notOwnerAddress, [validEncodedNFTId], 1)
+                    ).to.be.equal(false)
                 })
 
                 it("succeeds when balance sufficient", async () => {
-                    const { advancedChecker, target, subjectAddress, validNFTId } =
+                    const { advancedChecker, target, subjectAddress, validEncodedNFTId } =
                         await loadFixture(deployAdvancedCheckerFixture)
 
-                    expect(await advancedChecker.connect(target).check(subjectAddress, [validNFTId], 1)).to.be.equal(
-                        true
-                    )
+                    expect(
+                        await advancedChecker.connect(target).check(subjectAddress, [validEncodedNFTId], 1)
+                    ).to.be.equal(true)
                 })
             })
             describe("post check", () => {
                 it("reverts when already rewarded", async () => {
-                    const { rewardNft, advancedChecker, target, subjectAddress, invalidNFTId } =
-                        await loadFixture(deployAdvancedCheckerFixture)
-
-                    await rewardNft.mint(subjectAddress)
-
-                    expect(await advancedChecker.connect(target).check(subjectAddress, [invalidNFTId], 2)).to.be.equal(
-                        false
-                    )
-                })
-
-                it("succeeds when in valid range", async () => {
-                    const { advancedChecker, target, subjectAddress, validNFTId } =
-                        await loadFixture(deployAdvancedCheckerFixture)
-
-                    expect(await advancedChecker.connect(target).check(subjectAddress, [validNFTId], 2)).to.be.equal(
-                        true
-                    )
-                })
-            })
-        })
-
-        describe("getVerifierAtIndex", () => {
-            it("returns correct verifier address", async () => {
-                const { advancedChecker, signupNft } = await loadFixture(deployAdvancedCheckerFixture)
-                expect(await advancedChecker.getVerifierAtIndex(0)).to.equal(await signupNft.getAddress())
-            })
-
-            it("reverts when index out of bounds", async () => {
-                const { advancedChecker } = await loadFixture(deployAdvancedCheckerFixture)
-                await expect(advancedChecker.getVerifierAtIndex(5)).to.be.revertedWithCustomError(
-                    advancedChecker,
-                    "VerifierNotFound"
-                )
-            })
-        })
-
-        describe("internal getVerifierAtIndex", () => {
-            it("returns correct verifier address", async () => {
-                const { advancedCheckerHarness, signupNft } = await loadFixture(deployAdvancedCheckerFixture)
-                expect(await advancedCheckerHarness.exposed__getVerifierAtIndex(0)).to.equal(
-                    await signupNft.getAddress()
-                )
-            })
-
-            it("reverts when index out of bounds", async () => {
-                const { advancedCheckerHarness } = await loadFixture(deployAdvancedCheckerFixture)
-                await expect(advancedCheckerHarness.exposed__getVerifierAtIndex(5)).to.be.revertedWithCustomError(
-                    advancedCheckerHarness,
-                    "VerifierNotFound"
-                )
-            })
-        })
-
-        describe("internal checks", () => {
-            describe("pre check", () => {
-                it("reverts when evidence invalid", async () => {
-                    const { signupNft, advancedCheckerHarness, target, subjectAddress, invalidNFTId } =
-                        await loadFixture(deployAdvancedCheckerFixture)
-
-                    await expect(
-                        advancedCheckerHarness.connect(target).exposed__check(subjectAddress, [invalidNFTId], 0)
-                    ).to.be.revertedWithCustomError(signupNft, "ERC721NonexistentToken")
-                })
-
-                it("returns false when not owner", async () => {
-                    const { advancedCheckerHarness, target, notOwnerAddress, validNFTId } =
-                        await loadFixture(deployAdvancedCheckerFixture)
-
-                    expect(
-                        await advancedCheckerHarness.connect(target).exposed__check(notOwnerAddress, [validNFTId], 0)
-                    ).to.be.equal(false)
-                })
-
-                it("succeeds when valid", async () => {
-                    const { advancedCheckerHarness, target, subjectAddress, validNFTId } =
-                        await loadFixture(deployAdvancedCheckerFixture)
-
-                    expect(
-                        await advancedCheckerHarness.connect(target).exposed__check(subjectAddress, [validNFTId], 0)
-                    ).to.be.equal(true)
-                })
-            })
-            describe("main check", () => {
-                it("returns false when balance insufficient", async () => {
-                    const { advancedCheckerHarness, target, notOwnerAddress, validNFTId } =
-                        await loadFixture(deployAdvancedCheckerFixture)
-
-                    expect(
-                        await advancedCheckerHarness.connect(target).exposed__check(notOwnerAddress, [validNFTId], 1)
-                    ).to.be.equal(false)
-                })
-
-                it("succeeds when balance sufficient", async () => {
-                    const { advancedCheckerHarness, target, subjectAddress, validNFTId } =
-                        await loadFixture(deployAdvancedCheckerFixture)
-
-                    expect(
-                        await advancedCheckerHarness.connect(target).exposed__check(subjectAddress, [validNFTId], 1)
-                    ).to.be.equal(true)
-                })
-            })
-            describe("post check", () => {
-                it("reverts when evidence invalid", async () => {
-                    const { rewardNft, advancedCheckerHarness, target, subjectAddress, invalidNFTId } =
+                    const { rewardNft, advancedChecker, target, subjectAddress, invalidEncodedNFTId } =
                         await loadFixture(deployAdvancedCheckerFixture)
 
                     await rewardNft.mint(subjectAddress)
 
                     expect(
-                        await advancedCheckerHarness.connect(target).check(subjectAddress, [invalidNFTId], 2)
+                        await advancedChecker.connect(target).check(subjectAddress, [invalidEncodedNFTId], 2)
                     ).to.be.equal(false)
                 })
 
                 it("succeeds when in valid range", async () => {
-                    const { advancedCheckerHarness, target, subjectAddress, validNFTId } =
+                    const { advancedChecker, target, subjectAddress, validEncodedNFTId } =
                         await loadFixture(deployAdvancedCheckerFixture)
 
                     expect(
-                        await advancedCheckerHarness.connect(target).exposed__check(subjectAddress, [validNFTId], 2)
+                        await advancedChecker.connect(target).check(subjectAddress, [validEncodedNFTId], 2)
                     ).to.be.equal(true)
                 })
-            })
-        })
-
-        describe("internal checkPre", () => {
-            it("reverts when evidence invalid", async () => {
-                const { signupNft, advancedCheckerHarness, target, subjectAddress, invalidNFTId } =
-                    await loadFixture(deployAdvancedCheckerFixture)
-
-                await expect(
-                    advancedCheckerHarness.connect(target).exposed__checkPre(subjectAddress, [invalidNFTId])
-                ).to.be.revertedWithCustomError(signupNft, "ERC721NonexistentToken")
-            })
-
-            it("returns false when not owner", async () => {
-                const { advancedCheckerHarness, target, notOwnerAddress, validNFTId } =
-                    await loadFixture(deployAdvancedCheckerFixture)
-
-                expect(
-                    await advancedCheckerHarness.connect(target).exposed__checkPre(notOwnerAddress, [validNFTId])
-                ).to.be.equal(false)
-            })
-
-            it("succeeds when valid", async () => {
-                const { advancedCheckerHarness, target, subjectAddress, validNFTId } =
-                    await loadFixture(deployAdvancedCheckerFixture)
-
-                expect(
-                    await advancedCheckerHarness.connect(target).exposed__checkPre(subjectAddress, [validNFTId])
-                ).to.be.equal(true)
-            })
-        })
-
-        describe("internal checkMain", () => {
-            it("returns false when balance insufficient", async () => {
-                const { advancedCheckerHarness, target, notOwnerAddress, validNFTId } =
-                    await loadFixture(deployAdvancedCheckerFixture)
-
-                expect(
-                    await advancedCheckerHarness.connect(target).exposed__checkMain(notOwnerAddress, [validNFTId])
-                ).to.be.equal(false)
-            })
-
-            it("succeeds when balance sufficient", async () => {
-                const { advancedCheckerHarness, target, subjectAddress, validNFTId } =
-                    await loadFixture(deployAdvancedCheckerFixture)
-
-                expect(
-                    await advancedCheckerHarness.connect(target).exposed__checkMain(subjectAddress, [validNFTId])
-                ).to.be.equal(true)
-            })
-        })
-
-        describe("internal checkPost", () => {
-            it("reverts when evidence invalid", async () => {
-                const { rewardNft, advancedCheckerHarness, target, subjectAddress, invalidNFTId } =
-                    await loadFixture(deployAdvancedCheckerFixture)
-
-                await rewardNft.mint(subjectAddress)
-
-                expect(
-                    await advancedCheckerHarness.connect(target).exposed__checkPost(subjectAddress, [invalidNFTId])
-                ).to.be.equal(false)
-            })
-
-            it("succeeds when in valid range", async () => {
-                const { advancedCheckerHarness, target, subjectAddress, validNFTId } =
-                    await loadFixture(deployAdvancedCheckerFixture)
-
-                expect(
-                    await advancedCheckerHarness.connect(target).exposed__checkPost(subjectAddress, [validNFTId])
-                ).to.be.equal(true)
             })
         })
     })
@@ -338,62 +225,106 @@ describe("Advanced", () => {
             const subjectAddress: string = await subject.getAddress()
             const notOwnerAddress: string = await notOwner.getAddress()
 
-            const NFTFactory: NFT__factory = await ethers.getContractFactory("NFT")
-            const BaseERC721CheckerFactory: BaseERC721Checker__factory =
-                await ethers.getContractFactory("BaseERC721Checker")
-            const AdvancedERC721CheckerFactory: AdvancedERC721Checker__factory =
-                await ethers.getContractFactory("AdvancedERC721Checker")
-            const AdvancedERC721PolicyFactory: AdvancedERC721Policy__factory =
-                await ethers.getContractFactory("AdvancedERC721Policy")
-            const AdvancedERC721PolicyHarnessFactory: AdvancedERC721PolicyHarness__factory =
-                await ethers.getContractFactory("AdvancedERC721PolicyHarness")
+            const NFT: NFT__factory = await ethers.getContractFactory("NFT")
+            const BaseERC721CheckerFactory: BaseERC721CheckerFactory__factory =
+                await ethers.getContractFactory("BaseERC721CheckerFactory")
+            const AdvancedERC721CheckerFactory: AdvancedERC721CheckerFactory__factory =
+                await ethers.getContractFactory("AdvancedERC721CheckerFactory")
+            const AdvancedERC721PolicyFactory: AdvancedERC721PolicyFactory__factory =
+                await ethers.getContractFactory("AdvancedERC721PolicyFactory")
 
-            const signupNft: NFT = await NFTFactory.deploy()
-            const rewardNft: NFT = await NFTFactory.deploy()
-            const signupIERC721Errors: IERC721Errors = await ethers.getContractAt(
+            const signupNft: NFT = await NFT.deploy()
+            const rewardNft: NFT = await NFT.deploy()
+            const iERC721Errors: IERC721Errors = await ethers.getContractAt(
                 "IERC721Errors",
                 await signupNft.getAddress()
             )
-            const rewardIERC721Errors: IERC721Errors = await ethers.getContractAt(
-                "IERC721Errors",
-                await rewardNft.getAddress()
+
+            const baseCheckerFactory: BaseERC721CheckerFactory =
+                await BaseERC721CheckerFactory.connect(deployer).deploy()
+
+            const baseCheckerTx = await baseCheckerFactory.deploy(await signupNft.getAddress())
+            const baseCheckerTxReceipt = await baseCheckerTx.wait()
+            const baseCheckerCloneDeployedEvent = BaseERC721CheckerFactory.interface.parseLog(
+                baseCheckerTxReceipt?.logs[0] as unknown as { topics: string[]; data: string }
+            ) as unknown as {
+                args: {
+                    clone: string
+                }
+            }
+
+            const baseChecker: BaseERC721Checker = BaseERC721Checker__factory.connect(
+                baseCheckerCloneDeployedEvent.args.clone,
+                deployer
             )
-            const baseChecker: BaseERC721Checker = await BaseERC721CheckerFactory.connect(deployer).deploy([
-                await signupNft.getAddress()
-            ])
-            const advancedChecker: AdvancedERC721Checker = await AdvancedERC721CheckerFactory.connect(deployer).deploy(
-                [await signupNft.getAddress(), await rewardNft.getAddress(), await baseChecker.getAddress()],
+
+            const advancedCheckerFactory: AdvancedERC721CheckerFactory =
+                await AdvancedERC721CheckerFactory.connect(deployer).deploy()
+
+            const advancedCheckerTx = await advancedCheckerFactory.deploy(
+                await signupNft.getAddress(),
+                await rewardNft.getAddress(),
+                await baseChecker.getAddress(),
                 1,
                 0,
                 10
             )
+            const advancedCheckerTxReceipt = await advancedCheckerTx.wait()
+            const advancedCheckerCloneDeployedEvent = AdvancedERC721CheckerFactory.interface.parseLog(
+                advancedCheckerTxReceipt?.logs[0] as unknown as { topics: string[]; data: string }
+            ) as unknown as {
+                args: {
+                    clone: string
+                }
+            }
 
-            const advancedCheckerSkippedPrePostNoMultMain: AdvancedERC721Checker =
-                await AdvancedERC721CheckerFactory.connect(deployer).deploy(
-                    [await signupNft.getAddress(), await rewardNft.getAddress(), await baseChecker.getAddress()],
-                    1,
-                    0,
-                    10
-                )
+            const advancedChecker: AdvancedERC721Checker = AdvancedERC721Checker__factory.connect(
+                advancedCheckerCloneDeployedEvent.args.clone,
+                deployer
+            )
 
-            const policy: AdvancedERC721Policy = await AdvancedERC721PolicyFactory.connect(deployer).deploy(
+            const advancedPolicyFactory: AdvancedERC721PolicyFactory =
+                await AdvancedERC721PolicyFactory.connect(deployer).deploy()
+
+            const advancedPolicyTx = await advancedPolicyFactory.deploy(
                 await advancedChecker.getAddress(),
                 false,
                 false,
                 true
             )
-            const policySkipped: AdvancedERC721Policy = await AdvancedERC721PolicyFactory.connect(deployer).deploy(
-                await advancedCheckerSkippedPrePostNoMultMain.getAddress(),
+            const advancedPolicyTxReceipt = await advancedPolicyTx.wait()
+            const advancedPolicyCloneDeployedEvent = AdvancedERC721PolicyFactory.interface.parseLog(
+                advancedPolicyTxReceipt?.logs[0] as unknown as { topics: string[]; data: string }
+            ) as unknown as {
+                args: {
+                    clone: string
+                }
+            }
+
+            const advancedPolicy: AdvancedERC721Policy = AdvancedERC721Policy__factory.connect(
+                advancedPolicyCloneDeployedEvent.args.clone,
+                deployer
+            )
+
+            const advancedPolicSkippedTx = await advancedPolicyFactory.deploy(
+                await advancedChecker.getAddress(),
                 true,
                 true,
                 false
             )
-            const policyHarness: AdvancedERC721PolicyHarness = await AdvancedERC721PolicyHarnessFactory.connect(
+            const advancedPolicySkippedTxReceipt = await advancedPolicSkippedTx.wait()
+            const advancedPolicySkippedCloneDeployedEvent = AdvancedERC721PolicyFactory.interface.parseLog(
+                advancedPolicySkippedTxReceipt?.logs[0] as unknown as { topics: string[]; data: string }
+            ) as unknown as {
+                args: {
+                    clone: string
+                }
+            }
+
+            const advancedPolicySkipped: AdvancedERC721Policy = AdvancedERC721Policy__factory.connect(
+                advancedPolicySkippedCloneDeployedEvent.args.clone,
                 deployer
-            ).deploy(await advancedChecker.getAddress(), false, false, true)
-            const policyHarnessSkipped: AdvancedERC721PolicyHarness = await AdvancedERC721PolicyHarnessFactory.connect(
-                deployer
-            ).deploy(await advancedCheckerSkippedPrePostNoMultMain.getAddress(), true, true, false)
+            )
 
             // mint 0 for subject.
             await signupNft.connect(deployer).mint(subjectAddress)
@@ -403,21 +334,17 @@ describe("Advanced", () => {
             const invalidEncodedNFTId = AbiCoder.defaultAbiCoder().encode(["uint256"], [1])
 
             return {
-                signupIERC721Errors,
-                rewardIERC721Errors,
-                AdvancedERC721PolicyFactory,
+                iERC721Errors,
                 signupNft,
                 rewardNft,
+                baseChecker,
                 advancedChecker,
-                advancedCheckerSkippedPrePostNoMultMain,
-                policyHarness,
-                policyHarnessSkipped,
-                policy,
-                policySkipped,
-                subject,
+                advancedPolicy,
+                advancedPolicySkipped,
                 deployer,
                 target,
                 notOwner,
+                subject,
                 subjectAddress,
                 notOwnerAddress,
                 validEncodedNFTId,
@@ -425,47 +352,94 @@ describe("Advanced", () => {
             }
         }
 
-        describe("constructor", () => {
-            it("deploys correctly", async () => {
-                const { policy } = await loadFixture(deployAdvancedPolicyFixture)
+        describe("initialize", () => {
+            it("should deploy and initialize correctly", async () => {
+                const { advancedPolicy, advancedPolicySkipped } = await loadFixture(deployAdvancedPolicyFixture)
 
-                expect(policy).to.not.eq(undefined)
+                expect(advancedPolicy).to.not.eq(undefined)
+                expect(await advancedPolicy.initialized()).to.be.eq(true)
+                expect(advancedPolicySkipped).to.not.eq(undefined)
+                expect(await advancedPolicySkipped.initialized()).to.be.eq(true)
+            })
+
+            it("should revert when already initialized", async () => {
+                const { advancedPolicy, advancedPolicySkipped, deployer } =
+                    await loadFixture(deployAdvancedPolicyFixture)
+
+                await expect(advancedPolicy.connect(deployer).initialize()).to.be.revertedWithCustomError(
+                    advancedPolicy,
+                    "AlreadyInitialized"
+                )
+                await expect(advancedPolicySkipped.connect(deployer).initialize()).to.be.revertedWithCustomError(
+                    advancedPolicySkipped,
+                    "AlreadyInitialized"
+                )
+            })
+        })
+
+        describe("getAppendedBytes", () => {
+            it("should append bytes correctly", async () => {
+                const { advancedPolicy, advancedPolicySkipped, advancedChecker, deployer } =
+                    await loadFixture(deployAdvancedPolicyFixture)
+
+                const appendedBytes = await advancedPolicy.getAppendedBytes.staticCall()
+
+                const expectedBytes = AbiCoder.defaultAbiCoder()
+                    .encode(
+                        ["address", "address", "bool", "bool", "bool"],
+                        [await deployer.getAddress(), await advancedChecker.getAddress(), false, false, true]
+                    )
+                    .toLowerCase()
+
+                expect(appendedBytes).to.equal(expectedBytes)
+
+                const appendedBytesSkipped = await advancedPolicySkipped.getAppendedBytes.staticCall()
+
+                const expectedBytesSkipped = AbiCoder.defaultAbiCoder()
+                    .encode(
+                        ["address", "address", "bool", "bool", "bool"],
+                        [await deployer.getAddress(), await advancedChecker.getAddress(), true, true, false]
+                    )
+                    .toLowerCase()
+
+                expect(appendedBytesSkipped).to.equal(expectedBytesSkipped)
             })
         })
 
         describe("trait", () => {
             it("returns correct value", async () => {
-                const { policy } = await loadFixture(deployAdvancedPolicyFixture)
+                const { advancedPolicy, advancedPolicySkipped } = await loadFixture(deployAdvancedPolicyFixture)
 
-                expect(await policy.trait()).to.be.eq("AdvancedERC721")
+                expect(await advancedPolicy.trait()).to.be.eq("AdvancedERC721")
+                expect(await advancedPolicySkipped.trait()).to.be.eq("AdvancedERC721")
             })
         })
 
         describe("setTarget", () => {
             it("reverts when caller not owner", async () => {
-                const { policy, notOwner, target } = await loadFixture(deployAdvancedPolicyFixture)
+                const { advancedPolicy, notOwner, target } = await loadFixture(deployAdvancedPolicyFixture)
 
                 await expect(
-                    policy.connect(notOwner).setTarget(await target.getAddress())
-                ).to.be.revertedWithCustomError(policy, "OwnableUnauthorizedAccount")
+                    advancedPolicy.connect(notOwner).setTarget(await target.getAddress())
+                ).to.be.revertedWithCustomError(advancedPolicy, "OwnableUnauthorizedAccount")
             })
 
             it("reverts when zero address", async () => {
-                const { policy, deployer } = await loadFixture(deployAdvancedPolicyFixture)
+                const { advancedPolicy, deployer } = await loadFixture(deployAdvancedPolicyFixture)
 
-                await expect(policy.connect(deployer).setTarget(ZeroAddress)).to.be.revertedWithCustomError(
-                    policy,
+                await expect(advancedPolicy.connect(deployer).setTarget(ZeroAddress)).to.be.revertedWithCustomError(
+                    advancedPolicy,
                     "ZeroAddress"
                 )
             })
 
             it("sets target correctly", async () => {
-                const { policy, target, AdvancedERC721PolicyFactory } = await loadFixture(deployAdvancedPolicyFixture)
+                const { advancedPolicy, target } = await loadFixture(deployAdvancedPolicyFixture)
                 const targetAddress = await target.getAddress()
 
-                const tx = await policy.setTarget(targetAddress)
+                const tx = await advancedPolicy.setTarget(targetAddress)
                 const receipt = await tx.wait()
-                const event = AdvancedERC721PolicyFactory.interface.parseLog(
+                const event = advancedPolicy.interface.parseLog(
                     receipt?.logs[0] as unknown as { topics: string[]; data: string }
                 ) as unknown as {
                     args: {
@@ -475,74 +449,77 @@ describe("Advanced", () => {
 
                 expect(receipt?.status).to.eq(1)
                 expect(event.args.target).to.eq(targetAddress)
-                expect(await policy.getTarget()).to.eq(targetAddress)
             })
 
             it("reverts when already set", async () => {
-                const { policy, target } = await loadFixture(deployAdvancedPolicyFixture)
+                const { advancedPolicy, target } = await loadFixture(deployAdvancedPolicyFixture)
                 const targetAddress = await target.getAddress()
 
-                await policy.setTarget(targetAddress)
+                await advancedPolicy.setTarget(targetAddress)
 
-                await expect(policy.setTarget(targetAddress)).to.be.revertedWithCustomError(policy, "TargetAlreadySet")
+                await expect(advancedPolicy.setTarget(targetAddress)).to.be.revertedWithCustomError(
+                    advancedPolicy,
+                    "TargetAlreadySet"
+                )
             })
         })
 
         describe("enforce", () => {
             describe("pre check", () => {
                 it("reverts when caller not target", async () => {
-                    const { policy, subject, target, subjectAddress } = await loadFixture(deployAdvancedPolicyFixture)
+                    const { advancedPolicy, subject, target, subjectAddress } =
+                        await loadFixture(deployAdvancedPolicyFixture)
 
-                    await policy.setTarget(await target.getAddress())
+                    await advancedPolicy.setTarget(await target.getAddress())
 
                     await expect(
-                        policy.connect(subject).enforce(subjectAddress, [ZeroHash], 0)
-                    ).to.be.revertedWithCustomError(policy, "TargetOnly")
+                        advancedPolicy.connect(subject).enforce(subjectAddress, [ZeroHash], 0)
+                    ).to.be.revertedWithCustomError(advancedPolicy, "TargetOnly")
                 })
 
                 it("reverts when evidence invalid", async () => {
-                    const { rewardIERC721Errors, policy, target, subjectAddress, invalidEncodedNFTId } =
+                    const { iERC721Errors, advancedPolicy, target, subjectAddress, invalidEncodedNFTId } =
                         await loadFixture(deployAdvancedPolicyFixture)
 
-                    await policy.setTarget(await target.getAddress())
+                    await advancedPolicy.setTarget(await target.getAddress())
 
                     await expect(
-                        policy.connect(target).enforce(subjectAddress, [invalidEncodedNFTId], 0)
-                    ).to.be.revertedWithCustomError(rewardIERC721Errors, "ERC721NonexistentToken")
+                        advancedPolicy.connect(target).enforce(subjectAddress, [invalidEncodedNFTId], 0)
+                    ).to.be.revertedWithCustomError(iERC721Errors, "ERC721NonexistentToken")
                 })
 
                 it("reverts when pre-check skipped", async () => {
-                    const { policySkipped, target, subjectAddress, validEncodedNFTId } =
+                    const { advancedPolicySkipped, target, subjectAddress, validEncodedNFTId } =
                         await loadFixture(deployAdvancedPolicyFixture)
 
-                    await policySkipped.setTarget(await target.getAddress())
+                    await advancedPolicySkipped.setTarget(await target.getAddress())
 
                     await expect(
-                        policySkipped.connect(target).enforce(subjectAddress, [validEncodedNFTId], 0)
-                    ).to.be.revertedWithCustomError(policySkipped, "CannotPreCheckWhenSkipped")
+                        advancedPolicySkipped.connect(target).enforce(subjectAddress, [validEncodedNFTId], 0)
+                    ).to.be.revertedWithCustomError(advancedPolicySkipped, "CannotPreCheckWhenSkipped")
                 })
 
                 it("reverts when check unsuccessful", async () => {
-                    const { policy, target, notOwnerAddress, validEncodedNFTId } =
+                    const { advancedPolicy, target, notOwnerAddress, validEncodedNFTId } =
                         await loadFixture(deployAdvancedPolicyFixture)
 
-                    await policy.setTarget(await target.getAddress())
+                    await advancedPolicy.setTarget(await target.getAddress())
 
                     expect(
-                        policy.connect(target).enforce(notOwnerAddress, [validEncodedNFTId], 0)
-                    ).to.be.revertedWithCustomError(policy, "UnsuccessfulCheck")
+                        advancedPolicy.connect(target).enforce(notOwnerAddress, [validEncodedNFTId], 0)
+                    ).to.be.revertedWithCustomError(advancedPolicy, "UnsuccessfulCheck")
                 })
 
                 it("enforces pre-check successfully", async () => {
-                    const { AdvancedERC721PolicyFactory, policy, target, subjectAddress, validEncodedNFTId } =
+                    const { advancedPolicy, target, subjectAddress, validEncodedNFTId } =
                         await loadFixture(deployAdvancedPolicyFixture)
                     const targetAddress = await target.getAddress()
 
-                    await policy.setTarget(targetAddress)
+                    await advancedPolicy.setTarget(targetAddress)
 
-                    const tx = await policy.connect(target).enforce(subjectAddress, [validEncodedNFTId], 0)
+                    const tx = await advancedPolicy.connect(target).enforce(subjectAddress, [validEncodedNFTId], 0)
                     const receipt = await tx.wait()
-                    const event = AdvancedERC721PolicyFactory.interface.parseLog(
+                    const event = advancedPolicy.interface.parseLog(
                         receipt?.logs[0] as unknown as { topics: string[]; data: string }
                     ) as unknown as {
                         args: {
@@ -558,58 +535,58 @@ describe("Advanced", () => {
                     expect(event.args.target).to.eq(targetAddress)
                     expect(event.args.evidence[0]).to.eq(validEncodedNFTId)
                     expect(event.args.checkType).to.eq(0)
-                    expect((await policy.enforced(targetAddress, subjectAddress))[0]).to.be.equal(true)
+                    expect((await advancedPolicy.enforced(subjectAddress))[0]).to.be.equal(true)
                 })
 
                 it("reverts when pre already enforced", async () => {
-                    const { policy, target, subjectAddress, validEncodedNFTId } =
+                    const { advancedPolicy, target, subjectAddress, validEncodedNFTId } =
                         await loadFixture(deployAdvancedPolicyFixture)
 
-                    await policy.setTarget(await target.getAddress())
+                    await advancedPolicy.setTarget(await target.getAddress())
 
-                    await policy.connect(target).enforce(subjectAddress, [validEncodedNFTId], 0)
+                    await advancedPolicy.connect(target).enforce(subjectAddress, [validEncodedNFTId], 0)
 
                     await expect(
-                        policy.connect(target).enforce(subjectAddress, [validEncodedNFTId], 0)
-                    ).to.be.revertedWithCustomError(policy, "AlreadyEnforced")
+                        advancedPolicy.connect(target).enforce(subjectAddress, [validEncodedNFTId], 0)
+                    ).to.be.revertedWithCustomError(advancedPolicy, "AlreadyEnforced")
                 })
             })
 
             describe("main check", () => {
                 it("reverts when pre-check missing", async () => {
-                    const { policy, target, subjectAddress, validEncodedNFTId } =
+                    const { advancedPolicy, target, subjectAddress, validEncodedNFTId } =
                         await loadFixture(deployAdvancedPolicyFixture)
 
-                    await policy.setTarget(await target.getAddress())
+                    await advancedPolicy.setTarget(await target.getAddress())
 
                     expect(
-                        policy.connect(target).enforce(subjectAddress, [validEncodedNFTId], 1)
-                    ).to.be.revertedWithCustomError(policy, "PreCheckNotEnforced")
+                        advancedPolicy.connect(target).enforce(subjectAddress, [validEncodedNFTId], 1)
+                    ).to.be.revertedWithCustomError(advancedPolicy, "PreCheckNotEnforced")
                 })
 
                 it("reverts when check unsuccessful", async () => {
-                    const { policy, target, notOwnerAddress, subjectAddress, validEncodedNFTId } =
+                    const { advancedPolicy, target, notOwnerAddress, subjectAddress, validEncodedNFTId } =
                         await loadFixture(deployAdvancedPolicyFixture)
 
-                    await policy.setTarget(await target.getAddress())
-                    await policy.connect(target).enforce(subjectAddress, [validEncodedNFTId], 0)
+                    await advancedPolicy.setTarget(await target.getAddress())
+                    await advancedPolicy.connect(target).enforce(subjectAddress, [validEncodedNFTId], 0)
 
                     expect(
-                        policy.connect(target).enforce(notOwnerAddress, [validEncodedNFTId], 1)
-                    ).to.be.revertedWithCustomError(policy, "UnsuccessfulCheck")
+                        advancedPolicy.connect(target).enforce(notOwnerAddress, [validEncodedNFTId], 1)
+                    ).to.be.revertedWithCustomError(advancedPolicy, "UnsuccessfulCheck")
                 })
 
                 it("enforces main-check successfully", async () => {
-                    const { AdvancedERC721PolicyFactory, policy, target, subjectAddress, validEncodedNFTId } =
+                    const { advancedPolicy, target, subjectAddress, validEncodedNFTId } =
                         await loadFixture(deployAdvancedPolicyFixture)
                     const targetAddress = await target.getAddress()
 
-                    await policy.setTarget(await target.getAddress())
-                    await policy.connect(target).enforce(subjectAddress, [validEncodedNFTId], 0)
+                    await advancedPolicy.setTarget(await target.getAddress())
+                    await advancedPolicy.connect(target).enforce(subjectAddress, [validEncodedNFTId], 0)
 
-                    const tx = await policy.connect(target).enforce(subjectAddress, [validEncodedNFTId], 1)
+                    const tx = await advancedPolicy.connect(target).enforce(subjectAddress, [validEncodedNFTId], 1)
                     const receipt = await tx.wait()
-                    const event = AdvancedERC721PolicyFactory.interface.parseLog(
+                    const event = advancedPolicy.interface.parseLog(
                         receipt?.logs[0] as unknown as { topics: string[]; data: string }
                     ) as unknown as {
                         args: {
@@ -625,21 +602,21 @@ describe("Advanced", () => {
                     expect(event.args.target).to.eq(targetAddress)
                     expect(event.args.evidence[0]).to.eq(validEncodedNFTId)
                     expect(event.args.checkType).to.eq(1)
-                    expect((await policy.enforced(targetAddress, subjectAddress))[1]).to.be.equal(1)
+                    expect((await advancedPolicy.enforced(subjectAddress))[1]).to.be.equal(1)
                 })
 
                 it("executes multiple mains when allowed", async () => {
-                    const { AdvancedERC721PolicyFactory, policy, target, subjectAddress, validEncodedNFTId } =
+                    const { advancedPolicy, target, subjectAddress, validEncodedNFTId } =
                         await loadFixture(deployAdvancedPolicyFixture)
                     const targetAddress = await target.getAddress()
-                    await policy.setTarget(targetAddress)
+                    await advancedPolicy.setTarget(targetAddress)
 
-                    await policy.connect(target).enforce(subjectAddress, [validEncodedNFTId], 0)
-                    await policy.connect(target).enforce(subjectAddress, [validEncodedNFTId], 1)
+                    await advancedPolicy.connect(target).enforce(subjectAddress, [validEncodedNFTId], 0)
+                    await advancedPolicy.connect(target).enforce(subjectAddress, [validEncodedNFTId], 1)
 
-                    const tx = await policy.connect(target).enforce(subjectAddress, [validEncodedNFTId], 1)
+                    const tx = await advancedPolicy.connect(target).enforce(subjectAddress, [validEncodedNFTId], 1)
                     const receipt = await tx.wait()
-                    const event = AdvancedERC721PolicyFactory.interface.parseLog(
+                    const event = advancedPolicy.interface.parseLog(
                         receipt?.logs[0] as unknown as { topics: string[]; data: string }
                     ) as unknown as {
                         args: {
@@ -655,105 +632,111 @@ describe("Advanced", () => {
                     expect(event.args.target).to.eq(targetAddress)
                     expect(event.args.evidence[0]).to.eq(validEncodedNFTId)
                     expect(event.args.checkType).to.eq(1)
-                    expect((await policy.enforced(targetAddress, subjectAddress))[1]).to.be.equal(2)
+                    expect((await advancedPolicy.enforced(subjectAddress))[1]).to.be.equal(2)
                 })
 
-                it("executes multiple mains when allowed", async () => {
-                    const { policySkipped, target, notOwnerAddress, subjectAddress, validEncodedNFTId } =
+                it("reverts when main check already enfored", async () => {
+                    const { advancedPolicySkipped, target, subjectAddress, validEncodedNFTId } =
                         await loadFixture(deployAdvancedPolicyFixture)
 
-                    await policySkipped.setTarget(await target.getAddress())
-                    await policySkipped.connect(target).enforce(subjectAddress, [validEncodedNFTId], 1)
+                    await advancedPolicySkipped.setTarget(await target.getAddress())
+                    await advancedPolicySkipped.connect(target).enforce(subjectAddress, [validEncodedNFTId], 1)
 
                     expect(
-                        policySkipped.connect(target).enforce(notOwnerAddress, [validEncodedNFTId], 1)
-                    ).to.be.revertedWithCustomError(policySkipped, "MainCheckAlreadyEnforced")
+                        advancedPolicySkipped.connect(target).enforce(subjectAddress, [validEncodedNFTId], 1)
+                    ).to.be.revertedWithCustomError(advancedPolicySkipped, "MainCheckAlreadyEnforced")
                 })
             })
 
             describe("post check", () => {
                 it("reverts when pre/main missing", async () => {
-                    const { policy, target, subjectAddress, validEncodedNFTId } =
+                    const { advancedPolicy, target, subjectAddress, validEncodedNFTId } =
                         await loadFixture(deployAdvancedPolicyFixture)
 
-                    await policy.setTarget(await target.getAddress())
+                    await advancedPolicy.setTarget(await target.getAddress())
 
                     expect(
-                        policy.connect(target).enforce(subjectAddress, [validEncodedNFTId], 2)
-                    ).to.be.revertedWithCustomError(policy, "PreCheckNotEnforced")
+                        advancedPolicy.connect(target).enforce(subjectAddress, [validEncodedNFTId], 2)
+                    ).to.be.revertedWithCustomError(advancedPolicy, "PreCheckNotEnforced")
 
-                    await policy.connect(target).enforce(subjectAddress, [validEncodedNFTId], 0)
+                    await advancedPolicy.connect(target).enforce(subjectAddress, [validEncodedNFTId], 0)
 
                     expect(
-                        policy.connect(target).enforce(subjectAddress, [validEncodedNFTId], 2)
-                    ).to.be.revertedWithCustomError(policy, "MainCheckNotEnforced")
+                        advancedPolicy.connect(target).enforce(subjectAddress, [validEncodedNFTId], 2)
+                    ).to.be.revertedWithCustomError(advancedPolicy, "MainCheckNotEnforced")
                 })
 
                 it("reverts when caller not target", async () => {
-                    const { policy, subject, target, subjectAddress, validEncodedNFTId } =
+                    const { advancedPolicy, subject, target, subjectAddress, validEncodedNFTId } =
                         await loadFixture(deployAdvancedPolicyFixture)
 
-                    await policy.setTarget(await target.getAddress())
-                    await policy.connect(target).enforce(subjectAddress, [validEncodedNFTId], 0)
-                    await policy.connect(target).enforce(subjectAddress, [validEncodedNFTId], 1)
+                    await advancedPolicy.setTarget(await target.getAddress())
+                    await advancedPolicy.connect(target).enforce(subjectAddress, [validEncodedNFTId], 0)
+                    await advancedPolicy.connect(target).enforce(subjectAddress, [validEncodedNFTId], 1)
 
                     await expect(
-                        policy.connect(subject).enforce(subjectAddress, [ZeroHash], 2)
-                    ).to.be.revertedWithCustomError(policy, "TargetOnly")
+                        advancedPolicy.connect(subject).enforce(subjectAddress, [ZeroHash], 2)
+                    ).to.be.revertedWithCustomError(advancedPolicy, "TargetOnly")
                 })
 
                 it("reverts when already rewarded", async () => {
-                    const { rewardNft, policy, target, subjectAddress, validEncodedNFTId, invalidEncodedNFTId } =
-                        await loadFixture(deployAdvancedPolicyFixture)
+                    const {
+                        rewardNft,
+                        advancedPolicy,
+                        target,
+                        subjectAddress,
+                        validEncodedNFTId,
+                        invalidEncodedNFTId
+                    } = await loadFixture(deployAdvancedPolicyFixture)
 
-                    await policy.setTarget(await target.getAddress())
-                    await policy.connect(target).enforce(subjectAddress, [validEncodedNFTId], 0)
-                    await policy.connect(target).enforce(subjectAddress, [validEncodedNFTId], 1)
+                    await advancedPolicy.setTarget(await target.getAddress())
+                    await advancedPolicy.connect(target).enforce(subjectAddress, [validEncodedNFTId], 0)
+                    await advancedPolicy.connect(target).enforce(subjectAddress, [validEncodedNFTId], 1)
 
                     await rewardNft.mint(subjectAddress)
 
                     await expect(
-                        policy.connect(target).enforce(subjectAddress, [invalidEncodedNFTId], 2)
-                    ).to.be.revertedWithCustomError(policy, "UnsuccessfulCheck")
+                        advancedPolicy.connect(target).enforce(subjectAddress, [invalidEncodedNFTId], 2)
+                    ).to.be.revertedWithCustomError(advancedPolicy, "UnsuccessfulCheck")
                 })
 
                 it("reverts when post-check skipped", async () => {
-                    const { policySkipped, target, subjectAddress, validEncodedNFTId } =
+                    const { advancedPolicySkipped, target, subjectAddress, validEncodedNFTId } =
                         await loadFixture(deployAdvancedPolicyFixture)
 
-                    await policySkipped.setTarget(await target.getAddress())
-                    await policySkipped.connect(target).enforce(subjectAddress, [validEncodedNFTId], 1)
+                    await advancedPolicySkipped.setTarget(await target.getAddress())
+                    await advancedPolicySkipped.connect(target).enforce(subjectAddress, [validEncodedNFTId], 1)
 
                     await expect(
-                        policySkipped.connect(target).enforce(subjectAddress, [validEncodedNFTId], 2)
-                    ).to.be.revertedWithCustomError(policySkipped, "CannotPostCheckWhenSkipped")
+                        advancedPolicySkipped.connect(target).enforce(subjectAddress, [validEncodedNFTId], 2)
+                    ).to.be.revertedWithCustomError(advancedPolicySkipped, "CannotPostCheckWhenSkipped")
                 })
 
                 it("reverts when check unsuccessful", async () => {
-                    const { policy, target, subjectAddress, notOwnerAddress, validEncodedNFTId } =
+                    const { advancedPolicy, target, subjectAddress, notOwnerAddress, validEncodedNFTId } =
                         await loadFixture(deployAdvancedPolicyFixture)
 
-                    await policy.setTarget(await target.getAddress())
-                    await policy.connect(target).enforce(subjectAddress, [validEncodedNFTId], 0)
-                    await policy.connect(target).enforce(subjectAddress, [validEncodedNFTId], 1)
+                    await advancedPolicy.setTarget(await target.getAddress())
+                    await advancedPolicy.connect(target).enforce(subjectAddress, [validEncodedNFTId], 0)
+                    await advancedPolicy.connect(target).enforce(subjectAddress, [validEncodedNFTId], 1)
 
                     expect(
-                        policy.connect(target).enforce(notOwnerAddress, [validEncodedNFTId], 2)
-                    ).to.be.revertedWithCustomError(policy, "UnsuccessfulCheck")
+                        advancedPolicy.connect(target).enforce(notOwnerAddress, [validEncodedNFTId], 2)
+                    ).to.be.revertedWithCustomError(advancedPolicy, "UnsuccessfulCheck")
                 })
 
                 it("enforces post-check successfully", async () => {
-                    const { AdvancedERC721PolicyFactory, policy, target, subjectAddress, validEncodedNFTId } =
+                    const { advancedPolicy, target, subjectAddress, validEncodedNFTId } =
                         await loadFixture(deployAdvancedPolicyFixture)
                     const targetAddress = await target.getAddress()
 
-                    await policy.setTarget(targetAddress)
-                    await policy.connect(target).enforce(subjectAddress, [validEncodedNFTId], 0)
-                    await policy.connect(target).enforce(subjectAddress, [validEncodedNFTId], 1)
+                    await advancedPolicy.setTarget(targetAddress)
+                    await advancedPolicy.connect(target).enforce(subjectAddress, [validEncodedNFTId], 0)
+                    await advancedPolicy.connect(target).enforce(subjectAddress, [validEncodedNFTId], 1)
 
-                    const tx = await policy.connect(target).enforce(subjectAddress, [validEncodedNFTId], 2)
+                    const tx = await advancedPolicy.connect(target).enforce(subjectAddress, [validEncodedNFTId], 2)
                     const receipt = await tx.wait()
-                    const event = AdvancedERC721PolicyFactory.interface.parseLog(
+                    const event = advancedPolicy.interface.parseLog(
                         receipt?.logs[0] as unknown as { topics: string[]; data: string }
                     ) as unknown as {
                         args: {
@@ -769,325 +752,21 @@ describe("Advanced", () => {
                     expect(event.args.target).to.eq(targetAddress)
                     expect(event.args.evidence[0]).to.eq(validEncodedNFTId)
                     expect(event.args.checkType).to.eq(2)
-                    expect((await policy.enforced(targetAddress, subjectAddress))[2]).to.be.equal(true)
+                    expect((await advancedPolicy.enforced(subjectAddress))[2]).to.be.equal(true)
                 })
 
                 it("reverts when post already enforced", async () => {
-                    const { policy, target, subjectAddress, validEncodedNFTId } =
+                    const { advancedPolicy, target, subjectAddress, validEncodedNFTId } =
                         await loadFixture(deployAdvancedPolicyFixture)
 
-                    await policy.setTarget(await target.getAddress())
-                    await policy.connect(target).enforce(subjectAddress, [validEncodedNFTId], 0)
-                    await policy.connect(target).enforce(subjectAddress, [validEncodedNFTId], 1)
-                    await policy.connect(target).enforce(subjectAddress, [validEncodedNFTId], 2)
+                    await advancedPolicy.setTarget(await target.getAddress())
+                    await advancedPolicy.connect(target).enforce(subjectAddress, [validEncodedNFTId], 0)
+                    await advancedPolicy.connect(target).enforce(subjectAddress, [validEncodedNFTId], 1)
+                    await advancedPolicy.connect(target).enforce(subjectAddress, [validEncodedNFTId], 2)
 
                     await expect(
-                        policy.connect(target).enforce(subjectAddress, [validEncodedNFTId], 2)
-                    ).to.be.revertedWithCustomError(policy, "AlreadyEnforced")
-                })
-            })
-        })
-
-        describe("internal enforce", () => {
-            describe("internal pre", () => {
-                it("reverts when caller not target", async () => {
-                    const { policyHarness, subject, target, subjectAddress } =
-                        await loadFixture(deployAdvancedPolicyFixture)
-
-                    await policyHarness.setTarget(await target.getAddress())
-
-                    await expect(
-                        policyHarness.connect(subject).exposed__enforce(subjectAddress, [ZeroHash], 0)
-                    ).to.be.revertedWithCustomError(policyHarness, "TargetOnly")
-                })
-
-                it("reverts when evidence invalid", async () => {
-                    const { rewardIERC721Errors, policyHarness, target, subjectAddress, invalidEncodedNFTId } =
-                        await loadFixture(deployAdvancedPolicyFixture)
-
-                    await policyHarness.setTarget(await target.getAddress())
-
-                    await expect(
-                        policyHarness.connect(target).exposed__enforce(subjectAddress, [invalidEncodedNFTId], 0)
-                    ).to.be.revertedWithCustomError(rewardIERC721Errors, "ERC721NonexistentToken")
-                })
-
-                it("reverts when pre-check skipped", async () => {
-                    const { policyHarnessSkipped, target, subjectAddress, validEncodedNFTId } =
-                        await loadFixture(deployAdvancedPolicyFixture)
-
-                    await policyHarnessSkipped.setTarget(await target.getAddress())
-
-                    await expect(
-                        policyHarnessSkipped.connect(target).exposed__enforce(subjectAddress, [validEncodedNFTId], 0)
-                    ).to.be.revertedWithCustomError(policyHarnessSkipped, "CannotPreCheckWhenSkipped")
-                })
-
-                it("reverts when check unsuccessful", async () => {
-                    const { policyHarness, target, notOwnerAddress, validEncodedNFTId } =
-                        await loadFixture(deployAdvancedPolicyFixture)
-
-                    await policyHarness.setTarget(await target.getAddress())
-
-                    expect(
-                        policyHarness.connect(target).exposed__enforce(notOwnerAddress, [validEncodedNFTId], 0)
-                    ).to.be.revertedWithCustomError(policyHarness, "UnsuccessfulCheck")
-                })
-
-                it("enforces pre-check successfully", async () => {
-                    const { AdvancedERC721PolicyFactory, policyHarness, target, subjectAddress, validEncodedNFTId } =
-                        await loadFixture(deployAdvancedPolicyFixture)
-                    const targetAddress = await target.getAddress()
-
-                    await policyHarness.setTarget(targetAddress)
-
-                    const tx = await policyHarness
-                        .connect(target)
-                        .exposed__enforce(subjectAddress, [validEncodedNFTId], 0)
-                    const receipt = await tx.wait()
-                    const event = AdvancedERC721PolicyFactory.interface.parseLog(
-                        receipt?.logs[0] as unknown as { topics: string[]; data: string }
-                    ) as unknown as {
-                        args: {
-                            subject: string
-                            target: string
-                            evidence: string
-                        }
-                    }
-
-                    expect(receipt?.status).to.eq(1)
-                    expect(event.args.subject).to.eq(subjectAddress)
-                    expect(event.args.target).to.eq(targetAddress)
-                    expect(event.args.evidence[0]).to.eq(validEncodedNFTId)
-                    expect((await policyHarness.enforced(targetAddress, subjectAddress))[0]).to.be.equal(true)
-                })
-
-                it("reverts when pre already enforced", async () => {
-                    const { policyHarness, target, subjectAddress, validEncodedNFTId } =
-                        await loadFixture(deployAdvancedPolicyFixture)
-
-                    await policyHarness.setTarget(await target.getAddress())
-
-                    await policyHarness.connect(target).exposed__enforce(subjectAddress, [validEncodedNFTId], 0)
-
-                    await expect(
-                        policyHarness.connect(target).enforce(subjectAddress, [validEncodedNFTId], 0)
-                    ).to.be.revertedWithCustomError(policyHarness, "AlreadyEnforced")
-                })
-            })
-
-            describe("_main", () => {
-                it("reverts when pre-check missing", async () => {
-                    const { policyHarness, target, subjectAddress, validEncodedNFTId } =
-                        await loadFixture(deployAdvancedPolicyFixture)
-
-                    await policyHarness.setTarget(await target.getAddress())
-
-                    expect(
-                        policyHarness.connect(target).exposed__enforce(subjectAddress, [validEncodedNFTId], 1)
-                    ).to.be.revertedWithCustomError(policyHarness, "PreCheckNotEnforced")
-                })
-
-                it("reverts when check unsuccessful", async () => {
-                    const { policyHarness, target, notOwnerAddress, subjectAddress, validEncodedNFTId } =
-                        await loadFixture(deployAdvancedPolicyFixture)
-
-                    await policyHarness.setTarget(await target.getAddress())
-                    await policyHarness.connect(target).exposed__enforce(subjectAddress, [validEncodedNFTId], 0)
-
-                    expect(
-                        policyHarness.connect(target).exposed__enforce(notOwnerAddress, [validEncodedNFTId], 1)
-                    ).to.be.revertedWithCustomError(policyHarness, "UnsuccessfulCheck")
-                })
-
-                it("enforces main-check successfully", async () => {
-                    const { AdvancedERC721PolicyFactory, policyHarness, target, subjectAddress, validEncodedNFTId } =
-                        await loadFixture(deployAdvancedPolicyFixture)
-                    const targetAddress = await target.getAddress()
-
-                    await policyHarness.setTarget(await target.getAddress())
-                    await policyHarness.connect(target).exposed__enforce(subjectAddress, [validEncodedNFTId], 0)
-
-                    const tx = await policyHarness
-                        .connect(target)
-                        .exposed__enforce(subjectAddress, [validEncodedNFTId], 1)
-                    const receipt = await tx.wait()
-                    const event = AdvancedERC721PolicyFactory.interface.parseLog(
-                        receipt?.logs[0] as unknown as { topics: string[]; data: string }
-                    ) as unknown as {
-                        args: {
-                            subject: string
-                            target: string
-                            evidence: string
-                        }
-                    }
-
-                    expect(receipt?.status).to.eq(1)
-                    expect(event.args.subject).to.eq(subjectAddress)
-                    expect(event.args.target).to.eq(targetAddress)
-                    expect(event.args.evidence[0]).to.eq(validEncodedNFTId)
-                    expect((await policyHarness.enforced(targetAddress, subjectAddress))[1]).to.be.equal(1)
-                })
-
-                it("executes multiple mains when allowed", async () => {
-                    const { AdvancedERC721PolicyFactory, policyHarness, target, subjectAddress, validEncodedNFTId } =
-                        await loadFixture(deployAdvancedPolicyFixture)
-                    const targetAddress = await target.getAddress()
-                    await policyHarness.setTarget(targetAddress)
-
-                    await policyHarness.connect(target).exposed__enforce(subjectAddress, [validEncodedNFTId], 0)
-                    await policyHarness.connect(target).exposed__enforce(subjectAddress, [validEncodedNFTId], 1)
-
-                    const tx = await policyHarness
-                        .connect(target)
-                        .exposed__enforce(subjectAddress, [validEncodedNFTId], 1)
-                    const receipt = await tx.wait()
-                    const event = AdvancedERC721PolicyFactory.interface.parseLog(
-                        receipt?.logs[0] as unknown as { topics: string[]; data: string }
-                    ) as unknown as {
-                        args: {
-                            subject: string
-                            target: string
-                            evidence: string
-                        }
-                    }
-
-                    expect(receipt?.status).to.eq(1)
-                    expect(event.args.subject).to.eq(subjectAddress)
-                    expect(event.args.target).to.eq(targetAddress)
-                    expect(event.args.evidence[0]).to.eq(validEncodedNFTId)
-                    expect((await policyHarness.enforced(targetAddress, subjectAddress))[1]).to.be.equal(2)
-                })
-
-                it("executes multiple mains when allowed", async () => {
-                    const { policyHarnessSkipped, target, notOwnerAddress, subjectAddress, validEncodedNFTId } =
-                        await loadFixture(deployAdvancedPolicyFixture)
-
-                    await policyHarnessSkipped.setTarget(await target.getAddress())
-                    await policyHarnessSkipped.connect(target).exposed__enforce(subjectAddress, [validEncodedNFTId], 1)
-
-                    expect(
-                        policyHarnessSkipped.connect(target).exposed__enforce(notOwnerAddress, [validEncodedNFTId], 1)
-                    ).to.be.revertedWithCustomError(policyHarnessSkipped, "MainCheckAlreadyEnforced")
-                    expect(
-                        policyHarnessSkipped.connect(target).exposed__enforce(subjectAddress, [validEncodedNFTId], 1)
-                    ).to.be.revertedWithCustomError(policyHarnessSkipped, "MainCheckAlreadyEnforced")
-                })
-            })
-
-            describe("_post", () => {
-                it("reverts when pre/main missing", async () => {
-                    const { policyHarness, target, subjectAddress, validEncodedNFTId } =
-                        await loadFixture(deployAdvancedPolicyFixture)
-
-                    await policyHarness.setTarget(await target.getAddress())
-
-                    expect(
-                        policyHarness.connect(target).exposed__enforce(subjectAddress, [validEncodedNFTId], 2)
-                    ).to.be.revertedWithCustomError(policyHarness, "PreCheckNotEnforced")
-
-                    await policyHarness.connect(target).exposed__enforce(subjectAddress, [validEncodedNFTId], 0)
-
-                    expect(
-                        policyHarness.connect(target).exposed__enforce(subjectAddress, [validEncodedNFTId], 2)
-                    ).to.be.revertedWithCustomError(policyHarness, "MainCheckNotEnforced")
-                })
-
-                it("reverts when caller not target", async () => {
-                    const { policyHarness, subject, target, subjectAddress, validEncodedNFTId } =
-                        await loadFixture(deployAdvancedPolicyFixture)
-
-                    await policyHarness.setTarget(await target.getAddress())
-                    await policyHarness.connect(target).exposed__enforce(subjectAddress, [validEncodedNFTId], 0)
-                    await policyHarness.connect(target).exposed__enforce(subjectAddress, [validEncodedNFTId], 1)
-
-                    await expect(
-                        policyHarness.connect(subject).exposed__enforce(subjectAddress, [ZeroHash], 2)
-                    ).to.be.revertedWithCustomError(policyHarness, "TargetOnly")
-                })
-
-                it("reverts when evidence invalid", async () => {
-                    const { rewardNft, policyHarness, target, subjectAddress, validEncodedNFTId, invalidEncodedNFTId } =
-                        await loadFixture(deployAdvancedPolicyFixture)
-
-                    await policyHarness.setTarget(await target.getAddress())
-                    await policyHarness.connect(target).exposed__enforce(subjectAddress, [validEncodedNFTId], 0)
-                    await policyHarness.connect(target).exposed__enforce(subjectAddress, [validEncodedNFTId], 1)
-
-                    await rewardNft.mint(subjectAddress)
-
-                    await expect(
-                        policyHarness.connect(target).enforce(subjectAddress, [invalidEncodedNFTId], 2)
-                    ).to.be.revertedWithCustomError(policyHarness, "UnsuccessfulCheck")
-                })
-
-                it("reverts when post-check skipped", async () => {
-                    const { policyHarnessSkipped, target, subjectAddress, validEncodedNFTId } =
-                        await loadFixture(deployAdvancedPolicyFixture)
-
-                    await policyHarnessSkipped.setTarget(await target.getAddress())
-                    await policyHarnessSkipped.connect(target).exposed__enforce(subjectAddress, [validEncodedNFTId], 1)
-
-                    await expect(
-                        policyHarnessSkipped.connect(target).exposed__enforce(subjectAddress, [validEncodedNFTId], 2)
-                    ).to.be.revertedWithCustomError(policyHarnessSkipped, "CannotPostCheckWhenSkipped")
-                })
-
-                it("reverts when check unsuccessful", async () => {
-                    const { policyHarness, target, subjectAddress, notOwnerAddress, validEncodedNFTId } =
-                        await loadFixture(deployAdvancedPolicyFixture)
-
-                    await policyHarness.setTarget(await target.getAddress())
-                    await policyHarness.connect(target).exposed__enforce(subjectAddress, [validEncodedNFTId], 0)
-                    await policyHarness.connect(target).exposed__enforce(subjectAddress, [validEncodedNFTId], 1)
-
-                    expect(
-                        policyHarness.connect(target).exposed__enforce(notOwnerAddress, [validEncodedNFTId], 2)
-                    ).to.be.revertedWithCustomError(policyHarness, "UnsuccessfulCheck")
-                })
-
-                it("enforces post-check successfully", async () => {
-                    const { AdvancedERC721PolicyFactory, policyHarness, target, subjectAddress, validEncodedNFTId } =
-                        await loadFixture(deployAdvancedPolicyFixture)
-                    const targetAddress = await target.getAddress()
-
-                    await policyHarness.setTarget(targetAddress)
-                    await policyHarness.connect(target).exposed__enforce(subjectAddress, [validEncodedNFTId], 0)
-                    await policyHarness.connect(target).exposed__enforce(subjectAddress, [validEncodedNFTId], 1)
-
-                    const tx = await policyHarness
-                        .connect(target)
-                        .exposed__enforce(subjectAddress, [validEncodedNFTId], 2)
-                    const receipt = await tx.wait()
-                    const event = AdvancedERC721PolicyFactory.interface.parseLog(
-                        receipt?.logs[0] as unknown as { topics: string[]; data: string }
-                    ) as unknown as {
-                        args: {
-                            subject: string
-                            target: string
-                            evidence: string
-                        }
-                    }
-
-                    expect(receipt?.status).to.eq(1)
-                    expect(event.args.subject).to.eq(subjectAddress)
-                    expect(event.args.target).to.eq(targetAddress)
-                    expect(event.args.evidence[0]).to.eq(validEncodedNFTId)
-                    expect((await policyHarness.enforced(targetAddress, subjectAddress))[2]).to.be.equal(true)
-                })
-
-                it("reverts when post already enforced", async () => {
-                    const { policyHarness, target, subjectAddress, validEncodedNFTId } =
-                        await loadFixture(deployAdvancedPolicyFixture)
-
-                    await policyHarness.setTarget(await target.getAddress())
-                    await policyHarness.connect(target).exposed__enforce(subjectAddress, [validEncodedNFTId], 0)
-                    await policyHarness.connect(target).exposed__enforce(subjectAddress, [validEncodedNFTId], 1)
-                    await policyHarness.connect(target).exposed__enforce(subjectAddress, [validEncodedNFTId], 2)
-
-                    await expect(
-                        policyHarness.connect(target).exposed__enforce(subjectAddress, [validEncodedNFTId], 2)
-                    ).to.be.revertedWithCustomError(policyHarness, "AlreadyEnforced")
+                        advancedPolicy.connect(target).enforce(subjectAddress, [validEncodedNFTId], 2)
+                    ).to.be.revertedWithCustomError(advancedPolicy, "AlreadyEnforced")
                 })
             })
         })
@@ -1095,76 +774,117 @@ describe("Advanced", () => {
 
     describe("Voting", () => {
         async function deployAdvancedVotingFixture() {
-            const [deployer, subject, notOwner]: Signer[] = await ethers.getSigners()
+            const [deployer, subject, target, notOwner]: Signer[] = await ethers.getSigners()
             const subjectAddress: string = await subject.getAddress()
             const notOwnerAddress: string = await notOwner.getAddress()
 
-            const NFTFactory: NFT__factory = await ethers.getContractFactory("NFT")
-            const BaseERC721CheckerFactory: BaseERC721Checker__factory =
-                await ethers.getContractFactory("BaseERC721Checker")
-            const AdvancedERC721CheckerFactory: AdvancedERC721Checker__factory =
-                await ethers.getContractFactory("AdvancedERC721Checker")
-            const AdvancedERC721PolicyFactory: AdvancedERC721Policy__factory =
-                await ethers.getContractFactory("AdvancedERC721Policy")
-            const AdvancedVotingFactory: AdvancedVoting__factory = await ethers.getContractFactory("AdvancedVoting")
+            const NFT: NFT__factory = await ethers.getContractFactory("NFT")
+            const BaseERC721CheckerFactory: BaseERC721CheckerFactory__factory =
+                await ethers.getContractFactory("BaseERC721CheckerFactory")
+            const AdvancedERC721CheckerFactory: AdvancedERC721CheckerFactory__factory =
+                await ethers.getContractFactory("AdvancedERC721CheckerFactory")
+            const AdvancedERC721PolicyFactory: AdvancedERC721PolicyFactory__factory =
+                await ethers.getContractFactory("AdvancedERC721PolicyFactory")
+            const AdvancedVoting: AdvancedVoting__factory = await ethers.getContractFactory("AdvancedVoting")
 
-            const signupNft: NFT = await NFTFactory.deploy()
-            const rewardNft: NFT = await NFTFactory.deploy()
-            const signupIERC721Errors: IERC721Errors = await ethers.getContractAt(
+            const signupNft: NFT = await NFT.deploy()
+            const rewardNft: NFT = await NFT.deploy()
+            const iERC721Errors: IERC721Errors = await ethers.getContractAt(
                 "IERC721Errors",
                 await signupNft.getAddress()
             )
-            const rewardIERC721Errors: IERC721Errors = await ethers.getContractAt(
-                "IERC721Errors",
-                await rewardNft.getAddress()
+
+            const baseCheckerFactory: BaseERC721CheckerFactory =
+                await BaseERC721CheckerFactory.connect(deployer).deploy()
+
+            const baseCheckerTx = await baseCheckerFactory.deploy(await signupNft.getAddress())
+            const baseCheckerTxReceipt = await baseCheckerTx.wait()
+            const baseCheckerCloneDeployedEvent = BaseERC721CheckerFactory.interface.parseLog(
+                baseCheckerTxReceipt?.logs[0] as unknown as { topics: string[]; data: string }
+            ) as unknown as {
+                args: {
+                    clone: string
+                }
+            }
+
+            const baseChecker: BaseERC721Checker = BaseERC721Checker__factory.connect(
+                baseCheckerCloneDeployedEvent.args.clone,
+                deployer
             )
-            const baseChecker: BaseERC721Checker = await BaseERC721CheckerFactory.connect(deployer).deploy([
-                await signupNft.getAddress()
-            ])
-            const advancedChecker: AdvancedERC721Checker = await AdvancedERC721CheckerFactory.connect(deployer).deploy(
-                [await signupNft.getAddress(), await rewardNft.getAddress(), await baseChecker.getAddress()],
+
+            const advancedCheckerFactory: AdvancedERC721CheckerFactory =
+                await AdvancedERC721CheckerFactory.connect(deployer).deploy()
+
+            const advancedCheckerTx = await advancedCheckerFactory.deploy(
+                await signupNft.getAddress(),
+                await rewardNft.getAddress(),
+                await baseChecker.getAddress(),
                 1,
                 0,
                 10
             )
+            const advancedCheckerTxReceipt = await advancedCheckerTx.wait()
+            const advancedCheckerCloneDeployedEvent = AdvancedERC721CheckerFactory.interface.parseLog(
+                advancedCheckerTxReceipt?.logs[0] as unknown as { topics: string[]; data: string }
+            ) as unknown as {
+                args: {
+                    clone: string
+                }
+            }
 
-            const policy: AdvancedERC721Policy = await AdvancedERC721PolicyFactory.connect(deployer).deploy(
+            const advancedChecker: AdvancedERC721Checker = AdvancedERC721Checker__factory.connect(
+                advancedCheckerCloneDeployedEvent.args.clone,
+                deployer
+            )
+
+            const advancedPolicyFactory: AdvancedERC721PolicyFactory =
+                await AdvancedERC721PolicyFactory.connect(deployer).deploy()
+
+            const advancedPolicyTx = await advancedPolicyFactory.deploy(
                 await advancedChecker.getAddress(),
                 false,
                 false,
                 true
             )
+            const advancedPolicyTxReceipt = await advancedPolicyTx.wait()
+            const advancedPolicyCloneDeployedEvent = AdvancedERC721PolicyFactory.interface.parseLog(
+                advancedPolicyTxReceipt?.logs[0] as unknown as { topics: string[]; data: string }
+            ) as unknown as {
+                args: {
+                    clone: string
+                }
+            }
 
-            const voting: AdvancedVoting = await AdvancedVotingFactory.connect(deployer).deploy(
-                await policy.getAddress()
+            const advancedPolicy: AdvancedERC721Policy = AdvancedERC721Policy__factory.connect(
+                advancedPolicyCloneDeployedEvent.args.clone,
+                deployer
+            )
+
+            const advancedVoting: AdvancedVoting = await AdvancedVoting.connect(deployer).deploy(
+                await advancedPolicy.getAddress()
             )
 
             // mint 0 for subject.
             await signupNft.connect(deployer).mint(subjectAddress)
 
             // encoded token ids.
-            const validNFTId = 0
-            const invalidNFTId = 1
-            const validEncodedNFTId = AbiCoder.defaultAbiCoder().encode(["uint256"], [validNFTId])
-            const invalidEncodedNFTId = AbiCoder.defaultAbiCoder().encode(["uint256"], [invalidNFTId])
+            const validEncodedNFTId = AbiCoder.defaultAbiCoder().encode(["uint256"], [0])
+            const invalidEncodedNFTId = AbiCoder.defaultAbiCoder().encode(["uint256"], [1])
 
             return {
-                signupIERC721Errors,
-                rewardIERC721Errors,
-                AdvancedVotingFactory,
-                AdvancedERC721PolicyFactory,
+                iERC721Errors,
                 signupNft,
                 rewardNft,
+                baseChecker,
                 advancedChecker,
-                voting,
-                policy,
-                subject,
+                advancedPolicy,
+                advancedVoting,
                 deployer,
+                target,
                 notOwner,
+                subject,
                 subjectAddress,
                 notOwnerAddress,
-                validNFTId,
-                invalidNFTId,
                 validEncodedNFTId,
                 invalidEncodedNFTId
             }
@@ -1172,57 +892,56 @@ describe("Advanced", () => {
 
         describe("constructor", () => {
             it("deploys correctly", async () => {
-                const { voting } = await loadFixture(deployAdvancedVotingFixture)
+                const { advancedVoting } = await loadFixture(deployAdvancedVotingFixture)
 
-                expect(voting).to.not.eq(undefined)
+                expect(advancedVoting).to.not.eq(undefined)
             })
         })
 
         describe("register", () => {
             it("reverts when caller not target", async () => {
-                const { voting, policy, notOwner, validNFTId } = await loadFixture(deployAdvancedVotingFixture)
+                const { advancedVoting, advancedPolicy, notOwner, validEncodedNFTId } =
+                    await loadFixture(deployAdvancedVotingFixture)
 
-                await policy.setTarget(await notOwner.getAddress())
+                await advancedPolicy.setTarget(await notOwner.getAddress())
 
-                await expect(voting.connect(notOwner).register(validNFTId)).to.be.revertedWithCustomError(
-                    policy,
-                    "TargetOnly"
-                )
+                await expect(
+                    advancedVoting.connect(notOwner).register(validEncodedNFTId)
+                ).to.be.revertedWithCustomError(advancedPolicy, "TargetOnly")
             })
 
             it("reverts when evidence invalid", async () => {
-                const { signupIERC721Errors, voting, policy, subject, invalidNFTId } =
+                const { iERC721Errors, advancedVoting, advancedPolicy, subject, invalidEncodedNFTId } =
                     await loadFixture(deployAdvancedVotingFixture)
 
-                await policy.setTarget(await voting.getAddress())
+                await advancedPolicy.setTarget(await advancedVoting.getAddress())
 
-                await expect(voting.connect(subject).register(invalidNFTId)).to.be.revertedWithCustomError(
-                    signupIERC721Errors,
-                    "ERC721NonexistentToken"
-                )
+                await expect(
+                    advancedVoting.connect(subject).register(invalidEncodedNFTId)
+                ).to.be.revertedWithCustomError(iERC721Errors, "ERC721NonexistentToken")
             })
 
             it("reverts when check fails", async () => {
-                const { voting, policy, notOwner, validNFTId } = await loadFixture(deployAdvancedVotingFixture)
+                const { advancedVoting, advancedPolicy, notOwner, validEncodedNFTId } =
+                    await loadFixture(deployAdvancedVotingFixture)
 
-                await policy.setTarget(await voting.getAddress())
+                await advancedPolicy.setTarget(await advancedVoting.getAddress())
 
-                await expect(voting.connect(notOwner).register(validNFTId)).to.be.revertedWithCustomError(
-                    policy,
-                    "UnsuccessfulCheck"
-                )
+                await expect(
+                    advancedVoting.connect(notOwner).register(validEncodedNFTId)
+                ).to.be.revertedWithCustomError(advancedPolicy, "UnsuccessfulCheck")
             })
 
             it("registers successfully", async () => {
-                const { AdvancedVotingFactory, voting, policy, subject, validNFTId, subjectAddress } =
+                const { advancedVoting, advancedPolicy, subject, validEncodedNFTId, subjectAddress } =
                     await loadFixture(deployAdvancedVotingFixture)
-                const targetAddress = await voting.getAddress()
+                const targetAddress = await advancedVoting.getAddress()
 
-                await policy.setTarget(targetAddress)
+                await advancedPolicy.setTarget(targetAddress)
 
-                const tx = await voting.connect(subject).register(validNFTId)
+                const tx = await advancedVoting.connect(subject).register(validEncodedNFTId)
                 const receipt = await tx.wait()
-                const event = AdvancedVotingFactory.interface.parseLog(
+                const event = advancedVoting.interface.parseLog(
                     receipt?.logs[1] as unknown as { topics: string[]; data: string }
                 ) as unknown as {
                     args: {
@@ -1232,22 +951,23 @@ describe("Advanced", () => {
 
                 expect(receipt?.status).to.eq(1)
                 expect(event.args.voter).to.eq(subjectAddress)
-                expect((await policy.enforced(targetAddress, subjectAddress))[0]).to.be.equal(true)
-                expect((await policy.enforced(targetAddress, subjectAddress))[1]).to.be.equal(0n)
-                expect(await voting.voteCounts(0)).to.be.equal(0)
-                expect(await voting.voteCounts(1)).to.be.equal(0)
+                expect((await advancedPolicy.enforced(subjectAddress))[0]).to.be.equal(true)
+                expect((await advancedPolicy.enforced(subjectAddress))[1]).to.be.equal(0n)
+                expect(await advancedVoting.voteCounts(0)).to.be.equal(0)
+                expect(await advancedVoting.voteCounts(1)).to.be.equal(0)
             })
 
             it("reverts when already registered", async () => {
-                const { voting, policy, subject, validNFTId } = await loadFixture(deployAdvancedVotingFixture)
-                const targetAddress = await voting.getAddress()
+                const { advancedVoting, advancedPolicy, subject, validEncodedNFTId } =
+                    await loadFixture(deployAdvancedVotingFixture)
+                const targetAddress = await advancedVoting.getAddress()
 
-                await policy.setTarget(targetAddress)
+                await advancedPolicy.setTarget(targetAddress)
 
-                await voting.connect(subject).register(validNFTId)
+                await advancedVoting.connect(subject).register(validEncodedNFTId)
 
-                await expect(voting.connect(subject).register(validNFTId)).to.be.revertedWithCustomError(
-                    policy,
+                await expect(advancedVoting.connect(subject).register(validEncodedNFTId)).to.be.revertedWithCustomError(
+                    advancedPolicy,
                     "AlreadyEnforced"
                 )
             })
@@ -1255,34 +975,41 @@ describe("Advanced", () => {
 
         describe("vote", () => {
             it("reverts when not registered", async () => {
-                const { voting, policy, subject } = await loadFixture(deployAdvancedVotingFixture)
+                const { advancedVoting, advancedPolicy, subject } = await loadFixture(deployAdvancedVotingFixture)
 
-                await policy.setTarget(await voting.getAddress())
+                await advancedPolicy.setTarget(await advancedVoting.getAddress())
 
-                await expect(voting.connect(subject).vote(0)).to.be.revertedWithCustomError(voting, "NotRegistered")
+                await expect(advancedVoting.connect(subject).vote(0)).to.be.revertedWithCustomError(
+                    advancedVoting,
+                    "NotRegistered"
+                )
             })
 
             it("reverts when option invalid", async () => {
-                const { voting, policy, subject, validNFTId } = await loadFixture(deployAdvancedVotingFixture)
+                const { advancedVoting, advancedPolicy, subject, validEncodedNFTId } =
+                    await loadFixture(deployAdvancedVotingFixture)
 
-                await policy.setTarget(await voting.getAddress())
-                await voting.connect(subject).register(validNFTId)
+                await advancedPolicy.setTarget(await advancedVoting.getAddress())
+                await advancedVoting.connect(subject).register(validEncodedNFTId)
 
-                await expect(voting.connect(subject).vote(3)).to.be.revertedWithCustomError(voting, "InvalidOption")
+                await expect(advancedVoting.connect(subject).vote(3)).to.be.revertedWithCustomError(
+                    advancedVoting,
+                    "InvalidOption"
+                )
             })
 
             it("votes successfully", async () => {
-                const { AdvancedVotingFactory, voting, policy, subject, subjectAddress, validNFTId } =
+                const { advancedVoting, advancedPolicy, subject, subjectAddress, validEncodedNFTId } =
                     await loadFixture(deployAdvancedVotingFixture)
                 const option = 0
-                const targetAddress = await voting.getAddress()
+                const targetAddress = await advancedVoting.getAddress()
 
-                await policy.setTarget(targetAddress)
-                await voting.connect(subject).register(validNFTId)
+                await advancedPolicy.setTarget(targetAddress)
+                await advancedVoting.connect(subject).register(validEncodedNFTId)
 
-                const tx = await voting.connect(subject).vote(option)
+                const tx = await advancedVoting.connect(subject).vote(option)
                 const receipt = await tx.wait()
-                const event = AdvancedVotingFactory.interface.parseLog(
+                const event = advancedVoting.interface.parseLog(
                     receipt?.logs[1] as unknown as { topics: string[]; data: string }
                 ) as unknown as {
                     args: {
@@ -1294,25 +1021,25 @@ describe("Advanced", () => {
                 expect(receipt?.status).to.eq(1)
                 expect(event.args.voter).to.eq(subjectAddress)
                 expect(event.args.option).to.eq(option)
-                expect((await policy.enforced(targetAddress, subjectAddress))[0]).to.be.equal(true)
-                expect((await policy.enforced(targetAddress, subjectAddress))[1]).to.be.equal(1n)
-                expect(await voting.voteCounts(0)).to.be.equal(1)
-                expect(await voting.voteCounts(1)).to.be.equal(0)
+                expect((await advancedPolicy.enforced(subjectAddress))[0]).to.be.equal(true)
+                expect((await advancedPolicy.enforced(subjectAddress))[1]).to.be.equal(1n)
+                expect(await advancedVoting.voteCounts(0)).to.be.equal(1)
+                expect(await advancedVoting.voteCounts(1)).to.be.equal(0)
             })
 
             it("allows multiple votes", async () => {
-                const { AdvancedVotingFactory, voting, policy, subject, subjectAddress, validNFTId } =
+                const { advancedVoting, advancedPolicy, subject, subjectAddress, validEncodedNFTId } =
                     await loadFixture(deployAdvancedVotingFixture)
                 const option = 0
-                const targetAddress = await voting.getAddress()
+                const targetAddress = await advancedVoting.getAddress()
 
-                await policy.setTarget(targetAddress)
-                await voting.connect(subject).register(validNFTId)
-                await voting.connect(subject).vote(option)
+                await advancedPolicy.setTarget(targetAddress)
+                await advancedVoting.connect(subject).register(validEncodedNFTId)
+                await advancedVoting.connect(subject).vote(option)
 
-                const tx = await voting.connect(subject).vote(option)
+                const tx = await advancedVoting.connect(subject).vote(option)
                 const receipt = await tx.wait()
-                const event = AdvancedVotingFactory.interface.parseLog(
+                const event = advancedVoting.interface.parseLog(
                     receipt?.logs[1] as unknown as { topics: string[]; data: string }
                 ) as unknown as {
                     args: {
@@ -1324,89 +1051,105 @@ describe("Advanced", () => {
                 expect(receipt?.status).to.eq(1)
                 expect(event.args.voter).to.eq(subjectAddress)
                 expect(event.args.option).to.eq(option)
-                expect((await policy.enforced(targetAddress, subjectAddress))[0]).to.be.equal(true)
-                expect((await policy.enforced(targetAddress, subjectAddress))[1]).to.be.equal(2n)
-                expect(await voting.voteCounts(0)).to.be.equal(2)
-                expect(await voting.voteCounts(1)).to.be.equal(0)
+                expect((await advancedPolicy.enforced(subjectAddress))[0]).to.be.equal(true)
+                expect((await advancedPolicy.enforced(subjectAddress))[1]).to.be.equal(2n)
+                expect(await advancedVoting.voteCounts(0)).to.be.equal(2)
+                expect(await advancedVoting.voteCounts(1)).to.be.equal(0)
             })
         })
 
         describe("eligibility", () => {
             it("reverts when caller not target", async () => {
-                const { voting, policy, subject, notOwner, validNFTId } = await loadFixture(deployAdvancedVotingFixture)
+                const { advancedVoting, advancedPolicy, subject, notOwner, validEncodedNFTId } =
+                    await loadFixture(deployAdvancedVotingFixture)
 
-                await policy.setTarget(await notOwner.getAddress())
+                await advancedPolicy.setTarget(await notOwner.getAddress())
 
-                await expect(voting.connect(subject).register(validNFTId)).to.be.revertedWithCustomError(
-                    policy,
+                await expect(advancedVoting.connect(subject).register(validEncodedNFTId)).to.be.revertedWithCustomError(
+                    advancedPolicy,
                     "TargetOnly"
                 )
             })
 
             it("reverts when already owns reward token", async () => {
-                const { rewardNft, voting, policy, subject, validNFTId } =
+                const { rewardNft, advancedVoting, advancedPolicy, subject, validEncodedNFTId } =
                     await loadFixture(deployAdvancedVotingFixture)
 
-                await policy.setTarget(await voting.getAddress())
-                await voting.connect(subject).register(validNFTId)
-                await voting.connect(subject).vote(0)
+                await advancedPolicy.setTarget(await advancedVoting.getAddress())
+                await advancedVoting.connect(subject).register(validEncodedNFTId)
+                await advancedVoting.connect(subject).vote(0)
 
                 await rewardNft.mint(subject)
 
-                await expect(voting.connect(subject).eligible()).to.be.revertedWithCustomError(
-                    policy,
+                await expect(advancedVoting.connect(subject).eligible()).to.be.revertedWithCustomError(
+                    advancedPolicy,
                     "UnsuccessfulCheck"
                 )
             })
 
             it("reverts when check fails", async () => {
-                const { signupNft, rewardNft, deployer, voting, policy, notOwner, subject, validNFTId } =
-                    await loadFixture(deployAdvancedVotingFixture)
+                const {
+                    signupNft,
+                    rewardNft,
+                    deployer,
+                    advancedVoting,
+                    advancedPolicy,
+                    notOwner,
+                    subject,
+                    validEncodedNFTId
+                } = await loadFixture(deployAdvancedVotingFixture)
 
-                await policy.setTarget(await voting.getAddress())
+                await advancedPolicy.setTarget(await advancedVoting.getAddress())
                 await signupNft.connect(deployer).mint(notOwner)
-                await voting.connect(subject).register(validNFTId)
-                await voting.connect(subject).vote(0)
-                await voting.connect(notOwner).register(1)
-                await voting.connect(notOwner).vote(0)
+                await advancedVoting.connect(subject).register(validEncodedNFTId)
+                await advancedVoting.connect(subject).vote(0)
+                await advancedVoting.connect(notOwner).register(1)
+                await advancedVoting.connect(notOwner).vote(0)
 
                 await rewardNft.connect(deployer).mint(subject)
 
-                await expect(voting.connect(subject).eligible()).to.be.revertedWithCustomError(
-                    policy,
+                await expect(advancedVoting.connect(subject).eligible()).to.be.revertedWithCustomError(
+                    advancedPolicy,
                     "UnsuccessfulCheck"
                 )
             })
 
             it("reverts when not registered", async () => {
-                const { voting, policy, notOwner } = await loadFixture(deployAdvancedVotingFixture)
+                const { advancedVoting, advancedPolicy, notOwner } = await loadFixture(deployAdvancedVotingFixture)
 
-                await policy.setTarget(await notOwner.getAddress())
+                await advancedPolicy.setTarget(await notOwner.getAddress())
 
-                await expect(voting.connect(notOwner).eligible()).to.be.revertedWithCustomError(voting, "NotRegistered")
+                await expect(advancedVoting.connect(notOwner).eligible()).to.be.revertedWithCustomError(
+                    advancedVoting,
+                    "NotRegistered"
+                )
             })
 
             it("reverts when not voted", async () => {
-                const { voting, policy, subject, validNFTId } = await loadFixture(deployAdvancedVotingFixture)
+                const { advancedVoting, advancedPolicy, subject, validEncodedNFTId } =
+                    await loadFixture(deployAdvancedVotingFixture)
 
-                await policy.setTarget(await voting.getAddress())
-                await voting.connect(subject).register(validNFTId)
+                await advancedPolicy.setTarget(await advancedVoting.getAddress())
+                await advancedVoting.connect(subject).register(validEncodedNFTId)
 
-                await expect(voting.connect(subject).eligible()).to.be.revertedWithCustomError(voting, "NotVoted")
+                await expect(advancedVoting.connect(subject).eligible()).to.be.revertedWithCustomError(
+                    advancedVoting,
+                    "NotVoted"
+                )
             })
 
             it("verifies eligibility successfully", async () => {
-                const { AdvancedVotingFactory, voting, policy, subject, subjectAddress, validNFTId } =
+                const { advancedVoting, advancedPolicy, subject, subjectAddress, validEncodedNFTId } =
                     await loadFixture(deployAdvancedVotingFixture)
-                const targetAddress = await voting.getAddress()
+                const targetAddress = await advancedVoting.getAddress()
 
-                await policy.setTarget(targetAddress)
-                await voting.connect(subject).register(validNFTId)
-                await voting.connect(subject).vote(0)
+                await advancedPolicy.setTarget(targetAddress)
+                await advancedVoting.connect(subject).register(validEncodedNFTId)
+                await advancedVoting.connect(subject).vote(0)
 
-                const tx = await voting.connect(subject).eligible()
+                const tx = await advancedVoting.connect(subject).eligible()
                 const receipt = await tx.wait()
-                const event = AdvancedVotingFactory.interface.parseLog(
+                const event = advancedVoting.interface.parseLog(
                     receipt?.logs[1] as unknown as { topics: string[]; data: string }
                 ) as unknown as {
                     args: {
@@ -1416,68 +1159,118 @@ describe("Advanced", () => {
 
                 expect(receipt?.status).to.eq(1)
                 expect(event.args.voter).to.eq(subjectAddress)
-                expect((await policy.enforced(targetAddress, subjectAddress))[0]).to.be.equal(true)
-                expect((await policy.enforced(targetAddress, subjectAddress))[1]).to.be.equal(1n)
-                expect((await policy.enforced(targetAddress, subjectAddress))[2]).to.be.equal(true)
-                expect(await voting.voteCounts(0)).to.be.equal(1)
-                expect(await voting.voteCounts(1)).to.be.equal(0)
+                expect((await advancedPolicy.enforced(subjectAddress))[0]).to.be.equal(true)
+                expect((await advancedPolicy.enforced(subjectAddress))[1]).to.be.equal(1n)
+                expect((await advancedPolicy.enforced(subjectAddress))[2]).to.be.equal(true)
+                expect(await advancedVoting.voteCounts(0)).to.be.equal(1)
+                expect(await advancedVoting.voteCounts(1)).to.be.equal(0)
             })
 
             it("reverts when already eligible", async () => {
-                const { voting, policy, subject, validNFTId } = await loadFixture(deployAdvancedVotingFixture)
+                const { advancedVoting, advancedPolicy, subject, validEncodedNFTId } =
+                    await loadFixture(deployAdvancedVotingFixture)
 
-                await policy.setTarget(await voting.getAddress())
-                await voting.connect(subject).register(validNFTId)
-                await voting.connect(subject).vote(0)
-                await voting.connect(subject).eligible()
+                await advancedPolicy.setTarget(await advancedVoting.getAddress())
+                await advancedVoting.connect(subject).register(validEncodedNFTId)
+                await advancedVoting.connect(subject).vote(0)
+                await advancedVoting.connect(subject).eligible()
 
-                await expect(voting.connect(subject).eligible()).to.be.revertedWithCustomError(
-                    voting,
+                await expect(advancedVoting.connect(subject).eligible()).to.be.revertedWithCustomError(
+                    advancedVoting,
                     "AlreadyEligible"
                 )
             })
         })
+
         describe("end to end", () => {
             it("completes full voting lifecycle", async () => {
                 const [deployer]: Signer[] = await ethers.getSigners()
 
-                const NFTFactory: NFT__factory = await ethers.getContractFactory("NFT")
-                const BaseERC721CheckerFactory: BaseERC721Checker__factory =
-                    await ethers.getContractFactory("BaseERC721Checker")
-                const AdvancedERC721CheckerFactory: AdvancedERC721Checker__factory =
-                    await ethers.getContractFactory("AdvancedERC721Checker")
-                const AdvancedERC721PolicyFactory: AdvancedERC721Policy__factory =
-                    await ethers.getContractFactory("AdvancedERC721Policy")
-                const AdvancedVotingFactory: AdvancedVoting__factory = await ethers.getContractFactory("AdvancedVoting")
+                const NFT: NFT__factory = await ethers.getContractFactory("NFT")
+                const BaseERC721CheckerFactory: BaseERC721CheckerFactory__factory =
+                    await ethers.getContractFactory("BaseERC721CheckerFactory")
+                const AdvancedERC721CheckerFactory: AdvancedERC721CheckerFactory__factory =
+                    await ethers.getContractFactory("AdvancedERC721CheckerFactory")
+                const AdvancedERC721PolicyFactory: AdvancedERC721PolicyFactory__factory =
+                    await ethers.getContractFactory("AdvancedERC721PolicyFactory")
+                const AdvancedVoting: AdvancedVoting__factory = await ethers.getContractFactory("AdvancedVoting")
 
-                const signupNft: NFT = await NFTFactory.deploy()
-                const rewardNft: NFT = await NFTFactory.deploy()
-                const baseChecker: BaseERC721Checker = await BaseERC721CheckerFactory.connect(deployer).deploy([
-                    await signupNft.getAddress()
-                ])
-                const advancedChecker: AdvancedERC721Checker = await AdvancedERC721CheckerFactory.connect(
+                const signupNft: NFT = await NFT.deploy()
+                const rewardNft: NFT = await NFT.deploy()
+
+                const baseCheckerFactory: BaseERC721CheckerFactory =
+                    await BaseERC721CheckerFactory.connect(deployer).deploy()
+
+                const baseCheckerTx = await baseCheckerFactory.deploy(await signupNft.getAddress())
+                const baseCheckerTxReceipt = await baseCheckerTx.wait()
+                const baseCheckerCloneDeployedEvent = BaseERC721CheckerFactory.interface.parseLog(
+                    baseCheckerTxReceipt?.logs[0] as unknown as { topics: string[]; data: string }
+                ) as unknown as {
+                    args: {
+                        clone: string
+                    }
+                }
+
+                const baseChecker: BaseERC721Checker = BaseERC721Checker__factory.connect(
+                    baseCheckerCloneDeployedEvent.args.clone,
                     deployer
-                ).deploy(
-                    [await signupNft.getAddress(), await rewardNft.getAddress(), await baseChecker.getAddress()],
+                )
+
+                const advancedCheckerFactory: AdvancedERC721CheckerFactory =
+                    await AdvancedERC721CheckerFactory.connect(deployer).deploy()
+
+                const advancedCheckerTx = await advancedCheckerFactory.deploy(
+                    await signupNft.getAddress(),
+                    await rewardNft.getAddress(),
+                    await baseChecker.getAddress(),
                     1,
                     0,
                     10
                 )
+                const advancedCheckerTxReceipt = await advancedCheckerTx.wait()
+                const advancedCheckerCloneDeployedEvent = AdvancedERC721CheckerFactory.interface.parseLog(
+                    advancedCheckerTxReceipt?.logs[0] as unknown as { topics: string[]; data: string }
+                ) as unknown as {
+                    args: {
+                        clone: string
+                    }
+                }
 
-                const policy: AdvancedERC721Policy = await AdvancedERC721PolicyFactory.connect(deployer).deploy(
+                const advancedChecker: AdvancedERC721Checker = AdvancedERC721Checker__factory.connect(
+                    advancedCheckerCloneDeployedEvent.args.clone,
+                    deployer
+                )
+
+                const advancedPolicyFactory: AdvancedERC721PolicyFactory =
+                    await AdvancedERC721PolicyFactory.connect(deployer).deploy()
+
+                const advancedPolicyTx = await advancedPolicyFactory.deploy(
                     await advancedChecker.getAddress(),
                     false,
                     false,
                     true
                 )
+                const advancedPolicyTxReceipt = await advancedPolicyTx.wait()
+                const advancedPolicyCloneDeployedEvent = AdvancedERC721PolicyFactory.interface.parseLog(
+                    advancedPolicyTxReceipt?.logs[0] as unknown as { topics: string[]; data: string }
+                ) as unknown as {
+                    args: {
+                        clone: string
+                    }
+                }
 
-                const voting: AdvancedVoting = await AdvancedVotingFactory.connect(deployer).deploy(
-                    await policy.getAddress()
+                const advancedPolicy: AdvancedERC721Policy = AdvancedERC721Policy__factory.connect(
+                    advancedPolicyCloneDeployedEvent.args.clone,
+                    deployer
+                )
+
+                const advancedVoting: AdvancedVoting = await AdvancedVoting.connect(deployer).deploy(
+                    await advancedPolicy.getAddress()
                 )
 
                 // set the target.
-                const targetAddress = await voting.getAddress()
-                await policy.setTarget(targetAddress)
+                const targetAddress = await advancedVoting.getAddress()
+                await advancedPolicy.setTarget(targetAddress)
 
                 for (const [tokenId, voter] of (await ethers.getSigners()).entries()) {
                     const voterAddress = await voter.getAddress()
@@ -1486,17 +1279,17 @@ describe("Advanced", () => {
                     await signupNft.connect(deployer).mint(voterAddress)
 
                     // register.
-                    await voting.connect(voter).register(tokenId)
+                    await advancedVoting.connect(voter).register(tokenId)
 
                     // vote.
-                    await voting.connect(voter).vote(tokenId % 2)
+                    await advancedVoting.connect(voter).vote(tokenId % 2)
 
                     // reward.
-                    await voting.connect(voter).eligible()
+                    await advancedVoting.connect(voter).eligible()
 
-                    expect((await policy.enforced(targetAddress, voterAddress))[0]).to.be.equal(true)
-                    expect((await policy.enforced(targetAddress, voterAddress))[1]).to.be.equal(1)
-                    expect((await policy.enforced(targetAddress, voterAddress))[2]).to.be.equal(true)
+                    expect((await advancedPolicy.enforced(voterAddress))[0]).to.be.equal(true)
+                    expect((await advancedPolicy.enforced(voterAddress))[1]).to.be.equal(1)
+                    expect((await advancedPolicy.enforced(voterAddress))[2]).to.be.equal(true)
                 }
             })
         })
