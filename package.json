@@ -2,7 +2,10 @@
     "name": "excubiae",
     "description": "An on-chain flexible &amp; modular framework for implementing custom gatekeepers.",
     "license": "MIT",
-    "repository": "git@github.com:privacy-scaling-explorations/excubiae.git",
+    "repository": {
+        "type": "git",
+        "url": "git+ssh://git@github.com/privacy-scaling-explorations/excubiae.git"
+    },
     "homepage": "https://github.com/privacy-scaling-explorations/excubiae.git",
     "bugs": "https://github.com/privacy-scaling-explorations/excubiae/issues",
     "private": true,
@@ -51,11 +54,12 @@
         "lint": "eslint . && yarn workspace excubiae-contracts lint",
         "lint:fix": "eslint . --fix && yarn workspace excubiae-contracts lint:fix",
         "version:bump": "ts-node scripts/version.ts ${0}",
-        "version:publish": "scripts/publish.ts",
+        "version:publish": "ts-node scripts/publish.ts",
         "version:release": "changelogithub",
         "clean": "scripts/clean-apps.ts && scripts/clean-packages.ts && rimraf node_modules coverage",
         "remove:stable-version-field": "scripts/remove-stable-version-field.ts && yarn format:write",
         "precommit": "lint-staged",
         "postinstall": "husky && git config --local core.editor cat"
-    }
+    },
+    "version": ""
 }
