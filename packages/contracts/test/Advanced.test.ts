@@ -105,14 +105,14 @@ describe("Advanced", () => {
         }
 
         describe("initialize", () => {
-            it("should deploy and initialize correctly", async () => {
+            it("deploy and initialize correctly", async () => {
                 const { advancedChecker } = await loadFixture(deployAdvancedCheckerFixture)
 
                 expect(advancedChecker).to.not.eq(undefined)
                 expect(await advancedChecker.initialized()).to.be.eq(true)
             })
 
-            it("should revert when already initialized", async () => {
+            it("revert when already initialized", async () => {
                 const { advancedChecker, deployer } = await loadFixture(deployAdvancedCheckerFixture)
 
                 await expect(advancedChecker.connect(deployer).initialize()).to.be.revertedWithCustomError(
@@ -123,7 +123,7 @@ describe("Advanced", () => {
         })
 
         describe("getAppendedBytes", () => {
-            it("should append bytes correctly", async () => {
+            it("append bytes correctly", async () => {
                 const { advancedChecker, signupNft, rewardNft, baseChecker } =
                     await loadFixture(deployAdvancedCheckerFixture)
 
@@ -353,7 +353,7 @@ describe("Advanced", () => {
         }
 
         describe("initialize", () => {
-            it("should deploy and initialize correctly", async () => {
+            it("deploy and initialize correctly", async () => {
                 const { advancedPolicy, advancedPolicySkipped } = await loadFixture(deployAdvancedPolicyFixture)
 
                 expect(advancedPolicy).to.not.eq(undefined)
@@ -362,7 +362,7 @@ describe("Advanced", () => {
                 expect(await advancedPolicySkipped.initialized()).to.be.eq(true)
             })
 
-            it("should revert when already initialized", async () => {
+            it("revert when already initialized", async () => {
                 const { advancedPolicy, advancedPolicySkipped, deployer } =
                     await loadFixture(deployAdvancedPolicyFixture)
 
@@ -378,7 +378,7 @@ describe("Advanced", () => {
         })
 
         describe("getAppendedBytes", () => {
-            it("should append bytes correctly", async () => {
+            it("append bytes correctly", async () => {
                 const { advancedPolicy, advancedPolicySkipped, advancedChecker, deployer } =
                     await loadFixture(deployAdvancedPolicyFixture)
 
