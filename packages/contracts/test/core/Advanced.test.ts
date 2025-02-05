@@ -20,7 +20,7 @@ import {
     AdvancedERC721Policy__factory,
     AdvancedVoting__factory,
     AdvancedVoting
-} from "../typechain-types"
+} from "../../typechain-types"
 
 /* eslint-disable @typescript-eslint/no-shadow */
 describe("Advanced", () => {

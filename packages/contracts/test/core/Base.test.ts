@@ -16,7 +16,7 @@ import {
     IERC721Errors,
     BaseVoting__factory,
     BaseVoting
-} from "../typechain-types"
+} from "../../typechain-types"
 
 /* eslint-disable @typescript-eslint/no-shadow */
 describe("Base", () => {
