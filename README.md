@@ -59,7 +59,7 @@ yarn test
 
 ### Build
 
-Build all packages & apps:
+Build all packages:
 
 ```bash
 yarn build

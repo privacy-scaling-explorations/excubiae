@@ -11,7 +11,6 @@
     "private": true,
     "packageManager": "yarn@4.6.0",
     "workspaces": [
-        "apps/*",
         "packages/*",
         "packages/contracts/contracts"
     ],
@@ -40,23 +39,21 @@
         "typescript": "5.3"
     },
     "scripts": {
-        "build": "yarn build:docs && yarn build:website && yarn build:packages",
+        "build": "yarn build:packages",
         "build:packages": "yarn workspaces foreach -Apt --no-private run build",
-        "build:docs": "yarn workspace excubiae-docs build && yarn workspace excubiae-contracts docs:forge",
-        "build:website": "yarn workspace excubiae-website build",
         "compile:contracts": "yarn workspace excubiae-contracts compile",
         "test": "yarn test:contracts",
         "test:coverage": "yarn test:contracts-coverage",
         "test:contracts": "yarn workspace excubiae-contracts test",
         "test:contracts-coverage": "yarn workspace excubiae-contracts test:coverage",
-        "format": "prettier -c . && yarn workspace excubiae-docs format && yarn workspace excubiae-contracts format:forge",
-        "format:write": "prettier -w . && yarn workspace excubiae-docs format:write && yarn workspace excubiae-contracts format:forge && yarn workspace excubiae-docs format",
+        "format": "prettier -c . && yarn workspace excubiae-contracts format:forge",
+        "format:write": "prettier -w . && yarn workspace excubiae-contracts format:forge",
         "lint": "eslint . && yarn workspace excubiae-contracts lint",
         "lint:fix": "eslint . --fix && yarn workspace excubiae-contracts lint:fix",
         "version:bump": "ts-node scripts/version.ts ${0}",
         "version:publish": "ts-node scripts/publish.ts",
         "version:release": "changelogithub",
-        "clean": "ts-node scripts/clean-apps.ts && ts-node scripts/clean-packages.ts && rimraf node_modules coverage",
+        "clean": "ts-node scripts/clean-packages.ts && rimraf node_modules coverage",
         "remove:stable-version-field": "ts-node scripts/remove-stable-version-field.ts && yarn format:write",
         "precommit": "lint-staged",
         "postinstall": "husky && git config --local core.editor cat"
