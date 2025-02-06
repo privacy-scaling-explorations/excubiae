@@ -65,10 +65,6 @@ build
 dist
 /docs
 
-# Docusaurus cache and generated files
-.docusaurus
-.cache-loader
-
 # Hardhat
 artifacts
 cache

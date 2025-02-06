@@ -66,14 +66,14 @@ describe("Base", () => {
         }
 
         describe("initialize", () => {
-            it("should deploy and initialize correctly", async () => {
+            it("deploy and initialize correctly", async () => {
                 const { checker } = await loadFixture(deployBaseCheckerFixture)
 
                 expect(checker).to.not.eq(undefined)
                 expect(await checker.initialized()).to.be.eq(true)
             })
 
-            it("should revert when already initialized", async () => {
+            it("revert when already initialized", async () => {
                 const { checker, deployer } = await loadFixture(deployBaseCheckerFixture)
 
                 await expect(checker.connect(deployer).initialize()).to.be.revertedWithCustomError(
@@ -84,7 +84,7 @@ describe("Base", () => {
         })
 
         describe("getAppendedBytes", () => {
-            it("should append bytes correctly", async () => {
+            it("append bytes correctly", async () => {
                 const { checker, nft } = await loadFixture(deployBaseCheckerFixture)
 
                 const appendedBytes = await checker.getAppendedBytes.staticCall()
@@ -195,14 +195,14 @@ describe("Base", () => {
         }
 
         describe("initialize", () => {
-            it("should deploy and initialize correctly", async () => {
+            it("deploy and initialize correctly", async () => {
                 const { policy } = await loadFixture(deployBasePolicyFixture)
 
                 expect(policy).to.not.eq(undefined)
                 expect(await policy.initialized()).to.be.eq(true)
             })
 
-            it("should revert when already initialized", async () => {
+            it("revert when already initialized", async () => {
                 const { policy, deployer } = await loadFixture(deployBasePolicyFixture)
 
                 await expect(policy.connect(deployer).initialize()).to.be.revertedWithCustomError(
@@ -213,7 +213,7 @@ describe("Base", () => {
         })
 
         describe("getAppendedBytes", () => {
-            it("should append bytes correctly", async () => {
+            it("append bytes correctly", async () => {
                 const { policy, checker, deployer } = await loadFixture(deployBasePolicyFixture)
 
                 const appendedBytes = await policy.getAppendedBytes.staticCall()
