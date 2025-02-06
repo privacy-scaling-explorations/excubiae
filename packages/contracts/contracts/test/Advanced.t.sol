@@ -10,12 +10,12 @@ import {AdvancedERC721CheckerFactory} from "./advanced/AdvancedERC721CheckerFact
 import {AdvancedERC721Policy} from "./advanced/AdvancedERC721Policy.sol";
 import {AdvancedERC721PolicyFactory} from "./advanced/AdvancedERC721PolicyFactory.sol";
 import {AdvancedVoting} from "./advanced/AdvancedVoting.sol";
-import {IPolicy} from "../core/interfaces/IPolicy.sol";
+import {IPolicy} from "../interfaces/IPolicy.sol";
 import {IERC721Errors} from "@openzeppelin/contracts/interfaces/draft-IERC6093.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
-import {Check} from "../core/interfaces/IAdvancedChecker.sol";
-import {IClone} from "../core/interfaces/IClone.sol";
-import {IAdvancedPolicy} from "../core/interfaces/IAdvancedPolicy.sol";
+import {Check} from "../interfaces/IAdvancedChecker.sol";
+import {IClone} from "../interfaces/IClone.sol";
+import {IAdvancedPolicy} from "../interfaces/IAdvancedPolicy.sol";
 
 contract AdvancedChecker is Test {
     event CloneDeployed(address indexed clone);

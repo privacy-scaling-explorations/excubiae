@@ -725,15 +725,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@excubiae/contracts@workspace:packages/contracts/contracts":
-  version: 0.0.0-use.local
-  resolution: "@excubiae/contracts@workspace:packages/contracts/contracts"
-  dependencies:
-    "@openzeppelin/contracts": "npm:^5.2.0"
-    solady: "npm:^0.1.4"
-  languageName: unknown
-  linkType: soft
-
 "@fastify/busboy@npm:^2.0.0":
   version: 2.1.1
   resolution: "@fastify/busboy@npm:2.1.1"
@@ -8690,7 +8681,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"solady@npm:0.1.4, solady@npm:^0.1.4":
+"solady@npm:0.1.4":
   version: 0.1.4
   resolution: "solady@npm:0.1.4"
   checksum: 10/5e316f27d236984704cb622cb673fd5ac336c18f8ea671954ce27a224c7950e9abb7dfac8e02050894003031f8aba5c95ede0d2afc7ae41b67351805399b1c30

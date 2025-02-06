@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import {AdvancedChecker} from "../../core/checker/AdvancedChecker.sol";
+import {AdvancedChecker} from "../../checker/AdvancedChecker.sol";
 import {BaseERC721Checker} from "../base/BaseERC721Checker.sol";
 import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 

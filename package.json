@@ -11,9 +11,11 @@
     "private": true,
     "packageManager": "yarn@4.6.0",
     "workspaces": [
-        "packages/*",
-        "packages/contracts/contracts"
+        "packages/*"
     ],
+    "installConfig": {
+        "hoistingLimits": "workspaces"
+    },
     "devDependencies": {
         "@commitlint/cli": "^19.7.1",
         "@commitlint/config-conventional": "^19.7.1",
@@ -57,6 +59,5 @@
         "remove:stable-version-field": "ts-node scripts/remove-stable-version-field.ts && yarn format:write",
         "precommit": "lint-staged",
         "postinstall": "husky && git config --local core.editor cat"
-    },
-    "version": ""
+    }
 }

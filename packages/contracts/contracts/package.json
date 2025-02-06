@@ -25,7 +25,6 @@
     "publishConfig": {
         "access": "public"
     },
-    "packageManager": "yarn@4.5.0",
     "dependencies": {
         "@openzeppelin/contracts": "^5.2.0",
         "solady": "^0.1.4"

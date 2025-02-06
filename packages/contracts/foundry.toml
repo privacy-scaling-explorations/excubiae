@@ -2,10 +2,11 @@
   # core
   libs = ['node_modules']
   cache_path = 'cache_forge'
-  test = 'contracts/src/test'
-  src = 'contracts/src'
+  test = 'test'
+  src = 'contracts'
   out = 'out'
-  script = "contracts/scripts"
+  script = "scripts"
+  ignore_paths = ["node_modules"]
 
   # sol
   auto_detect_solc = false
