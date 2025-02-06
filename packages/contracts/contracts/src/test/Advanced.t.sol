@@ -32,7 +32,7 @@ contract AdvancedChecker is Test {
     address public subject = vm.addr(0x3);
     address public notOwner = vm.addr(0x4);
 
-    bytes[] public evidence = new bytes[](1);
+    bytes public evidence = abi.encode(0);
 
     function setUp() public virtual {
         vm.startPrank(deployer);
@@ -54,8 +54,6 @@ contract AdvancedChecker is Test {
         entries = vm.getRecordedLogs();
         address advancedClone = address(uint160(uint256(entries[0].topics[1])));
         advancedChecker = AdvancedERC721Checker(advancedClone);
-
-        evidence[0] = abi.encode(0);
 
         vm.stopPrank();
     }
@@ -148,7 +146,7 @@ contract AdvancedChecker is Test {
 
 contract AdvancedPolicy is Test {
     event TargetSet(address indexed target);
-    event Enforced(address indexed subject, address indexed target, bytes[] evidence, Check checkType);
+    event Enforced(address indexed subject, address indexed target, bytes evidence, Check checkType);
 
     NFT internal signupNft;
     NFT internal rewardNft;
@@ -165,8 +163,8 @@ contract AdvancedPolicy is Test {
     address public subject = vm.addr(0x3);
     address public notOwner = vm.addr(0x4);
 
-    bytes[] public evidence = new bytes[](1);
-    bytes[] public wrongEvidence = new bytes[](1);
+    bytes public evidence = abi.encode(0);
+    bytes public wrongEvidence = abi.encode(1);
 
     function setUp() public virtual {
         vm.startPrank(deployer);
@@ -202,9 +200,6 @@ contract AdvancedPolicy is Test {
         entries = vm.getRecordedLogs();
         address policyCloneSkipped = address(uint160(uint256(entries[0].topics[1])));
         policySkipped = AdvancedERC721Policy(policyCloneSkipped);
-
-        evidence[0] = abi.encode(0);
-        wrongEvidence[0] = abi.encode(1);
 
         vm.stopPrank();
     }
@@ -535,8 +530,8 @@ contract Voting is Test {
     address public subject = vm.addr(0x3);
     address public notOwner = vm.addr(0x4);
 
-    bytes[] public evidence = new bytes[](1);
-    bytes[] public wrongEvidence = new bytes[](1);
+    bytes public evidence = abi.encode(0);
+    bytes public wrongEvidence = abi.encode(1);
 
     function setUp() public virtual {
         vm.startPrank(deployer);
@@ -566,9 +561,6 @@ contract Voting is Test {
         entries = vm.getRecordedLogs();
         address policyClone = address(uint160(uint256(entries[0].topics[1])));
         policy = AdvancedERC721Policy(policyClone);
-
-        evidence[0] = abi.encode(0);
-        wrongEvidence[0] = abi.encode(1);
 
         voting = new AdvancedVoting(policy);
 

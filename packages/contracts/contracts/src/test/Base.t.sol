@@ -22,7 +22,8 @@ contract BaseChecker is Test {
     address public target = vm.addr(0x2);
     address public subject = vm.addr(0x3);
     address public notOwner = vm.addr(0x4);
-    bytes[] public evidence = new bytes[](1);
+
+    bytes public evidence = abi.encode(0);
 
     function setUp() public {
         vm.startPrank(deployer);
@@ -36,8 +37,6 @@ contract BaseChecker is Test {
         Vm.Log[] memory entries = vm.getRecordedLogs();
         address baseClone = address(uint160(uint256(entries[0].topics[1])));
         checker = BaseERC721Checker(baseClone);
-
-        evidence[0] = abi.encode(0);
 
         vm.stopPrank();
     }
@@ -87,7 +86,7 @@ contract BaseChecker is Test {
 
 contract BasePolicy is Test {
     event TargetSet(address indexed target);
-    event Enforced(address indexed subject, address indexed target, bytes[] evidence);
+    event Enforced(address indexed subject, address indexed target, bytes evidence);
 
     NFT internal nft;
     BaseERC721Checker internal checker;
@@ -100,7 +99,7 @@ contract BasePolicy is Test {
     address public subject = vm.addr(0x3);
     address public notOwner = vm.addr(0x4);
 
-    bytes[] public evidence = new bytes[](1);
+    bytes public evidence = abi.encode(0);
 
     function setUp() public virtual {
         vm.startPrank(deployer);
@@ -121,8 +120,6 @@ contract BasePolicy is Test {
         entries = vm.getRecordedLogs();
         address policyClone = address(uint160(uint256(entries[0].topics[1])));
         policy = BaseERC721Policy(policyClone);
-
-        evidence[0] = abi.encode(0);
 
         vm.stopPrank();
     }

@@ -39,17 +39,17 @@ abstract contract AdvancedPolicy is IAdvancedPolicy, Policy {
     /// @notice Enforces a multi-stage policy check.
     /// @dev Handles pre, main, and post validation stages. Only callable by the target contract.
     /// @param subject Address to enforce the policy on.
-    /// @param evidence Evidence required for validation.
+    /// @param evidence Custom validation data.
     /// @param checkType The type of check performed (PRE, MAIN, POST).
-    function enforce(address subject, bytes[] calldata evidence, Check checkType) external override onlyTarget {
+    function enforce(address subject, bytes calldata evidence, Check checkType) external override onlyTarget {
         _enforce(subject, evidence, checkType);
     }
 
     /// @notice Internal implementation of multi-stage enforcement logic.
     /// @param subject Address to enforce the policy on.
-    /// @param evidence Evidence required for validation.
+    /// @param evidence Custom validation data.
     /// @param checkType The type of check performed (PRE, MAIN, POST).
-    function _enforce(address subject, bytes[] calldata evidence, Check checkType) internal {
+    function _enforce(address subject, bytes calldata evidence, Check checkType) internal {
         if (checkType == Check.PRE) {
             if (SKIP_PRE) revert CannotPreCheckWhenSkipped();
         } else if (checkType == Check.POST) {

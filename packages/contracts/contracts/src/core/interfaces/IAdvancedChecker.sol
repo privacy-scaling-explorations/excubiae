@@ -32,8 +32,8 @@ interface IAdvancedChecker {
     /// @notice Validates a subject for a specific check phase.
     /// @dev Implementations should route to appropriate phase-specific logic.
     /// @param subject The address to validate.
-    /// @param evidence An array of custom validation data.
+    /// @param evidence Custom validation data.
     /// @param checkType The phase of validation to execute (PRE, MAIN, POST).
     /// @return checked Boolean indicating whether the validation passed.
-    function check(address subject, bytes[] calldata evidence, Check checkType) external view returns (bool checked);
+    function check(address subject, bytes calldata evidence, Check checkType) external view returns (bool checked);
 }

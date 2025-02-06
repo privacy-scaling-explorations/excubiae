@@ -103,7 +103,7 @@ describe("Base", () => {
                     await loadFixture(deployBaseCheckerFixture)
 
                 await expect(
-                    checker.connect(target).check(subjectAddress, [invalidEncodedNFTId])
+                    checker.connect(target).check(subjectAddress, invalidEncodedNFTId)
                 ).to.be.revertedWithCustomError(nft, "ERC721NonexistentToken")
             })
 
@@ -111,14 +111,14 @@ describe("Base", () => {
                 const { checker, target, notOwnerAddress, validEncodedNFTId } =
                     await loadFixture(deployBaseCheckerFixture)
 
-                expect(await checker.connect(target).check(notOwnerAddress, [validEncodedNFTId])).to.be.equal(false)
+                expect(await checker.connect(target).check(notOwnerAddress, validEncodedNFTId)).to.be.equal(false)
             })
 
             it("succeeds when valid", async () => {
                 const { checker, target, subjectAddress, validEncodedNFTId } =
                     await loadFixture(deployBaseCheckerFixture)
 
-                expect(await checker.connect(target).check(subjectAddress, [validEncodedNFTId])).to.be.equal(true)
+                expect(await checker.connect(target).check(subjectAddress, validEncodedNFTId)).to.be.equal(true)
             })
         })
     })
@@ -285,7 +285,7 @@ describe("Base", () => {
 
                 await policy.setTarget(await target.getAddress())
 
-                await expect(policy.connect(subject).enforce(subjectAddress, [ZeroHash])).to.be.revertedWithCustomError(
+                await expect(policy.connect(subject).enforce(subjectAddress, ZeroHash)).to.be.revertedWithCustomError(
                     policy,
                     "TargetOnly"
                 )
@@ -298,7 +298,7 @@ describe("Base", () => {
                 await policy.setTarget(await target.getAddress())
 
                 await expect(
-                    policy.connect(target).enforce(subjectAddress, [invalidEncodedNFTId])
+                    policy.connect(target).enforce(subjectAddress, invalidEncodedNFTId)
                 ).to.be.revertedWithCustomError(iERC721Errors, "ERC721NonexistentToken")
             })
 
@@ -309,7 +309,7 @@ describe("Base", () => {
                 await policy.setTarget(await target.getAddress())
 
                 expect(
-                    policy.connect(target).enforce(notOwnerAddress, [validEncodedNFTId])
+                    policy.connect(target).enforce(notOwnerAddress, validEncodedNFTId)
                 ).to.be.revertedWithCustomError(policy, "UnsuccessfulCheck")
             })
 
@@ -319,7 +319,7 @@ describe("Base", () => {
 
                 await policy.setTarget(await target.getAddress())
 
-                const tx = await policy.connect(target).enforce(subjectAddress, [validEncodedNFTId])
+                const tx = await policy.connect(target).enforce(subjectAddress, validEncodedNFTId)
                 const receipt = await tx.wait()
                 const event = policy.interface.parseLog(
                     receipt?.logs[0] as unknown as { topics: string[]; data: string }
@@ -334,7 +334,7 @@ describe("Base", () => {
                 expect(receipt?.status).to.eq(1)
                 expect(event.args.subject).to.eq(subjectAddress)
                 expect(event.args.target).to.eq(targetAddress)
-                expect(event.args.evidence[0]).to.eq(validEncodedNFTId)
+                expect(event.args.evidence).to.eq(validEncodedNFTId)
             })
         })
     })

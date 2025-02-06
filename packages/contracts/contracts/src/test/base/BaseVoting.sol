@@ -44,12 +44,8 @@ contract BaseVoting {
     /// @dev Enforces ownership validation via the policy contract.
     /// @param tokenId Token ID of the NFT used for validation.
     function register(uint256 tokenId) external {
-        // Encode the token ID for policy validation.
-        bytes[] memory _evidence = new bytes[](1);
-        _evidence[0] = abi.encode(tokenId);
-
         // Enforce NFT ownership validation.
-        POLICY.enforce(msg.sender, _evidence);
+        POLICY.enforce(msg.sender, abi.encode(tokenId));
 
         // Track enforcement.
         registered[msg.sender] = true;

@@ -28,10 +28,10 @@ contract BaseERC721Checker is BaseChecker {
     /// @param subject Address to validate ownership for.
     /// @param evidence Encoded token ID used for validation.
     /// @return Boolean indicating whether the subject owns the token.
-    function _check(address subject, bytes[] calldata evidence) internal view override returns (bool) {
+    function _check(address subject, bytes calldata evidence) internal view override returns (bool) {
         super._check(subject, evidence);
 
-        uint256 tokenId = abi.decode(evidence[0], (uint256));
+        uint256 tokenId = abi.decode(evidence, (uint256));
 
         return nft.ownerOf(tokenId) == subject;
     }

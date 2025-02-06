@@ -58,12 +58,8 @@ contract AdvancedVoting {
     /// @dev Enforces the pre-check phase using the AdvancedPolicy contract.
     /// @param tokenId The ID of the NFT used to verify registration eligibility.
     function register(uint256 tokenId) external {
-        // Prepare evidence with the tokenId encoded as bytes.
-        bytes[] memory _evidence = new bytes[](1);
-        _evidence[0] = abi.encode(tokenId);
-
         // Enforce the pre-check phase using the provided policy.
-        POLICY.enforce(msg.sender, _evidence, Check.PRE);
+        POLICY.enforce(msg.sender, abi.encode(tokenId), Check.PRE);
 
         // Track enforcement.
         registered[msg.sender] = true;
@@ -82,12 +78,8 @@ contract AdvancedVoting {
         // Validate that the voting option is within the allowed range.
         if (option >= 2) revert InvalidOption();
 
-        // Prepare evidence with the chosen option encoded as bytes.
-        bytes[] memory _evidence = new bytes[](1);
-        _evidence[0] = abi.encode(option);
-
         // Enforce the main-check phase using the policy.
-        POLICY.enforce(msg.sender, _evidence, Check.MAIN);
+        POLICY.enforce(msg.sender, abi.encode(option), Check.MAIN);
 
         // Record the vote.
         hasVoted[msg.sender] = true;
@@ -109,7 +101,7 @@ contract AdvancedVoting {
         if (isEligible[msg.sender]) revert AlreadyEligible();
 
         // Enforce the post-check phase using the policy.
-        POLICY.enforce(msg.sender, new bytes[](1), Check.POST);
+        POLICY.enforce(msg.sender, abi.encode(), Check.POST);
 
         // Record eligibility.
         isEligible[msg.sender] = true;

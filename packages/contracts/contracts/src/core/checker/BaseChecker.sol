@@ -13,16 +13,16 @@ abstract contract BaseChecker is Clone, IBaseChecker {
     /// @dev External view function that calls the `_check` method, allowing derived contracts
     ///      to implement custom validation logic.
     /// @param subject The address to validate.
-    /// @param evidence An array of custom validation data.
+    /// @param evidence Custom validation data.
     /// @return checked Boolean indicating whether the validation passed.
-    function check(address subject, bytes[] calldata evidence) external view override returns (bool checked) {
+    function check(address subject, bytes calldata evidence) external view override returns (bool checked) {
         return _check(subject, evidence);
     }
 
     /// @notice Internal validation logic implementation.
     /// @dev Must be overridden by derived contracts to define custom validation rules.
     /// @param subject The address to validate.
-    /// @param evidence An array of custom validation data.
+    /// @param evidence Custom validation data.
     /// @return checked Boolean indicating whether the validation passed.
-    function _check(address subject, bytes[] calldata evidence) internal view virtual returns (bool checked) {}
+    function _check(address subject, bytes calldata evidence) internal view virtual returns (bool checked) {}
 }
