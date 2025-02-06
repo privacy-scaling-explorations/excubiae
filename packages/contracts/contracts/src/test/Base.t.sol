@@ -257,24 +257,6 @@ contract BasePolicy is Test {
 
         vm.stopPrank();
     }
-
-    function test_policy_enforce_whenAlreadyEnforced_reverts() public {
-        vm.startPrank(deployer);
-
-        policy.setTarget(target);
-        nft.mint(subject);
-
-        vm.stopPrank();
-
-        vm.startPrank(target);
-
-        policy.enforce(subject, evidence);
-
-        vm.expectRevert(abi.encodeWithSelector(IPolicy.AlreadyEnforced.selector));
-        policy.enforce(subject, evidence);
-
-        vm.stopPrank();
-    }
 }
 
 contract Voting is Test {
@@ -320,7 +302,7 @@ contract Voting is Test {
     function test_voting_deployed() public view {
         assertEq(address(voting.POLICY()), address(policy));
         assertEq(voting.hasVoted(subject), false);
-        assertEq(voting.voteCounts(0), 0);
+        assertEq(voting.registered(subject), false);
     }
 
     function test_register_whenCallerNotTarget_reverts() public {
@@ -389,24 +371,6 @@ contract Voting is Test {
         vm.stopPrank();
     }
 
-    function test_register_whenAlreadyRegistered_reverts() public {
-        vm.startPrank(deployer);
-
-        policy.setTarget(address(voting));
-        nft.mint(subject);
-
-        vm.stopPrank();
-
-        vm.startPrank(subject);
-
-        voting.register(0);
-
-        vm.expectRevert(abi.encodeWithSelector(IPolicy.AlreadyEnforced.selector));
-        voting.register(0);
-
-        vm.stopPrank();
-    }
-
     function test_vote_whenNotRegistered_reverts() public {
         vm.startPrank(deployer);
 
@@ -451,13 +415,14 @@ contract Voting is Test {
         vm.startPrank(subject);
         voting.register(0);
 
+        assertEq(voting.registered(subject), true);
+
         vm.expectEmit(true, true, true, true);
         emit Voted(subject, 0);
 
         voting.vote(0);
 
         assertEq(voting.hasVoted(subject), true);
-        assertEq(voting.voteCounts(0), 1);
 
         vm.stopPrank();
     }

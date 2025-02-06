@@ -12,9 +12,6 @@ abstract contract BasePolicy is Policy, IBasePolicy {
     /// @notice Reference to the BaseChecker contract used for validation.
     BaseChecker public BASE_CHECKER;
 
-    /// @notice Tracks enforcement status for each subject.
-    mapping(address => bool) public enforced;
-
     /// @notice Initializes the contract with appended bytes data for configuration.
     /// @dev Decodes BaseChecker address and sets the owner.
     function _initialize() internal virtual override {
@@ -40,10 +37,7 @@ abstract contract BasePolicy is Policy, IBasePolicy {
     /// @param subject Address to enforce the policy on.
     /// @param evidence Evidence required for validation.
     function _enforce(address subject, bytes[] memory evidence) internal {
-        if (enforced[subject]) revert AlreadyEnforced();
         if (!BASE_CHECKER.check(subject, evidence)) revert UnsuccessfulCheck();
-
-        enforced[subject] = true;
 
         emit Enforced(subject, target, evidence);
     }

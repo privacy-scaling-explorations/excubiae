@@ -24,9 +24,6 @@ interface IPolicy {
     /// @notice Error thrown when attempting to set the target more than once.
     error TargetAlreadySet();
 
-    /// @notice Error thrown when a subject is already enforced.
-    error AlreadyEnforced();
-
     /// @notice Retrieves the policy trait identifier.
     /// @dev This is typically used to distinguish policy implementations (e.g., "Semaphore").
     /// @return The policy trait string.

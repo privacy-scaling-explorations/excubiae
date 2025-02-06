@@ -28,11 +28,11 @@ contract BaseVoting {
     /// @notice Policy contract enforcing NFT-based registration.
     BaseERC721Policy public immutable POLICY;
 
+    /// @dev Tracks whether an address has been registered.
+    mapping(address => bool) public registered;
+
     /// @dev Tracks whether an address has voted.
     mapping(address => bool) public hasVoted;
-
-    /// @dev Tracks the number of votes for each option.
-    mapping(uint8 => uint256) public voteCounts;
 
     /// @notice Initializes the voting system with a specific policy contract.
     /// @param _policy Address of the policy contract enforcing access control.
@@ -51,6 +51,9 @@ contract BaseVoting {
         // Enforce NFT ownership validation.
         POLICY.enforce(msg.sender, _evidence);
 
+        // Track enforcement.
+        registered[msg.sender] = true;
+
         emit Registered(msg.sender);
     }
 
@@ -59,13 +62,12 @@ contract BaseVoting {
     /// @param option The chosen voting option (0 or 1).
     function vote(uint8 option) external {
         // Check registration and voting status.
-        if (!POLICY.enforced(msg.sender)) revert NotRegistered();
+        if (!registered[msg.sender]) revert NotRegistered();
         if (hasVoted[msg.sender]) revert AlreadyVoted();
         if (option >= 2) revert InvalidOption();
 
         // Record the vote.
         hasVoted[msg.sender] = true;
-        voteCounts[option]++;
 
         emit Voted(msg.sender, option);
     }

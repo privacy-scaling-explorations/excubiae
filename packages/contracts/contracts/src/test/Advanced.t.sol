@@ -192,13 +192,13 @@ contract AdvancedPolicy is Test {
         policyFactory = new AdvancedERC721PolicyFactory();
 
         vm.recordLogs();
-        policyFactory.deploy(address(advancedChecker), false, false, true);
+        policyFactory.deploy(address(advancedChecker), false, false);
         entries = vm.getRecordedLogs();
         address policyClone = address(uint160(uint256(entries[0].topics[1])));
         policy = AdvancedERC721Policy(policyClone);
 
         vm.recordLogs();
-        policyFactory.deploy(address(advancedChecker), true, true, false);
+        policyFactory.deploy(address(advancedChecker), true, true);
         entries = vm.getRecordedLogs();
         address policyCloneSkipped = address(uint160(uint256(entries[0].topics[1])));
         policySkipped = AdvancedERC721Policy(policyCloneSkipped);
@@ -223,14 +223,8 @@ contract AdvancedPolicy is Test {
     }
 
     function test_policy_getAppendedBytes() public {
-        assertEq(
-            policy.getAppendedBytes(),
-            abi.encode(address(deployer), address(advancedChecker), false, false, true)
-        );
-        assertEq(
-            policySkipped.getAppendedBytes(),
-            abi.encode(address(deployer), address(advancedChecker), true, true, false)
-        );
+        assertEq(policy.getAppendedBytes(), abi.encode(address(deployer), address(advancedChecker), false, false));
+        assertEq(policySkipped.getAppendedBytes(), abi.encode(address(deployer), address(advancedChecker), true, true));
     }
 
     function test_policy_trait_returnsCorrectValue() public view {
@@ -357,24 +351,6 @@ contract AdvancedPolicy is Test {
         vm.stopPrank();
     }
 
-    function test_policy_enforcePre_whenAlreadyEnforced_reverts() public {
-        vm.startPrank(deployer);
-
-        policy.setTarget(target);
-        signupNft.mint(subject);
-
-        vm.stopPrank();
-
-        vm.startPrank(target);
-
-        policy.enforce(subject, evidence, Check.PRE);
-
-        vm.expectRevert(abi.encodeWithSelector(IPolicy.AlreadyEnforced.selector));
-        policy.enforce(subject, evidence, Check.PRE);
-
-        vm.stopPrank();
-    }
-
     function test_policy_enforceMain_whenCallerNotTarget_reverts() public {
         vm.startPrank(deployer);
 
@@ -413,22 +389,6 @@ contract AdvancedPolicy is Test {
         vm.startPrank(target);
 
         vm.expectRevert(abi.encodeWithSelector(IPolicy.UnsuccessfulCheck.selector));
-        policy.enforce(subject, evidence, Check.MAIN);
-
-        vm.stopPrank();
-    }
-
-    function test_policy_enforceMain_whenPreCheckMissing_reverts() public {
-        vm.startPrank(deployer);
-
-        policy.setTarget(target);
-        signupNft.mint(subject);
-
-        vm.stopPrank();
-
-        vm.startPrank(target);
-
-        vm.expectRevert(abi.encodeWithSelector(IAdvancedPolicy.PreCheckNotEnforced.selector));
         policy.enforce(subject, evidence, Check.MAIN);
 
         vm.stopPrank();
@@ -475,41 +435,6 @@ contract AdvancedPolicy is Test {
         emit Enforced(subject, target, evidence, Check.MAIN);
 
         policy.enforce(subject, evidence, Check.MAIN);
-
-        vm.stopPrank();
-    }
-
-    function test_policy_enforceMain_whenMultipleNotAllowed_reverts() public {
-        vm.startPrank(deployer);
-
-        policySkipped.setTarget(target);
-        signupNft.mint(subject);
-
-        vm.stopPrank();
-
-        vm.startPrank(target);
-
-        policySkipped.enforce(subject, evidence, Check.MAIN);
-
-        vm.expectRevert(abi.encodeWithSelector(IAdvancedPolicy.MainCheckAlreadyEnforced.selector));
-        policySkipped.enforce(subject, evidence, Check.MAIN);
-
-        vm.stopPrank();
-    }
-
-    function test_policy_enforcePost_whenPreCheckMissing_reverts() public {
-        vm.startPrank(deployer);
-
-        policy.setTarget(target);
-        signupNft.mint(subject);
-
-        vm.stopPrank();
-
-        vm.startPrank(target);
-        policy.enforce(subject, evidence, Check.PRE);
-
-        vm.expectRevert(abi.encodeWithSelector(IAdvancedPolicy.MainCheckNotEnforced.selector));
-        policy.enforce(subject, evidence, Check.POST);
 
         vm.stopPrank();
     }
@@ -588,26 +513,6 @@ contract AdvancedPolicy is Test {
 
         vm.stopPrank();
     }
-
-    function test_policy_enforcePost_whenAlreadyEnforced_reverts() public {
-        vm.startPrank(deployer);
-
-        policy.setTarget(target);
-        signupNft.mint(subject);
-
-        vm.stopPrank();
-
-        vm.startPrank(target);
-
-        policy.enforce(subject, evidence, Check.PRE);
-        policy.enforce(subject, evidence, Check.MAIN);
-        policy.enforce(subject, evidence, Check.POST);
-
-        vm.expectRevert(abi.encodeWithSelector(IPolicy.AlreadyEnforced.selector));
-        policy.enforce(subject, evidence, Check.POST);
-
-        vm.stopPrank();
-    }
 }
 
 contract Voting is Test {
@@ -657,7 +562,7 @@ contract Voting is Test {
         policyFactory = new AdvancedERC721PolicyFactory();
 
         vm.recordLogs();
-        policyFactory.deploy(address(advancedChecker), false, false, true);
+        policyFactory.deploy(address(advancedChecker), false, false);
         entries = vm.getRecordedLogs();
         address policyClone = address(uint160(uint256(entries[0].topics[1])));
         policy = AdvancedERC721Policy(policyClone);
@@ -688,7 +593,9 @@ contract Voting is Test {
 
     function test_voting_deployed() public view {
         assertEq(address(voting.POLICY()), address(policy));
-        assertEq(voting.voteCounts(0), 0);
+        assertEq(voting.registered(subject), false);
+        assertEq(voting.hasVoted(subject), false);
+        assertEq(voting.isEligible(subject), false);
     }
 
     function test_register_whenCallerNotTarget_reverts() public {
@@ -752,24 +659,6 @@ contract Voting is Test {
         vm.expectEmit(true, true, true, true);
         emit Registered(subject);
 
-        voting.register(0);
-
-        vm.stopPrank();
-    }
-
-    function test_register_whenAlreadyRegistered_reverts() public {
-        vm.startPrank(deployer);
-
-        policy.setTarget(address(voting));
-        signupNft.mint(subject);
-
-        vm.stopPrank();
-
-        vm.startPrank(subject);
-
-        voting.register(0);
-
-        vm.expectRevert(abi.encodeWithSelector(IPolicy.AlreadyEnforced.selector));
         voting.register(0);
 
         vm.stopPrank();

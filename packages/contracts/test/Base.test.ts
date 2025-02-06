@@ -335,19 +335,6 @@ describe("Base", () => {
                 expect(event.args.subject).to.eq(subjectAddress)
                 expect(event.args.target).to.eq(targetAddress)
                 expect(event.args.evidence[0]).to.eq(validEncodedNFTId)
-                expect(await policy.enforced(subjectAddress)).to.be.equal(true)
-            })
-
-            it("reverts when already enforced", async () => {
-                const { policy, target, subjectAddress, validEncodedNFTId } = await loadFixture(deployBasePolicyFixture)
-
-                await policy.setTarget(await target.getAddress())
-
-                await policy.connect(target).enforce(subjectAddress, [validEncodedNFTId])
-
-                await expect(
-                    policy.connect(target).enforce(subjectAddress, [validEncodedNFTId])
-                ).to.be.revertedWithCustomError(policy, "AlreadyEnforced")
             })
         })
     })
@@ -436,8 +423,8 @@ describe("Base", () => {
                 const { baseVoting, subject } = await loadFixture(deployBaseVotingFixture)
 
                 expect(baseVoting).to.not.eq(undefined)
+                expect(await baseVoting.registered(subject)).to.be.eq(false)
                 expect(await baseVoting.hasVoted(subject)).to.be.eq(false)
-                expect(await baseVoting.voteCounts(0)).to.be.eq(0)
             })
         })
 
@@ -495,24 +482,8 @@ describe("Base", () => {
 
                 expect(receipt?.status).to.eq(1)
                 expect(event.args.voter).to.eq(subjectAddress)
-                expect(await policy.enforced(subjectAddress)).to.be.equal(true)
+                expect(await baseVoting.registered(subjectAddress)).to.be.equal(true)
                 expect(await baseVoting.hasVoted(subjectAddress)).to.be.equal(false)
-                expect(await baseVoting.voteCounts(0)).to.be.equal(0)
-                expect(await baseVoting.voteCounts(1)).to.be.equal(0)
-            })
-
-            it("reverts when already registered", async () => {
-                const { baseVoting, policy, subject, validNFTId } = await loadFixture(deployBaseVotingFixture)
-                const targetAddress = await baseVoting.getAddress()
-
-                await policy.setTarget(targetAddress)
-
-                await baseVoting.connect(subject).register(validNFTId)
-
-                await expect(baseVoting.connect(subject).register(validNFTId)).to.be.revertedWithCustomError(
-                    policy,
-                    "AlreadyEnforced"
-                )
             })
         })
 
@@ -562,9 +533,8 @@ describe("Base", () => {
                 expect(receipt?.status).to.eq(1)
                 expect(event.args.voter).to.eq(subjectAddress)
                 expect(event.args.option).to.eq(option)
+                expect(await baseVoting.registered(subjectAddress)).to.be.equal(true)
                 expect(await baseVoting.hasVoted(subjectAddress)).to.be.equal(true)
-                expect(await baseVoting.voteCounts(0)).to.be.equal(1)
-                expect(await baseVoting.voteCounts(1)).to.be.equal(0)
             })
 
             it("reverts when already voted", async () => {

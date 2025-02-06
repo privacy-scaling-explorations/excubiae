@@ -289,8 +289,7 @@ describe("Advanced", () => {
             const advancedPolicyTx = await advancedPolicyFactory.deploy(
                 await advancedChecker.getAddress(),
                 false,
-                false,
-                true
+                false
             )
             const advancedPolicyTxReceipt = await advancedPolicyTx.wait()
             const advancedPolicyCloneDeployedEvent = AdvancedERC721PolicyFactory.interface.parseLog(
@@ -309,8 +308,7 @@ describe("Advanced", () => {
             const advancedPolicSkippedTx = await advancedPolicyFactory.deploy(
                 await advancedChecker.getAddress(),
                 true,
-                true,
-                false
+                true
             )
             const advancedPolicySkippedTxReceipt = await advancedPolicSkippedTx.wait()
             const advancedPolicySkippedCloneDeployedEvent = AdvancedERC721PolicyFactory.interface.parseLog(
@@ -386,8 +384,8 @@ describe("Advanced", () => {
 
                 const expectedBytes = AbiCoder.defaultAbiCoder()
                     .encode(
-                        ["address", "address", "bool", "bool", "bool"],
-                        [await deployer.getAddress(), await advancedChecker.getAddress(), false, false, true]
+                        ["address", "address", "bool", "bool"],
+                        [await deployer.getAddress(), await advancedChecker.getAddress(), false, false]
                     )
                     .toLowerCase()
 
@@ -397,8 +395,8 @@ describe("Advanced", () => {
 
                 const expectedBytesSkipped = AbiCoder.defaultAbiCoder()
                     .encode(
-                        ["address", "address", "bool", "bool", "bool"],
-                        [await deployer.getAddress(), await advancedChecker.getAddress(), true, true, false]
+                        ["address", "address", "bool", "bool"],
+                        [await deployer.getAddress(), await advancedChecker.getAddress(), true, true]
                     )
                     .toLowerCase()
 
@@ -535,20 +533,6 @@ describe("Advanced", () => {
                     expect(event.args.target).to.eq(targetAddress)
                     expect(event.args.evidence[0]).to.eq(validEncodedNFTId)
                     expect(event.args.checkType).to.eq(0)
-                    expect((await advancedPolicy.enforced(subjectAddress))[0]).to.be.equal(true)
-                })
-
-                it("reverts when pre already enforced", async () => {
-                    const { advancedPolicy, target, subjectAddress, validEncodedNFTId } =
-                        await loadFixture(deployAdvancedPolicyFixture)
-
-                    await advancedPolicy.setTarget(await target.getAddress())
-
-                    await advancedPolicy.connect(target).enforce(subjectAddress, [validEncodedNFTId], 0)
-
-                    await expect(
-                        advancedPolicy.connect(target).enforce(subjectAddress, [validEncodedNFTId], 0)
-                    ).to.be.revertedWithCustomError(advancedPolicy, "AlreadyEnforced")
                 })
             })
 
@@ -602,7 +586,6 @@ describe("Advanced", () => {
                     expect(event.args.target).to.eq(targetAddress)
                     expect(event.args.evidence[0]).to.eq(validEncodedNFTId)
                     expect(event.args.checkType).to.eq(1)
-                    expect((await advancedPolicy.enforced(subjectAddress))[1]).to.be.equal(1)
                 })
 
                 it("executes multiple mains when allowed", async () => {
@@ -632,19 +615,6 @@ describe("Advanced", () => {
                     expect(event.args.target).to.eq(targetAddress)
                     expect(event.args.evidence[0]).to.eq(validEncodedNFTId)
                     expect(event.args.checkType).to.eq(1)
-                    expect((await advancedPolicy.enforced(subjectAddress))[1]).to.be.equal(2)
-                })
-
-                it("reverts when main check already enfored", async () => {
-                    const { advancedPolicySkipped, target, subjectAddress, validEncodedNFTId } =
-                        await loadFixture(deployAdvancedPolicyFixture)
-
-                    await advancedPolicySkipped.setTarget(await target.getAddress())
-                    await advancedPolicySkipped.connect(target).enforce(subjectAddress, [validEncodedNFTId], 1)
-
-                    expect(
-                        advancedPolicySkipped.connect(target).enforce(subjectAddress, [validEncodedNFTId], 1)
-                    ).to.be.revertedWithCustomError(advancedPolicySkipped, "MainCheckAlreadyEnforced")
                 })
             })
 
@@ -752,21 +722,6 @@ describe("Advanced", () => {
                     expect(event.args.target).to.eq(targetAddress)
                     expect(event.args.evidence[0]).to.eq(validEncodedNFTId)
                     expect(event.args.checkType).to.eq(2)
-                    expect((await advancedPolicy.enforced(subjectAddress))[2]).to.be.equal(true)
-                })
-
-                it("reverts when post already enforced", async () => {
-                    const { advancedPolicy, target, subjectAddress, validEncodedNFTId } =
-                        await loadFixture(deployAdvancedPolicyFixture)
-
-                    await advancedPolicy.setTarget(await target.getAddress())
-                    await advancedPolicy.connect(target).enforce(subjectAddress, [validEncodedNFTId], 0)
-                    await advancedPolicy.connect(target).enforce(subjectAddress, [validEncodedNFTId], 1)
-                    await advancedPolicy.connect(target).enforce(subjectAddress, [validEncodedNFTId], 2)
-
-                    await expect(
-                        advancedPolicy.connect(target).enforce(subjectAddress, [validEncodedNFTId], 2)
-                    ).to.be.revertedWithCustomError(advancedPolicy, "AlreadyEnforced")
                 })
             })
         })
@@ -843,8 +798,7 @@ describe("Advanced", () => {
             const advancedPolicyTx = await advancedPolicyFactory.deploy(
                 await advancedChecker.getAddress(),
                 false,
-                false,
-                true
+                false
             )
             const advancedPolicyTxReceipt = await advancedPolicyTx.wait()
             const advancedPolicyCloneDeployedEvent = AdvancedERC721PolicyFactory.interface.parseLog(
@@ -951,25 +905,9 @@ describe("Advanced", () => {
 
                 expect(receipt?.status).to.eq(1)
                 expect(event.args.voter).to.eq(subjectAddress)
-                expect((await advancedPolicy.enforced(subjectAddress))[0]).to.be.equal(true)
-                expect((await advancedPolicy.enforced(subjectAddress))[1]).to.be.equal(0n)
-                expect(await advancedVoting.voteCounts(0)).to.be.equal(0)
-                expect(await advancedVoting.voteCounts(1)).to.be.equal(0)
-            })
-
-            it("reverts when already registered", async () => {
-                const { advancedVoting, advancedPolicy, subject, validEncodedNFTId } =
-                    await loadFixture(deployAdvancedVotingFixture)
-                const targetAddress = await advancedVoting.getAddress()
-
-                await advancedPolicy.setTarget(targetAddress)
-
-                await advancedVoting.connect(subject).register(validEncodedNFTId)
-
-                await expect(advancedVoting.connect(subject).register(validEncodedNFTId)).to.be.revertedWithCustomError(
-                    advancedPolicy,
-                    "AlreadyEnforced"
-                )
+                expect(await advancedVoting.registered(subject)).to.be.equal(true)
+                expect(await advancedVoting.hasVoted(subject)).to.be.equal(false)
+                expect(await advancedVoting.isEligible(subject)).to.be.equal(false)
             })
         })
 
@@ -1021,10 +959,9 @@ describe("Advanced", () => {
                 expect(receipt?.status).to.eq(1)
                 expect(event.args.voter).to.eq(subjectAddress)
                 expect(event.args.option).to.eq(option)
-                expect((await advancedPolicy.enforced(subjectAddress))[0]).to.be.equal(true)
-                expect((await advancedPolicy.enforced(subjectAddress))[1]).to.be.equal(1n)
-                expect(await advancedVoting.voteCounts(0)).to.be.equal(1)
-                expect(await advancedVoting.voteCounts(1)).to.be.equal(0)
+                expect(await advancedVoting.registered(subject)).to.be.equal(true)
+                expect(await advancedVoting.hasVoted(subject)).to.be.equal(true)
+                expect(await advancedVoting.isEligible(subject)).to.be.equal(false)
             })
 
             it("allows multiple votes", async () => {
@@ -1051,10 +988,9 @@ describe("Advanced", () => {
                 expect(receipt?.status).to.eq(1)
                 expect(event.args.voter).to.eq(subjectAddress)
                 expect(event.args.option).to.eq(option)
-                expect((await advancedPolicy.enforced(subjectAddress))[0]).to.be.equal(true)
-                expect((await advancedPolicy.enforced(subjectAddress))[1]).to.be.equal(2n)
-                expect(await advancedVoting.voteCounts(0)).to.be.equal(2)
-                expect(await advancedVoting.voteCounts(1)).to.be.equal(0)
+                expect(await advancedVoting.registered(subject)).to.be.equal(true)
+                expect(await advancedVoting.hasVoted(subject)).to.be.equal(true)
+                expect(await advancedVoting.isEligible(subject)).to.be.equal(false)
             })
         })
 
@@ -1159,11 +1095,9 @@ describe("Advanced", () => {
 
                 expect(receipt?.status).to.eq(1)
                 expect(event.args.voter).to.eq(subjectAddress)
-                expect((await advancedPolicy.enforced(subjectAddress))[0]).to.be.equal(true)
-                expect((await advancedPolicy.enforced(subjectAddress))[1]).to.be.equal(1n)
-                expect((await advancedPolicy.enforced(subjectAddress))[2]).to.be.equal(true)
-                expect(await advancedVoting.voteCounts(0)).to.be.equal(1)
-                expect(await advancedVoting.voteCounts(1)).to.be.equal(0)
+                expect(await advancedVoting.registered(subject)).to.be.equal(true)
+                expect(await advancedVoting.hasVoted(subject)).to.be.equal(true)
+                expect(await advancedVoting.isEligible(subject)).to.be.equal(true)
             })
 
             it("reverts when already eligible", async () => {
@@ -1247,8 +1181,7 @@ describe("Advanced", () => {
                 const advancedPolicyTx = await advancedPolicyFactory.deploy(
                     await advancedChecker.getAddress(),
                     false,
-                    false,
-                    true
+                    false
                 )
                 const advancedPolicyTxReceipt = await advancedPolicyTx.wait()
                 const advancedPolicyCloneDeployedEvent = AdvancedERC721PolicyFactory.interface.parseLog(
@@ -1287,9 +1220,9 @@ describe("Advanced", () => {
                     // reward.
                     await advancedVoting.connect(voter).eligible()
 
-                    expect((await advancedPolicy.enforced(voterAddress))[0]).to.be.equal(true)
-                    expect((await advancedPolicy.enforced(voterAddress))[1]).to.be.equal(1)
-                    expect((await advancedPolicy.enforced(voterAddress))[2]).to.be.equal(true)
+                    expect(await advancedVoting.registered(voter)).to.be.equal(true)
+                    expect(await advancedVoting.hasVoted(voter)).to.be.equal(true)
+                    expect(await advancedVoting.isEligible(voter)).to.be.equal(true)
                 }
             })
         })
