@@ -16,7 +16,10 @@ contract SemaphoreChecker is BaseChecker {
     /// @dev The subject can prove membership only for the group having the following identifier.
     uint256 public groupId;
 
-    /// @notice Error thrown when the subject sends a proof with an invalid or mismatching group.
+    /// @notice Error thrown when the subject sends a proof with an invalid or mismatching prover in the scope.
+    error IncorrectProver();
+
+    /// @notice Error thrown when the subject sends a proof with an invalid or mismatching group id in the scope.
     error IncorrectGroupId();
 
     /// @notice Error thrown when the subject sends an invalid proof.
@@ -44,9 +47,19 @@ contract SemaphoreChecker is BaseChecker {
         super._check(subject, evidence);
 
         ISemaphore.SemaphoreProof memory proof = abi.decode(evidence, (ISemaphore.SemaphoreProof));
+
+        // the scope is (uint256(uint160(_addr)) << 96) | uint256(_num).
+        // this can avoid frontrunning (ie. subject encoded in the scope of the proof).
         uint256 _scope = proof.scope;
 
-        if (_scope != groupId) revert IncorrectGroupId();
+        // first 20 byte (160bits) are the address.
+        address _prover = address(uint160(_scope >> 96));
+
+        // remaining 12 bytes (96bits) are for the group identifier.
+        uint96 _groupId = uint96(_scope & ((1 << 96) - 1));
+
+        if (_prover != subject) revert IncorrectProver();
+        if (_groupId != groupId) revert IncorrectGroupId();
         if (!semaphore.verifyProof(_scope, proof)) revert InvalidProof();
 
         return true;
