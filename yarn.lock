@@ -1359,6 +1359,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@semaphore-protocol/contracts@npm:^4.9.0":
+  version: 4.9.0
+  resolution: "@semaphore-protocol/contracts@npm:4.9.0"
+  dependencies:
+    "@zk-kit/lean-imt.sol": "npm:2.0.0"
+  checksum: 10/391910dbdd4b430caf7220b7a6ad67fd826b37ec3c98b21b4cc072dcdfea67a0c28166fefdcd148d5ff151ba22308a8fbe7e5330991d3da6b86fc19c501beff8
+  languageName: node
+  linkType: hard
+
 "@sentry/core@npm:5.30.0":
   version: 5.30.0
   resolution: "@sentry/core@npm:5.30.0"
@@ -1870,6 +1879,15 @@ __metadata:
   version: 1.2.0
   resolution: "@ungap/structured-clone@npm:1.2.0"
   checksum: 10/c6fe89a505e513a7592e1438280db1c075764793a2397877ff1351721fe8792a966a5359769e30242b3cd023f2efb9e63ca2ca88019d73b564488cc20e3eab12
+  languageName: node
+  linkType: hard
+
+"@zk-kit/lean-imt.sol@npm:2.0.0":
+  version: 2.0.0
+  resolution: "@zk-kit/lean-imt.sol@npm:2.0.0"
+  dependencies:
+    poseidon-solidity: "npm:0.0.5"
+  checksum: 10/094a1788905c380ed5c767184938d3aa0d0b3ba8ad92e8d6efae1243e4d15103484ec1224163ae7d0c43e0095ae19f28e41a7877d37398ff60dcadbf1eb27a77
   languageName: node
   linkType: hard
 
@@ -4486,6 +4504,7 @@ __metadata:
     "@nomicfoundation/hardhat-verify": "npm:^2.0.12"
     "@nomicfoundation/ignition-core": "npm:^0.15.9"
     "@openzeppelin/contracts": "npm:^5.2.0"
+    "@semaphore-protocol/contracts": "npm:^4.9.0"
     "@typechain/ethers-v6": "npm:^0.5.1"
     "@typechain/hardhat": "npm:^9.1.0"
     "@types/chai": "npm:^4.2.0"
@@ -7751,6 +7770,13 @@ __metadata:
   version: 8.0.0
   resolution: "pluralize@npm:8.0.0"
   checksum: 10/17877fdfdb7ddb3639ce257ad73a7c51a30a966091e40f56ea9f2f545b5727ce548d4928f8cb3ce38e7dc0c5150407d318af6a4ed0ea5265d378473b4c2c61ec
+  languageName: node
+  linkType: hard
+
+"poseidon-solidity@npm:0.0.5":
+  version: 0.0.5
+  resolution: "poseidon-solidity@npm:0.0.5"
+  checksum: 10/a680d0bf8c5eeb6ea8dd1b89a0a924fb2f9a7d33919ef26197aaf0e83ddca0e9c1125f3b3dffa40340a4ed6bef6d864203ff49da6fb91c4c4604149969cafc82
   languageName: node
   linkType: hard
 

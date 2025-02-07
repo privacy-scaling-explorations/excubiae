@@ -36,7 +36,7 @@ abstract contract BasePolicy is Policy, IBasePolicy {
     /// @notice Internal logic for enforcing policy checks.
     /// @param subject Address to enforce the policy on.
     /// @param evidence Custom validation data.
-    function _enforce(address subject, bytes calldata evidence) internal {
+    function _enforce(address subject, bytes calldata evidence) internal virtual {
         if (!BASE_CHECKER.check(subject, evidence)) revert UnsuccessfulCheck();
 
         emit Enforced(subject, target, evidence);
