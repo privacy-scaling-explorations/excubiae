@@ -8,8 +8,8 @@ import {BaseERC721CheckerFactory} from "./base/BaseERC721CheckerFactory.sol";
 import {BaseERC721PolicyFactory} from "./base/BaseERC721PolicyFactory.sol";
 import {BaseERC721Policy} from "./base/BaseERC721Policy.sol";
 import {BaseVoting} from "./base/BaseVoting.sol";
-import {IPolicy} from "../interfaces/IPolicy.sol";
-import {IClone} from "../interfaces/IClone.sol";
+import {IPolicy} from "../../interfaces/IPolicy.sol";
+import {IClone} from "../../interfaces/IClone.sol";
 import {IERC721Errors} from "@openzeppelin/contracts/interfaces/draft-IERC6093.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 

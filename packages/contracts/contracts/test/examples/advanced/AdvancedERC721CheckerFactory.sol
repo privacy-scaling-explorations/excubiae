@@ -2,7 +2,7 @@
 pragma solidity ^0.8.20;
 
 import {AdvancedERC721Checker} from "./AdvancedERC721Checker.sol";
-import {Factory} from "../../proxy/Factory.sol";
+import {Factory} from "../../../proxy/Factory.sol";
 
 /// @title AdvancedERC721CheckerFactory
 /// @notice Factory for deploying minimal proxy instances of AdvancedERC721Checker.

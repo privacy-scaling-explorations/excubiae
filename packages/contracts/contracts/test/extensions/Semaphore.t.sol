@@ -1,0 +1,656 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+import {Test, Vm} from "forge-std/src/Test.sol";
+import {SemaphoreChecker} from "../../extensions/SemaphoreChecker.sol";
+import {SemaphoreCheckerFactory} from "../../extensions/SemaphoreCheckerFactory.sol";
+import {SemaphorePolicy} from "../../extensions/SemaphorePolicy.sol";
+import {SemaphorePolicyFactory} from "../../extensions/SemaphorePolicyFactory.sol";
+import {IPolicy} from "../../interfaces/IPolicy.sol";
+import {IClone} from "../../interfaces/IClone.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import {ISemaphore} from "@semaphore-protocol/contracts/interfaces/ISemaphore.sol";
+import {SemaphoreMock} from "./mocks/SemaphoreMock.sol";
+import {BaseCheckerMock} from "./mocks/BaseCheckerMock.sol";
+
+contract SemaphoreCheckerTest is Test {
+    ISemaphore internal semaphore;
+    SemaphoreMock internal semaphoreMock;
+    SemaphoreChecker internal checker;
+    SemaphoreCheckerFactory internal factory;
+
+    address public deployer = vm.addr(0x1);
+    address public target = vm.addr(0x2);
+    address public subject = vm.addr(0x3);
+    address public notOwner = vm.addr(0x4);
+    address public notSubject = vm.addr(0x5);
+    uint256 public validGroupId = 0;
+    uint256 public invalidGroupId = 1;
+
+    ISemaphore.SemaphoreProof public validProof =
+        ISemaphore.SemaphoreProof({
+            merkleTreeDepth: 1,
+            merkleTreeRoot: 0,
+            nullifier: 0,
+            message: 0,
+            scope: ((uint256(uint160(subject)) << 96) | uint256(validGroupId)),
+            points: [uint256(0), uint256(0), uint256(0), uint256(0), uint256(0), uint256(0), uint256(0), uint256(0)]
+        });
+
+    ISemaphore.SemaphoreProof public invalidProverProof =
+        ISemaphore.SemaphoreProof({
+            merkleTreeDepth: 1,
+            merkleTreeRoot: 0,
+            nullifier: 0,
+            message: 0,
+            scope: ((uint256(uint160(notSubject)) << 96) | uint256(validGroupId)),
+            points: [uint256(0), uint256(0), uint256(0), uint256(0), uint256(0), uint256(0), uint256(0), uint256(0)]
+        });
+
+    ISemaphore.SemaphoreProof public invalidGroupIdProof =
+        ISemaphore.SemaphoreProof({
+            merkleTreeDepth: 1,
+            merkleTreeRoot: 0,
+            nullifier: 0,
+            message: 0,
+            scope: ((uint256(uint160(subject)) << 96) | uint256(invalidGroupId)),
+            points: [uint256(0), uint256(0), uint256(0), uint256(0), uint256(0), uint256(0), uint256(0), uint256(0)]
+        });
+
+    ISemaphore.SemaphoreProof public invalidProof =
+        ISemaphore.SemaphoreProof({
+            merkleTreeDepth: 1,
+            merkleTreeRoot: 0,
+            nullifier: 1,
+            message: 0,
+            scope: ((uint256(uint160(subject)) << 96) | uint256(validGroupId)),
+            points: [uint256(1), uint256(0), uint256(0), uint256(0), uint256(0), uint256(0), uint256(0), uint256(0)]
+        });
+
+    bytes public validEvidence = abi.encode(validProof);
+    bytes public invalidProverEvidence = abi.encode(invalidProverProof);
+    bytes public invalidGroupIdEvidence = abi.encode(invalidGroupIdProof);
+    bytes public invalidEvidence = abi.encode(invalidProof);
+
+    function setUp() public {
+        vm.startPrank(deployer);
+
+        uint256[] memory groupIds = new uint256[](1);
+        uint256[] memory nullifiers = new uint256[](2);
+        bool[] memory nullifiersValidities = new bool[](2);
+        groupIds[0] = validGroupId;
+        nullifiers[0] = validProof.nullifier;
+        nullifiers[1] = invalidProof.nullifier;
+        nullifiersValidities[0] = true;
+        nullifiersValidities[1] = false;
+
+        semaphoreMock = new SemaphoreMock(groupIds, nullifiers, nullifiersValidities);
+
+        factory = new SemaphoreCheckerFactory();
+
+        vm.recordLogs();
+        factory.deploy(address(semaphoreMock), validGroupId);
+        Vm.Log[] memory entries = vm.getRecordedLogs();
+        address baseClone = address(uint160(uint256(entries[0].topics[1])));
+        checker = SemaphoreChecker(baseClone);
+
+        vm.stopPrank();
+    }
+
+    function test_factory_deployAndInitialize() public view {
+        assertEq(checker.initialized(), true);
+    }
+
+    function test_checker_whenAlreadyInitialized_reverts() public {
+        vm.expectRevert(abi.encodeWithSelector(IClone.AlreadyInitialized.selector));
+        checker.initialize();
+    }
+
+    function test_checker_getAppendedBytes() public {
+        assertEq(checker.getAppendedBytes(), abi.encode(address(semaphoreMock), validGroupId));
+    }
+
+    function test_checker_whenScopeProverIncorrect_reverts() public {
+        vm.startPrank(target);
+
+        vm.expectRevert(abi.encodeWithSelector(SemaphoreChecker.IncorrectProver.selector));
+        checker.check(subject, invalidProverEvidence);
+
+        vm.stopPrank();
+    }
+
+    function test_checker_whenScopeGroupIdIncorrect_reverts() public {
+        vm.startPrank(target);
+
+        vm.expectRevert(abi.encodeWithSelector(SemaphoreChecker.IncorrectGroupId.selector));
+        checker.check(subject, invalidGroupIdEvidence);
+
+        vm.stopPrank();
+    }
+
+    function test_checker_whenInvalidProof_reverts() public {
+        vm.startPrank(target);
+
+        vm.expectRevert(abi.encodeWithSelector(SemaphoreChecker.InvalidProof.selector));
+        checker.check(subject, invalidEvidence);
+
+        vm.stopPrank();
+    }
+
+    function test_checker_whenCallerIsOwner_succeeds() public {
+        vm.startPrank(target);
+
+        assert(checker.check(subject, validEvidence));
+
+        vm.stopPrank();
+    }
+}
+
+contract SemaphorePolicyTest is Test {
+    event TargetSet(address indexed target);
+    event Enforced(address indexed subject, address indexed target, bytes evidence);
+
+    ISemaphore internal semaphore;
+    SemaphoreMock internal semaphoreMock;
+    BaseCheckerMock internal baseCheckerMock;
+    SemaphoreChecker internal checker;
+    SemaphoreCheckerFactory internal factory;
+    SemaphorePolicy internal policy;
+    SemaphorePolicy internal policyWithCheckerMock;
+    SemaphorePolicyFactory internal policyFactory;
+
+    address public deployer = vm.addr(0x1);
+    address public target = vm.addr(0x2);
+    address public subject = vm.addr(0x3);
+    address public notOwner = vm.addr(0x4);
+    address public notSubject = vm.addr(0x5);
+    uint256 public validGroupId = 0;
+    uint256 public invalidGroupId = 1;
+
+    ISemaphore.SemaphoreProof public validProof =
+        ISemaphore.SemaphoreProof({
+            merkleTreeDepth: 1,
+            merkleTreeRoot: 0,
+            nullifier: 0,
+            message: 0,
+            scope: ((uint256(uint160(subject)) << 96) | uint256(validGroupId)),
+            points: [uint256(0), uint256(0), uint256(0), uint256(0), uint256(0), uint256(0), uint256(0), uint256(0)]
+        });
+
+    ISemaphore.SemaphoreProof public invalidProverProof =
+        ISemaphore.SemaphoreProof({
+            merkleTreeDepth: 1,
+            merkleTreeRoot: 0,
+            nullifier: 0,
+            message: 0,
+            scope: ((uint256(uint160(notSubject)) << 96) | uint256(validGroupId)),
+            points: [uint256(0), uint256(0), uint256(0), uint256(0), uint256(0), uint256(0), uint256(0), uint256(0)]
+        });
+
+    ISemaphore.SemaphoreProof public invalidGroupIdProof =
+        ISemaphore.SemaphoreProof({
+            merkleTreeDepth: 1,
+            merkleTreeRoot: 0,
+            nullifier: 0,
+            message: 0,
+            scope: ((uint256(uint160(subject)) << 96) | uint256(invalidGroupId)),
+            points: [uint256(0), uint256(0), uint256(0), uint256(0), uint256(0), uint256(0), uint256(0), uint256(0)]
+        });
+
+    ISemaphore.SemaphoreProof public invalidProof =
+        ISemaphore.SemaphoreProof({
+            merkleTreeDepth: 1,
+            merkleTreeRoot: 0,
+            nullifier: 1,
+            message: 0,
+            scope: ((uint256(uint160(subject)) << 96) | uint256(validGroupId)),
+            points: [uint256(1), uint256(0), uint256(0), uint256(0), uint256(0), uint256(0), uint256(0), uint256(0)]
+        });
+
+    bytes public validEvidence = abi.encode(validProof);
+    bytes public invalidProverEvidence = abi.encode(invalidProverProof);
+    bytes public invalidGroupIdEvidence = abi.encode(invalidGroupIdProof);
+    bytes public invalidEvidence = abi.encode(invalidProof);
+
+    function setUp() public virtual {
+        vm.startPrank(deployer);
+
+        uint256[] memory groupIds = new uint256[](1);
+        uint256[] memory nullifiers = new uint256[](2);
+        bool[] memory nullifiersValidities = new bool[](2);
+        groupIds[0] = validGroupId;
+        nullifiers[0] = validProof.nullifier;
+        nullifiers[1] = invalidProof.nullifier;
+        nullifiersValidities[0] = true;
+        nullifiersValidities[1] = false;
+
+        semaphoreMock = new SemaphoreMock(groupIds, nullifiers, nullifiersValidities);
+
+        baseCheckerMock = new BaseCheckerMock();
+
+        factory = new SemaphoreCheckerFactory();
+        policyFactory = new SemaphorePolicyFactory();
+
+        vm.recordLogs();
+        factory.deploy(address(semaphoreMock), validGroupId);
+        Vm.Log[] memory entries = vm.getRecordedLogs();
+        address baseClone = address(uint160(uint256(entries[0].topics[1])));
+        checker = SemaphoreChecker(baseClone);
+
+        vm.recordLogs();
+        policyFactory.deploy(address(checker));
+        entries = vm.getRecordedLogs();
+        address policyClone = address(uint160(uint256(entries[0].topics[1])));
+        policy = SemaphorePolicy(policyClone);
+
+        vm.recordLogs();
+        policyFactory.deploy(address(baseCheckerMock));
+        entries = vm.getRecordedLogs();
+        address policyCloneCheckerMock = address(uint160(uint256(entries[0].topics[1])));
+        policyWithCheckerMock = SemaphorePolicy(policyCloneCheckerMock);
+
+        vm.stopPrank();
+    }
+
+    function test_factory_deployAndInitialize() public view {
+        assertEq(policy.initialized(), true);
+    }
+
+    function test_policy_whenAlreadyInitialized_reverts() public {
+        vm.expectRevert(abi.encodeWithSelector(IClone.AlreadyInitialized.selector));
+        policy.initialize();
+    }
+
+    function test_policy_getAppendedBytes() public {
+        assertEq(policy.getAppendedBytes(), abi.encode(address(deployer), address(checker)));
+    }
+
+    function test_policy_trait_returnsCorrectValue() public view {
+        assertEq(policy.trait(), "Semaphore");
+    }
+
+    function test_policy_target_returnsExpectedAddress() public {
+        vm.startPrank(deployer);
+
+        policy.setTarget(target);
+
+        assertEq(policy.target(), target);
+
+        vm.stopPrank();
+    }
+
+    function test_policy_setTarget_whenCallerNotOwner_reverts() public {
+        vm.startPrank(notOwner);
+
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, notOwner));
+        policy.setTarget(target);
+
+        vm.stopPrank();
+    }
+
+    function test_policy_setTarget_whenZeroAddress_reverts() public {
+        vm.startPrank(deployer);
+
+        vm.expectRevert(abi.encodeWithSelector(IPolicy.ZeroAddress.selector));
+        policy.setTarget(address(0));
+
+        vm.stopPrank();
+    }
+
+    function test_policy_setTarget_whenValidAddress_succeeds() public {
+        vm.startPrank(deployer);
+
+        vm.expectEmit(true, true, true, true);
+        emit TargetSet(target);
+
+        policy.setTarget(target);
+
+        vm.stopPrank();
+    }
+
+    function test_policy_setTarget_whenAlreadySet_reverts() public {
+        vm.startPrank(deployer);
+
+        policy.setTarget(target);
+
+        vm.expectRevert(abi.encodeWithSelector(IPolicy.TargetAlreadySet.selector));
+        policy.setTarget(target);
+
+        vm.stopPrank();
+    }
+
+    function test_policy_enforce_whenScopeProverIncorrect_reverts() public {
+        vm.startPrank(deployer);
+
+        policy.setTarget(target);
+
+        vm.stopPrank();
+
+        vm.startPrank(target);
+
+        vm.expectRevert(abi.encodeWithSelector(SemaphoreChecker.IncorrectProver.selector));
+        policy.enforce(subject, invalidProverEvidence);
+
+        vm.stopPrank();
+    }
+
+    function test_policy_enforce_whenScopeGroupIdIncorrect_reverts() public {
+        vm.startPrank(deployer);
+
+        policy.setTarget(target);
+
+        vm.stopPrank();
+
+        vm.startPrank(target);
+
+        vm.expectRevert(abi.encodeWithSelector(SemaphoreChecker.IncorrectGroupId.selector));
+        policy.enforce(subject, invalidGroupIdEvidence);
+
+        vm.stopPrank();
+    }
+
+    function test_policy_enforce_whenInvalidProof_reverts() public {
+        vm.startPrank(deployer);
+
+        policy.setTarget(target);
+
+        vm.stopPrank();
+
+        vm.startPrank(target);
+
+        vm.expectRevert(abi.encodeWithSelector(SemaphoreChecker.InvalidProof.selector));
+        policy.enforce(subject, invalidEvidence);
+
+        vm.stopPrank();
+    }
+
+    function test_policy_enforce_whenValid_succeeds() public {
+        vm.startPrank(deployer);
+
+        policy.setTarget(target);
+
+        vm.stopPrank();
+
+        vm.startPrank(target);
+
+        vm.expectEmit(true, true, true, true);
+        emit Enforced(subject, target, validEvidence);
+
+        policy.enforce(subject, validEvidence);
+
+        vm.stopPrank();
+    }
+
+    function test_policy_enforce_whenAlreadySpentNullifier_reverts() public {
+        vm.startPrank(deployer);
+
+        policy.setTarget(target);
+
+        vm.stopPrank();
+
+        vm.startPrank(target);
+
+        vm.expectEmit(true, true, true, true);
+        emit Enforced(subject, target, validEvidence);
+
+        policy.enforce(subject, validEvidence);
+
+        vm.expectRevert(abi.encodeWithSelector(SemaphorePolicy.AlreadySpentNullifier.selector));
+        policy.enforce(subject, validEvidence);
+
+        vm.stopPrank();
+    }
+
+    function test_policyCheckerMockks_enforce_whenCheckFails_reverts() public {
+        vm.startPrank(deployer);
+
+        policyWithCheckerMock.setTarget(target);
+
+        vm.stopPrank();
+
+        vm.startPrank(target);
+
+        vm.expectRevert(abi.encodeWithSelector(IPolicy.UnsuccessfulCheck.selector));
+        policyWithCheckerMock.enforce(subject, validEvidence);
+
+        vm.stopPrank();
+    }
+}
+
+contract SemaphoreMockTest is Test {
+    SemaphoreMock internal semaphoreMock;
+
+    address public deployer = vm.addr(0x1);
+    uint256 public validGroupId = 0;
+
+    ISemaphore.SemaphoreProof public validProof =
+        ISemaphore.SemaphoreProof({
+            merkleTreeDepth: 1,
+            merkleTreeRoot: 0,
+            nullifier: 0,
+            message: 0,
+            scope: ((uint256(uint160(deployer)) << 96) | uint256(validGroupId)),
+            points: [uint256(0), uint256(0), uint256(0), uint256(0), uint256(0), uint256(0), uint256(0), uint256(0)]
+        });
+
+    function setUp() public {
+        vm.startPrank(deployer);
+
+        uint256[] memory groupIds = new uint256[](1);
+        uint256[] memory nullifiers = new uint256[](1);
+        bool[] memory nullifiersValidities = new bool[](1);
+        groupIds[0] = validGroupId;
+        nullifiers[0] = validProof.nullifier;
+        nullifiersValidities[0] = true;
+
+        semaphoreMock = new SemaphoreMock(groupIds, nullifiers, nullifiersValidities);
+
+        vm.stopPrank();
+    }
+
+    function test_mock_deployAndStubsForCoverage() public {
+        uint256[] memory dummy = new uint256[](1);
+        dummy[0] = validGroupId;
+
+        assertEq(semaphoreMock.createGroup(), 0);
+        assertEq(semaphoreMock.createGroup(deployer), 0);
+        assertEq(semaphoreMock.createGroup(deployer, 0), 0);
+
+        semaphoreMock.updateGroupAdmin(0, deployer);
+        semaphoreMock.acceptGroupAdmin(0);
+        semaphoreMock.updateGroupMerkleTreeDuration(0, 0);
+        semaphoreMock.addMember(0, 0);
+        semaphoreMock.addMembers(0, dummy);
+        semaphoreMock.updateMember(0, 0, 0, dummy);
+        semaphoreMock.removeMember(0, 0, dummy);
+        semaphoreMock.validateProof(0, validProof);
+    }
+}
+
+// contract Voting is Test {
+//     event Registered(address voter);
+//     event Voted(address voter, uint8 option);
+
+//     NFT internal nft;
+//     BaseERC721Checker internal checker;
+//     BaseERC721CheckerFactory internal checkerFactory;
+//     BaseERC721Policy internal policy;
+//     BaseERC721PolicyFactory internal policyFactory;
+//     BaseVoting internal voting;
+
+//     address public deployer = vm.addr(0x1);
+//     address public subject = vm.addr(0x2);
+//     address public notOwner = vm.addr(0x3);
+
+//     function setUp() public virtual {
+//         vm.startPrank(deployer);
+
+//         nft = new NFT();
+
+//         checkerFactory = new BaseERC721CheckerFactory();
+//         policyFactory = new BaseERC721PolicyFactory();
+
+//         vm.recordLogs();
+//         checkerFactory.deploy(address(nft));
+//         Vm.Log[] memory entries = vm.getRecordedLogs();
+//         address checkerClone = address(uint160(uint256(entries[0].topics[1])));
+//         checker = BaseERC721Checker(checkerClone);
+
+//         vm.recordLogs();
+//         policyFactory.deploy(address(checker));
+//         entries = vm.getRecordedLogs();
+//         address policyClone = address(uint160(uint256(entries[0].topics[1])));
+//         policy = BaseERC721Policy(policyClone);
+
+//         voting = new BaseVoting(policy);
+
+//         vm.stopPrank();
+//     }
+
+//     function test_voting_deployed() public view {
+//         assertEq(address(voting.POLICY()), address(policy));
+//         assertEq(voting.hasVoted(subject), false);
+//         assertEq(voting.registered(subject), false);
+//     }
+
+//     function test_register_whenCallerNotTarget_reverts() public {
+//         vm.startPrank(deployer);
+
+//         policy.setTarget(deployer);
+//         nft.mint(subject);
+
+//         vm.stopPrank();
+
+//         vm.startPrank(notOwner);
+
+//         vm.expectRevert(abi.encodeWithSelector(IPolicy.TargetOnly.selector));
+//         voting.register(0);
+
+//         vm.stopPrank();
+//     }
+
+//     function test_register_whenTokenDoesNotExist_reverts() public {
+//         vm.startPrank(deployer);
+
+//         policy.setTarget(address(voting));
+//         nft.mint(subject);
+
+//         vm.stopPrank();
+
+//         vm.startPrank(subject);
+
+//         vm.expectRevert(abi.encodeWithSelector(IERC721Errors.ERC721NonexistentToken.selector, uint256(1)));
+//         voting.register(1);
+
+//         vm.stopPrank();
+//     }
+
+//     function test_register_whenCheckFails_reverts() public {
+//         vm.startPrank(deployer);
+
+//         policy.setTarget(address(voting));
+//         nft.mint(subject);
+
+//         vm.stopPrank();
+
+//         vm.startPrank(notOwner);
+
+//         vm.expectRevert(abi.encodeWithSelector(IPolicy.UnsuccessfulCheck.selector));
+//         voting.register(0);
+
+//         vm.stopPrank();
+//     }
+
+//     function test_register_whenValid_succeeds() public {
+//         vm.startPrank(deployer);
+
+//         policy.setTarget(address(voting));
+//         nft.mint(subject);
+
+//         vm.stopPrank();
+
+//         vm.startPrank(subject);
+
+//         vm.expectEmit(true, true, true, true);
+//         emit Registered(subject);
+
+//         voting.register(0);
+
+//         vm.stopPrank();
+//     }
+
+//     function test_vote_whenNotRegistered_reverts() public {
+//         vm.startPrank(deployer);
+
+//         policy.setTarget(address(voting));
+//         nft.mint(subject);
+
+//         vm.stopPrank();
+
+//         vm.startPrank(subject);
+
+//         vm.expectRevert(abi.encodeWithSelector(BaseVoting.NotRegistered.selector));
+//         voting.vote(0);
+
+//         vm.stopPrank();
+//     }
+
+//     function test_vote_whenInvalidOption_reverts() public {
+//         vm.startPrank(deployer);
+
+//         policy.setTarget(address(voting));
+//         nft.mint(subject);
+
+//         vm.stopPrank();
+
+//         vm.startPrank(subject);
+//         voting.register(0);
+
+//         vm.expectRevert(abi.encodeWithSelector(BaseVoting.InvalidOption.selector));
+//         voting.vote(3);
+
+//         vm.stopPrank();
+//     }
+
+//     function test_vote_whenValid_succeeds() public {
+//         vm.startPrank(deployer);
+
+//         policy.setTarget(address(voting));
+//         nft.mint(subject);
+
+//         vm.stopPrank();
+
+//         vm.startPrank(subject);
+//         voting.register(0);
+
+//         assertEq(voting.registered(subject), true);
+
+//         vm.expectEmit(true, true, true, true);
+//         emit Voted(subject, 0);
+
+//         voting.vote(0);
+
+//         assertEq(voting.hasVoted(subject), true);
+
+//         vm.stopPrank();
+//     }
+
+//     function test_vote_whenAlreadyVoted_reverts() public {
+//         vm.startPrank(deployer);
+
+//         policy.setTarget(address(voting));
+//         nft.mint(subject);
+
+//         vm.stopPrank();
+
+//         vm.startPrank(subject);
+
+//         voting.register(0);
+//         voting.vote(0);
+
+//         vm.expectRevert(abi.encodeWithSelector(BaseVoting.AlreadyVoted.selector));
+//         voting.vote(0);
+
+//         vm.stopPrank();
+//     }
+// }

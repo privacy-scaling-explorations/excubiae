@@ -2,7 +2,7 @@
 pragma solidity ^0.8.20;
 
 import {AdvancedERC721Policy} from "./AdvancedERC721Policy.sol";
-import {Factory} from "../../proxy/Factory.sol";
+import {Factory} from "../../../proxy/Factory.sol";
 
 /// @title AdvancedERC721PolicyFactory
 /// @notice Factory for deploying minimal proxy instances of AdvancedERC721Policy.
