@@ -9,7 +9,7 @@ This approach enables seamless interoperability across different protocols. For 
 You can learn more in this [technical reference document](https://hackmd.io/@0xjei/B1RXoTh71e).
 
 > [!IMPORTANT]  
-> Excubiae is currently in the MVP stage. Official documentation website and audits are not yet available. Expect fast development cycles with potential breaking changes — use at your own risk! Please, refer to [release](https://github.com/privacy-scaling-explorations/excubiae/releases) section for latest changes and updates.
+> Excubiae is currently in the MVP stage. Audits are not yet available. Expect fast development cycles with potential breaking changes — use at your own risk! Please, refer to [release](https://github.com/privacy-scaling-explorations/excubiae/releases) section for latest changes and updates.
 
 ## Installation
 

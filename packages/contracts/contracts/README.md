@@ -4,10 +4,12 @@ This package contains the smart contracts which define the composable framework 
 
 You can learn more in the [Design](https://hackmd.io/@0xjei/B1RXoTh71e#Design) section of the current [technical reference document](https://hackmd.io/@0xjei/B1RXoTh71e).
 
+The extensions are ready to use Checker / Policy contracts that give unique features (e.g., enforcing a proof of membership for a Semaphore group with frontrunning resistance).
+
 Please, follow the [Guides](https://hackmd.io/@0xjei/B1RXoTh71e#Guides) section for an explanation on how to write, integrate & deploy; your own Checker & Policy contracts.
 
 > [!IMPORTANT]  
-> Excubiae is currently in the MVP stage. Official documentation website and audits are not yet available. Expect fast development cycles with potential breaking changes — use at your own risk! Please, refer to [release](https://github.com/privacy-scaling-explorations/excubiae/releases) section for latest changes and updates.
+> Excubiae is currently in the MVP stage. Audits are not yet available. Expect fast development cycles with potential breaking changes — use at your own risk! Please, refer to [release](https://github.com/privacy-scaling-explorations/excubiae/releases) section for latest changes and updates.
 
 ## Installation
 
