@@ -4,10 +4,13 @@ pragma solidity ^0.8.20;
 import {IBaseChecker} from "../../../interfaces/IBaseChecker.sol";
 
 /// @title BaseCheckerMock
-/// @notice This contract is a mock implementation of the IBaseChecker interface for testing purposes.
+/// @notice Mock implementation of the IBaseChecker interface for testing purposes.
+/// @dev Provides a dummy check function that always returns false.
 contract BaseCheckerMock is IBaseChecker {
-    ///@dev mock check() method that returns always false.
-    function check(address /*subject*/, bytes calldata /*evidence*/) external pure override returns (bool) {
+    /// @notice Mock check function that always returns false.
+    /// @dev This function simulates a failed check for testing.
+    /// @return Always returns false.
+    function check(address, bytes calldata) external pure override returns (bool) {
         return false;
     }
 }

@@ -5,25 +5,26 @@ import {ISemaphore} from "@semaphore-protocol/contracts/interfaces/ISemaphore.so
 import {BasePolicy} from "../policy/BasePolicy.sol";
 
 /// @title SemaphorePolicy
-/// @notice Policy contract enforcing proof of membership of Semaphore group validation.
-/// @dev Extends BasePolicy to add specific behavior for Semaphore proof of membership validation.
+/// @notice Policy contract enforcing Semaphore group membership validation.
+/// @dev Extends BasePolicy to add logic for tracking and preventing nullifier reuse, ensuring one-time proof validity.
 contract SemaphorePolicy is BasePolicy {
-    /// @notice Tracks nullifier spent for each valid proof / check.
+    /// @notice Mapping to track spent nullifiers for each validated proof.
     mapping(uint256 => bool) public spentNullifiers;
 
-    /// @notice Error thrown when the subject sends a proof with an already spent nullifier.
+    /// @notice Error thrown when a proof is submitted with an already spent nullifier.
     error AlreadySpentNullifier();
 
-    /// @notice Returns a trait identifier for the policy.
-    /// @dev Used to identify the policy type.
-    /// @return The trait string "Semaphore".
+    /// @notice Returns the policy trait identifier.
+    /// @dev Identifies the policy as a Semaphore-based validation mechanism.
+    /// @return The trait identifier string "Semaphore".
     function trait() external pure returns (string memory) {
         return "Semaphore";
     }
 
-    /// @notice Internal logic for enforcing checks.
-    /// @param subject Address to enforce the policy on.
-    /// @param evidence Custom validation data.
+    /// @notice Internal enforcement logic to validate proofs and track nullifier usage.
+    /// @dev Decodes the Semaphore proof from evidence and ensures the nullifier hasn't been previously used.
+    /// @param subject Address of the entity being validated.
+    /// @param evidence Encoded Semaphore proof data.
     function _enforce(address subject, bytes calldata evidence) internal override {
         ISemaphore.SemaphoreProof memory proof = abi.decode(evidence, (ISemaphore.SemaphoreProof));
         uint256 _nullifier = proof.nullifier;

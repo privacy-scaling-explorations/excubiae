@@ -1,61 +1,59 @@
 // SPDX-License-Identifier: MIT
-pragma solidity >=0.8.23 <=0.8.28;
+pragma solidity ^0.8.20;
 
 import {ISemaphore} from "@semaphore-protocol/contracts/interfaces/ISemaphore.sol";
 import {BaseChecker} from "../checker/BaseChecker.sol";
 
 /// @title SemaphoreChecker
-/// @notice Semaphore proof of membership validator.
-/// @dev Extends BaseChecker to implement proof of membership validation logic using Semaphore.
-/// Please note that once a identity is used to register, it cannot be used again, thanks to the nullifier.
+/// @notice Implements proof of membership validation using Semaphore.
+/// @dev Inherits from BaseChecker to extend the validation logic.
+/// Ensures unique identity usage through nullifier tracking.
 contract SemaphoreChecker is BaseChecker {
-    /// @notice Address of the Semaphore contract used for proof of membership validation.
+    /// @notice Address of the Semaphore contract used for proof verification.
     ISemaphore public semaphore;
 
-    /// @notice The unique identifier of the Semaphore group.
-    /// @dev The subject can prove membership only for the group having the following identifier.
+    /// @notice Unique identifier for the Semaphore group.
+    /// @dev Proofs are validated against this specific group ID.
     uint256 public groupId;
 
-    /// @notice Error thrown when the subject sends a proof with an invalid or mismatching prover in the scope.
+    /// @notice Error thrown when the provided proof does not match the subject's address.
     error IncorrectProver();
 
-    /// @notice Error thrown when the subject sends a proof with an invalid or mismatching group id in the scope.
+    /// @notice Error thrown when the provided proof does not match the expected group ID.
     error IncorrectGroupId();
 
-    /// @notice Error thrown when the subject sends an invalid proof.
+    /// @notice Error thrown when the proof is invalid or fails verification.
     error InvalidProof();
 
-    /// @notice Initializes the contract with necessary parameters values.
-    /// @dev Decodes the appended bytes from the clone to set the parameters values.
+    /// @notice Initializes the SemaphoreChecker with the provided Semaphore contract address and group ID.
+    /// @dev Decodes initialization parameters from appended bytes for clone deployments.
     function _initialize() internal override {
         super._initialize();
 
         bytes memory data = _getAppendedBytes();
-
         (address _semaphore, uint256 _groupId) = abi.decode(data, (address, uint256));
 
         semaphore = ISemaphore(_semaphore);
         groupId = _groupId;
     }
 
-    /// @notice Validates whether the subject is a member of the group.
-    /// @dev Decodes the proof from evidence and checks group membership based on proof validity.
-    /// @param subject Address to validate ownership for.
-    /// @param evidence Encoded proof used for validation.
-    /// @return Boolean indicating whether the subject is a member of the group or not.
+    /// @notice Verifies if the given subject is a valid member of the Semaphore group.
+    /// @dev Decodes the evidence to extract the Semaphore proof and validates the subject's membership.
+    /// @param subject The address of the user whose membership is being verified.
+    /// @param evidence Encoded Semaphore proof containing membership verification details.
+    /// @return Boolean indicating the success or failure of the membership verification.
     function _check(address subject, bytes calldata evidence) internal view override returns (bool) {
         super._check(subject, evidence);
 
         ISemaphore.SemaphoreProof memory proof = abi.decode(evidence, (ISemaphore.SemaphoreProof));
 
-        // the scope is (uint256(uint160(_addr)) << 96) | uint256(_num).
-        // this can avoid frontrunning (ie. subject encoded in the scope of the proof).
+        // The proof scope encodes both the subject address and group ID to prevent front-running attacks.
         uint256 _scope = proof.scope;
 
-        // first 20 byte (160bits) are the address.
+        // Extract the subject's address (first 20 bytes, 160 bits) from the scope.
         address _prover = address(uint160(_scope >> 96));
 
-        // remaining 12 bytes (96bits) are for the group identifier.
+        // Extract the group ID (remaining 12 bytes, 96 bits) from the scope.
         uint96 _groupId = uint96(_scope & ((1 << 96) - 1));
 
         if (_prover != subject) revert IncorrectProver();
