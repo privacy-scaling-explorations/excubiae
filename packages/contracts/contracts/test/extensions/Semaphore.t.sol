@@ -14,7 +14,6 @@ import {SemaphoreMock} from "./mocks/SemaphoreMock.sol";
 import {BaseCheckerMock} from "./mocks/BaseCheckerMock.sol";
 
 contract SemaphoreCheckerTest is Test {
-    ISemaphore internal semaphore;
     SemaphoreMock internal semaphoreMock;
     SemaphoreChecker internal checker;
     SemaphoreCheckerFactory internal factory;
@@ -22,8 +21,7 @@ contract SemaphoreCheckerTest is Test {
     address public deployer = vm.addr(0x1);
     address public target = vm.addr(0x2);
     address public subject = vm.addr(0x3);
-    address public notOwner = vm.addr(0x4);
-    address public notSubject = vm.addr(0x5);
+    address public notSubject = vm.addr(0x4);
     uint256 public validGroupId = 0;
     uint256 public invalidGroupId = 1;
 
@@ -150,7 +148,6 @@ contract SemaphorePolicyTest is Test {
     event TargetSet(address indexed target);
     event Enforced(address indexed subject, address indexed target, bytes evidence);
 
-    ISemaphore internal semaphore;
     SemaphoreMock internal semaphoreMock;
     BaseCheckerMock internal baseCheckerMock;
     SemaphoreChecker internal checker;
