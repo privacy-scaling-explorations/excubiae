@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import {BaseChecker} from "../../core/checker/BaseChecker.sol";
+import {BaseChecker} from "../../checker/BaseChecker.sol";
 import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
 /// @title BaseERC721Checker
@@ -28,10 +28,10 @@ contract BaseERC721Checker is BaseChecker {
     /// @param subject Address to validate ownership for.
     /// @param evidence Encoded token ID used for validation.
     /// @return Boolean indicating whether the subject owns the token.
-    function _check(address subject, bytes[] calldata evidence) internal view override returns (bool) {
+    function _check(address subject, bytes calldata evidence) internal view override returns (bool) {
         super._check(subject, evidence);
 
-        uint256 tokenId = abi.decode(evidence[0], (uint256));
+        uint256 tokenId = abi.decode(evidence, (uint256));
 
         return nft.ownerOf(tokenId) == subject;
     }

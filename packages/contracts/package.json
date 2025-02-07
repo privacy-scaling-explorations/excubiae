@@ -1,9 +1,6 @@
 {
     "name": "excubiae-contracts",
     "private": true,
-    "installConfig": {
-        "hoistingLimits": "dependencies"
-    },
     "scripts": {
         "start:hardhat": "hardhat node",
         "start:anvil": "anvil",

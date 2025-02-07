@@ -10,12 +10,12 @@ interface IBasePolicy is IPolicy {
     /// @notice Emitted when a subject successfully passes a policy enforcement check.
     /// @param subject Address that passed the validation.
     /// @param target Address of the protected contract.
-    /// @param evidence Data used during validation.
-    event Enforced(address indexed subject, address indexed target, bytes[] evidence);
+    /// @param evidence Custom validation data.
+    event Enforced(address indexed subject, address indexed target, bytes evidence);
 
     /// @notice Enforces a validation check on a given subject.
     /// @dev This method ensures that the provided subject meets the policy's criteria.
     /// @param subject Address to validate.
-    /// @param evidence Data required for validation.
-    function enforce(address subject, bytes[] calldata evidence) external;
+    /// @param evidence Custom validation data.
+    function enforce(address subject, bytes calldata evidence) external;
 }

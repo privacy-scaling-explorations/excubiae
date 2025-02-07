@@ -2,7 +2,7 @@
 pragma solidity ^0.8.20;
 
 import {AdvancedERC721Policy} from "./AdvancedERC721Policy.sol";
-import {Factory} from "../../core/proxy/Factory.sol";
+import {Factory} from "../../proxy/Factory.sol";
 
 /// @title AdvancedERC721PolicyFactory
 /// @notice Factory for deploying minimal proxy instances of AdvancedERC721Policy.
@@ -15,9 +15,8 @@ contract AdvancedERC721PolicyFactory is Factory {
     /// @param _checkerAddr Address of the associated checker contract.
     /// @param _skipPre Whether to skip pre-checks.
     /// @param _skipPost Whether to skip post-checks.
-    /// @param _allowMultipleMain Whether multiple main checks are allowed.
-    function deploy(address _checkerAddr, bool _skipPre, bool _skipPost, bool _allowMultipleMain) public {
-        bytes memory data = abi.encode(msg.sender, _checkerAddr, _skipPre, _skipPost, _allowMultipleMain);
+    function deploy(address _checkerAddr, bool _skipPre, bool _skipPost) public {
+        bytes memory data = abi.encode(msg.sender, _checkerAddr, _skipPre, _skipPost);
 
         address clone = super._deploy(data);
 

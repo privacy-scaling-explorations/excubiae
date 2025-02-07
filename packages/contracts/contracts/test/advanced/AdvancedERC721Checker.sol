@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import {AdvancedChecker} from "../../core/checker/AdvancedChecker.sol";
+import {AdvancedChecker} from "../../checker/AdvancedChecker.sol";
 import {BaseERC721Checker} from "../base/BaseERC721Checker.sol";
 import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
@@ -49,7 +49,7 @@ contract AdvancedERC721Checker is AdvancedChecker {
     /// @param subject Address to validate.
     /// @param evidence Encoded tokenId.
     /// @return Boolean indicating validation success.
-    function _checkPre(address subject, bytes[] calldata evidence) internal view override returns (bool) {
+    function _checkPre(address subject, bytes calldata evidence) internal view override returns (bool) {
         super._checkPre(subject, evidence);
 
         return baseERC721Checker.check(subject, evidence);
@@ -59,7 +59,7 @@ contract AdvancedERC721Checker is AdvancedChecker {
     /// @param subject Address to validate.
     /// @param evidence Not used in this validation.
     /// @return Boolean indicating validation success.
-    function _checkMain(address subject, bytes[] calldata evidence) internal view override returns (bool) {
+    function _checkMain(address subject, bytes calldata evidence) internal view override returns (bool) {
         super._checkMain(subject, evidence);
 
         return signupNft.balanceOf(subject) >= minBalance;
@@ -69,7 +69,7 @@ contract AdvancedERC721Checker is AdvancedChecker {
     /// @param subject Address to validate.
     /// @param evidence Not used in this validation.
     /// @return Boolean indicating validation success.
-    function _checkPost(address subject, bytes[] calldata evidence) internal view override returns (bool) {
+    function _checkPost(address subject, bytes calldata evidence) internal view override returns (bool) {
         super._checkPost(subject, evidence);
 
         return rewardNft.balanceOf(subject) == 0;

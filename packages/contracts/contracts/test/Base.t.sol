@@ -8,8 +8,8 @@ import {BaseERC721CheckerFactory} from "./base/BaseERC721CheckerFactory.sol";
 import {BaseERC721PolicyFactory} from "./base/BaseERC721PolicyFactory.sol";
 import {BaseERC721Policy} from "./base/BaseERC721Policy.sol";
 import {BaseVoting} from "./base/BaseVoting.sol";
-import {IPolicy} from "../core/interfaces/IPolicy.sol";
-import {IClone} from "../core/interfaces/IClone.sol";
+import {IPolicy} from "../interfaces/IPolicy.sol";
+import {IClone} from "../interfaces/IClone.sol";
 import {IERC721Errors} from "@openzeppelin/contracts/interfaces/draft-IERC6093.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
@@ -22,7 +22,8 @@ contract BaseChecker is Test {
     address public target = vm.addr(0x2);
     address public subject = vm.addr(0x3);
     address public notOwner = vm.addr(0x4);
-    bytes[] public evidence = new bytes[](1);
+
+    bytes public evidence = abi.encode(0);
 
     function setUp() public {
         vm.startPrank(deployer);
@@ -36,8 +37,6 @@ contract BaseChecker is Test {
         Vm.Log[] memory entries = vm.getRecordedLogs();
         address baseClone = address(uint160(uint256(entries[0].topics[1])));
         checker = BaseERC721Checker(baseClone);
-
-        evidence[0] = abi.encode(0);
 
         vm.stopPrank();
     }
@@ -87,7 +86,7 @@ contract BaseChecker is Test {
 
 contract BasePolicy is Test {
     event TargetSet(address indexed target);
-    event Enforced(address indexed subject, address indexed target, bytes[] evidence);
+    event Enforced(address indexed subject, address indexed target, bytes evidence);
 
     NFT internal nft;
     BaseERC721Checker internal checker;
@@ -100,7 +99,7 @@ contract BasePolicy is Test {
     address public subject = vm.addr(0x3);
     address public notOwner = vm.addr(0x4);
 
-    bytes[] public evidence = new bytes[](1);
+    bytes public evidence = abi.encode(0);
 
     function setUp() public virtual {
         vm.startPrank(deployer);
@@ -121,8 +120,6 @@ contract BasePolicy is Test {
         entries = vm.getRecordedLogs();
         address policyClone = address(uint160(uint256(entries[0].topics[1])));
         policy = BaseERC721Policy(policyClone);
-
-        evidence[0] = abi.encode(0);
 
         vm.stopPrank();
     }
@@ -257,24 +254,6 @@ contract BasePolicy is Test {
 
         vm.stopPrank();
     }
-
-    function test_policy_enforce_whenAlreadyEnforced_reverts() public {
-        vm.startPrank(deployer);
-
-        policy.setTarget(target);
-        nft.mint(subject);
-
-        vm.stopPrank();
-
-        vm.startPrank(target);
-
-        policy.enforce(subject, evidence);
-
-        vm.expectRevert(abi.encodeWithSelector(IPolicy.AlreadyEnforced.selector));
-        policy.enforce(subject, evidence);
-
-        vm.stopPrank();
-    }
 }
 
 contract Voting is Test {
@@ -320,7 +299,7 @@ contract Voting is Test {
     function test_voting_deployed() public view {
         assertEq(address(voting.POLICY()), address(policy));
         assertEq(voting.hasVoted(subject), false);
-        assertEq(voting.voteCounts(0), 0);
+        assertEq(voting.registered(subject), false);
     }
 
     function test_register_whenCallerNotTarget_reverts() public {
@@ -389,24 +368,6 @@ contract Voting is Test {
         vm.stopPrank();
     }
 
-    function test_register_whenAlreadyRegistered_reverts() public {
-        vm.startPrank(deployer);
-
-        policy.setTarget(address(voting));
-        nft.mint(subject);
-
-        vm.stopPrank();
-
-        vm.startPrank(subject);
-
-        voting.register(0);
-
-        vm.expectRevert(abi.encodeWithSelector(IPolicy.AlreadyEnforced.selector));
-        voting.register(0);
-
-        vm.stopPrank();
-    }
-
     function test_vote_whenNotRegistered_reverts() public {
         vm.startPrank(deployer);
 
@@ -451,13 +412,14 @@ contract Voting is Test {
         vm.startPrank(subject);
         voting.register(0);
 
+        assertEq(voting.registered(subject), true);
+
         vm.expectEmit(true, true, true, true);
         emit Voted(subject, 0);
 
         voting.vote(0);
 
         assertEq(voting.hasVoted(subject), true);
-        assertEq(voting.voteCounts(0), 1);
 
         vm.stopPrank();
     }

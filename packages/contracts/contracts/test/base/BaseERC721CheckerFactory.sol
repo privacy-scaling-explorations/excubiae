@@ -2,7 +2,7 @@
 pragma solidity ^0.8.20;
 
 import {BaseERC721Checker} from "./BaseERC721Checker.sol";
-import {Factory} from "../../core/proxy/Factory.sol";
+import {Factory} from "../../proxy/Factory.sol";
 
 /// @title BaseERC721CheckerFactory
 /// @notice Factory contract for deploying minimal proxy instances of BaseERC721Checker.
