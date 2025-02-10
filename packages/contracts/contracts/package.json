@@ -25,9 +25,12 @@
     "publishConfig": {
         "access": "public"
     },
+    "installConfig": {
+        "hoistingLimits": "none"
+    },
     "dependencies": {
         "@openzeppelin/contracts": "^5.2.0",
-        "solady": "^0.1.4",
-        "@semaphore-protocol/contracts": "^4.9.0"
+        "@semaphore-protocol/contracts": "^4.9.0",
+        "solady": "0.1.4"
     }
 }

@@ -725,6 +725,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@excubiae/contracts@workspace:packages/contracts/contracts":
+  version: 0.0.0-use.local
+  resolution: "@excubiae/contracts@workspace:packages/contracts/contracts"
+  dependencies:
+    "@openzeppelin/contracts": "npm:^5.2.0"
+    "@semaphore-protocol/contracts": "npm:^4.9.0"
+    solady: "npm:0.1.4"
+  languageName: unknown
+  linkType: soft
+
 "@fastify/busboy@npm:^2.0.0":
   version: 2.1.1
   resolution: "@fastify/busboy@npm:2.1.1"
