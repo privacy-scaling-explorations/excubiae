@@ -46,6 +46,32 @@ Run both in one command:
 yarn compile
 ```
 
+### Deploy extensions
+
+The package provides deployment scripts for the available extensions.
+
+#### Semaphore
+
+Deploy a Semaphore extension by providing the Semaphore contract address and group ID. This extension enforces membership proofs for a Semaphore group with frontrunning resistance.
+
+Using Hardhat Ignition:
+
+```bash
+yarn deploy:semaphore-ignition --parameters '{"semaphoreAddress":"0x1234...5678","groupId":1}' --network sepolia
+```
+
+Using Hardhat task:
+
+```bash
+yarn deploy:semaphore-task --semaphore-address 0x1234...5678 --group-id 1 --network sepolia
+```
+
+Required parameters per deployment:
+
+- `semaphoreAddress`: Address of the deployed Semaphore contract
+- `groupId`: ID of the Semaphore group to check membership against
+- `network`: Network to deploy to (e.g., sepolia, hardhat, mainnet)
+
 ### Testing
 
 Run [Mocha](https://mochajs.org/) to test the contracts (Typescript tests):
