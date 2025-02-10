@@ -40,12 +40,15 @@ contract SemaphoreMock is ISemaphore {
     function createGroup() external pure override returns (uint256) {
         return 0;
     }
+
     function createGroup(address) external pure override returns (uint256) {
         return 0;
     }
+
     function createGroup(address, uint256) external pure override returns (uint256) {
         return 0;
     }
+
     function updateGroupAdmin(uint256, address) external override {}
     function acceptGroupAdmin(uint256) external override {}
     function updateGroupMerkleTreeDuration(uint256, uint256) external override {}
