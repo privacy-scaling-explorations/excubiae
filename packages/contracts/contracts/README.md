@@ -4,10 +4,12 @@ This package contains the smart contracts which define the composable framework 
 
 You can learn more in the [Design](https://hackmd.io/@0xjei/B1RXoTh71e#Design) section of the current [technical reference document](https://hackmd.io/@0xjei/B1RXoTh71e).
 
+The extensions are ready to use Checker / Policy contracts that give unique features (e.g., enforcing a proof of membership for a Semaphore group with frontrunning resistance).
+
 Please, follow the [Guides](https://hackmd.io/@0xjei/B1RXoTh71e#Guides) section for an explanation on how to write, integrate & deploy; your own Checker & Policy contracts.
 
 > [!IMPORTANT]  
-> Excubiae is currently in the MVP stage. Official documentation website and audits are not yet available. Expect fast development cycles with potential breaking changes — use at your own risk! Please, refer to [release](https://github.com/privacy-scaling-explorations/excubiae/releases) section for latest changes and updates.
+> Excubiae is currently in the MVP stage. Audits are not yet available. Expect fast development cycles with potential breaking changes — use at your own risk! Please, refer to [release](https://github.com/privacy-scaling-explorations/excubiae/releases) section for latest changes and updates.
 
 ## Installation
 
@@ -43,6 +45,32 @@ Run both in one command:
 ```bash
 yarn compile
 ```
+
+### Deploy extensions
+
+The package provides deployment scripts for the available extensions.
+
+#### Semaphore
+
+Deploy a Semaphore extension by providing the Semaphore contract address and group ID. This extension enforces membership proofs for a Semaphore group with frontrunning resistance.
+
+Using Hardhat Ignition:
+
+```bash
+yarn deploy:semaphore-ignition --parameters '{"semaphoreAddress":"0x1234...5678","groupId":1}' --network sepolia
+```
+
+Using Hardhat task:
+
+```bash
+yarn deploy:semaphore-task --semaphore-address 0x1234...5678 --group-id 1 --network sepolia
+```
+
+Required parameters per deployment:
+
+- `semaphoreAddress`: Address of the deployed Semaphore contract
+- `groupId`: ID of the Semaphore group to check membership against
+- `network`: Network to deploy to (e.g., sepolia, hardhat, mainnet)
 
 ### Testing
 

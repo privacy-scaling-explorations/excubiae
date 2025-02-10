@@ -8,6 +8,8 @@
         "compile:hardhat": "hardhat compile",
         "compile:forge": "forge compile",
         "docs:forge": "forge doc",
+        "deploy:semaphore-ignition": "hardhat ignition deploy ignition/modules/extensions/Semaphore.ts",
+        "deploy:semaphore-task": "hardhat deploy:semaphore",
         "test": "yarn test:hardhat && yarn test:forge",
         "test:hardhat": "hardhat test",
         "test:forge": "forge test -vvv",
@@ -47,6 +49,7 @@
     },
     "dependencies": {
         "@openzeppelin/contracts": "^5.2.0",
+        "@semaphore-protocol/contracts": "^4.9.0",
         "solady": "0.1.4"
     }
 }

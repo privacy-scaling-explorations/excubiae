@@ -49,7 +49,7 @@ abstract contract AdvancedPolicy is IAdvancedPolicy, Policy {
     /// @param subject Address to enforce the policy on.
     /// @param evidence Custom validation data.
     /// @param checkType The type of check performed (PRE, MAIN, POST).
-    function _enforce(address subject, bytes calldata evidence, Check checkType) internal {
+    function _enforce(address subject, bytes calldata evidence, Check checkType) internal virtual {
         if (checkType == Check.PRE) {
             if (SKIP_PRE) revert CannotPreCheckWhenSkipped();
         } else if (checkType == Check.POST) {

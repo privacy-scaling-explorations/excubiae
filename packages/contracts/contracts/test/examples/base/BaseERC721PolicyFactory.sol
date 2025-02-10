@@ -2,7 +2,7 @@
 pragma solidity ^0.8.20;
 
 import {BaseERC721Policy} from "./BaseERC721Policy.sol";
-import {Factory} from "../../proxy/Factory.sol";
+import {Factory} from "../../../proxy/Factory.sol";
 
 /// @title BaseERC721PolicyFactory
 /// @notice Factory contract for deploying minimal proxy instances of BaseERC721Policy.
