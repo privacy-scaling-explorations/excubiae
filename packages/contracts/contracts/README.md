@@ -2,11 +2,11 @@
 
 This package contains the smart contracts which define the composable framework for building custom attribute-based access control policies on Ethereum.
 
-You can learn more in the [Design](https://hackmd.io/@0xjei/B1RXoTh71e#Design) section of the current [technical reference document](https://hackmd.io/@0xjei/B1RXoTh71e).
+You can learn more in the [Design](https://github.com/privacy-scaling-explorations/excubiae/tree/main/documentation/03_design.md) section of the current [documentation](https://github.com/privacy-scaling-explorations/excubiae/tree/main/documentation).
 
 The extensions are ready to use Checker / Policy contracts that give unique features (e.g., enforcing a proof of membership for a Semaphore group with frontrunning resistance).
 
-Please, follow the [Guides](https://hackmd.io/@0xjei/B1RXoTh71e#Guides) section for an explanation on how to write, integrate & deploy; your own Checker & Policy contracts.
+Please, follow the [Guides](https://github.com/privacy-scaling-explorations/excubiae/tree/main/documentation/04_guides.md) section for an explanation on how to write, integrate & deploy; your own Checker & Policy contracts.
 
 > [!IMPORTANT]  
 > Excubiae is currently in the MVP stage. Audits are not yet available. Expect fast development cycles with potential breaking changes — use at your own risk! Please, refer to [release](https://github.com/privacy-scaling-explorations/excubiae/releases) section for latest changes and updates.
@@ -102,4 +102,12 @@ Or a test gas report:
 
 ```bash
 yarn test:report-gas
+```
+
+### Documentation
+
+You can generate smart contract documentation (book):
+
+```bash
+yarn docs:forge
 ```
