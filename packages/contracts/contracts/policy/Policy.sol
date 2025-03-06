@@ -7,15 +7,15 @@ import {Clone} from "../proxy/Clone.sol";
 
 /// @title Policy
 /// @notice Abstract base contract for implementing policies to enforce access control.
-/// @dev Extends Clone and Ownable to provide policy initialization, ownership, and target management.
+/// @dev Extends Clone and Ownable to provide policy initialization, ownership, and guarded management.
 abstract contract Policy is Clone, IPolicy, Ownable(msg.sender) {
     /// @notice The address of the contract being protected by the policy.
     /// @dev Can only be set once by the owner.
-    address public target;
+    address public guarded;
 
-    /// @notice Modifier to restrict access to only the target contract.
+    /// @notice Modifier to restrict access to only the guarded contract.
     modifier onlyTarget() {
-        if (msg.sender != target) revert TargetOnly();
+        if (msg.sender != guarded) revert TargetOnly();
         _;
     }
 
@@ -30,12 +30,12 @@ abstract contract Policy is Clone, IPolicy, Ownable(msg.sender) {
 
     /// @notice Sets the contract address to be protected by this policy.
     /// @dev Can only be called once by the owner.
-    /// @param _target The contract address to protect.
-    function setTarget(address _target) external virtual onlyOwner {
-        if (_target == address(0)) revert ZeroAddress();
-        if (target != address(0)) revert TargetAlreadySet();
+    /// @param _guarded The contract address to protect.
+    function setTarget(address _guarded) external virtual onlyOwner {
+        if (_guarded == address(0)) revert ZeroAddress();
+        if (guarded != address(0)) revert TargetAlreadySet();
 
-        target = _target;
-        emit TargetSet(_target);
+        guarded = _guarded;
+        emit TargetSet(_guarded);
     }
 }

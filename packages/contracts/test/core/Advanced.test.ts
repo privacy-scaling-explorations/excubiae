@@ -441,12 +441,12 @@ describe("Advanced", () => {
                     receipt?.logs[0] as unknown as { topics: string[]; data: string }
                 ) as unknown as {
                     args: {
-                        target: string
+                        guarded: string
                     }
                 }
 
                 expect(receipt?.status).to.eq(1)
-                expect(event.args.target).to.eq(targetAddress)
+                expect(event.args.guarded).to.eq(targetAddress)
             })
 
             it("reverts when already set", async () => {
@@ -522,7 +522,7 @@ describe("Advanced", () => {
                     ) as unknown as {
                         args: {
                             subject: string
-                            target: string
+                            guarded: string
                             evidence: string
                             checkType: number
                         }
@@ -530,7 +530,7 @@ describe("Advanced", () => {
 
                     expect(receipt?.status).to.eq(1)
                     expect(event.args.subject).to.eq(subjectAddress)
-                    expect(event.args.target).to.eq(targetAddress)
+                    expect(event.args.guarded).to.eq(targetAddress)
                     expect(event.args.evidence).to.eq(validEncodedNFTId)
                     expect(event.args.checkType).to.eq(0)
                 })
@@ -575,7 +575,7 @@ describe("Advanced", () => {
                     ) as unknown as {
                         args: {
                             subject: string
-                            target: string
+                            guarded: string
                             evidence: string
                             checkType: number
                         }
@@ -583,7 +583,7 @@ describe("Advanced", () => {
 
                     expect(receipt?.status).to.eq(1)
                     expect(event.args.subject).to.eq(subjectAddress)
-                    expect(event.args.target).to.eq(targetAddress)
+                    expect(event.args.guarded).to.eq(targetAddress)
                     expect(event.args.evidence).to.eq(validEncodedNFTId)
                     expect(event.args.checkType).to.eq(1)
                 })
@@ -604,7 +604,7 @@ describe("Advanced", () => {
                     ) as unknown as {
                         args: {
                             subject: string
-                            target: string
+                            guarded: string
                             evidence: string
                             checkType: number
                         }
@@ -612,7 +612,7 @@ describe("Advanced", () => {
 
                     expect(receipt?.status).to.eq(1)
                     expect(event.args.subject).to.eq(subjectAddress)
-                    expect(event.args.target).to.eq(targetAddress)
+                    expect(event.args.guarded).to.eq(targetAddress)
                     expect(event.args.evidence).to.eq(validEncodedNFTId)
                     expect(event.args.checkType).to.eq(1)
                 })
@@ -711,7 +711,7 @@ describe("Advanced", () => {
                     ) as unknown as {
                         args: {
                             subject: string
-                            target: string
+                            guarded: string
                             evidence: string
                             checkType: number
                         }
@@ -719,7 +719,7 @@ describe("Advanced", () => {
 
                     expect(receipt?.status).to.eq(1)
                     expect(event.args.subject).to.eq(subjectAddress)
-                    expect(event.args.target).to.eq(targetAddress)
+                    expect(event.args.guarded).to.eq(targetAddress)
                     expect(event.args.evidence).to.eq(validEncodedNFTId)
                     expect(event.args.checkType).to.eq(2)
                 })
