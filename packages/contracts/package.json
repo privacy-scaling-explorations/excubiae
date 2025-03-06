@@ -7,6 +7,7 @@
         "compile": "yarn compile:hardhat && yarn compile:forge",
         "compile:hardhat": "hardhat compile",
         "compile:forge": "forge compile",
+        "types": "tsc -p tsconfig.json --noEmit",
         "docs:forge": "forge doc",
         "deploy:semaphore-ignition": "hardhat ignition deploy ignition/modules/extensions/Semaphore.ts",
         "deploy:semaphore-task": "hardhat deploy:semaphore",

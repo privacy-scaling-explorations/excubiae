@@ -19,7 +19,7 @@ contract SemaphoreCheckerTest is Test {
     SemaphoreCheckerFactory internal factory;
 
     address public deployer = vm.addr(0x1);
-    address public target = vm.addr(0x2);
+    address public guarded = vm.addr(0x2);
     address public subject = vm.addr(0x3);
     address public notSubject = vm.addr(0x4);
     uint256 public validGroupId = 0;
@@ -109,7 +109,7 @@ contract SemaphoreCheckerTest is Test {
     }
 
     function test_checker_whenScopeProverIncorrect_reverts() public {
-        vm.startPrank(target);
+        vm.startPrank(guarded);
 
         vm.expectRevert(abi.encodeWithSelector(SemaphoreChecker.IncorrectProver.selector));
         checker.check(subject, invalidProverEvidence);
@@ -118,7 +118,7 @@ contract SemaphoreCheckerTest is Test {
     }
 
     function test_checker_whenScopeGroupIdIncorrect_reverts() public {
-        vm.startPrank(target);
+        vm.startPrank(guarded);
 
         vm.expectRevert(abi.encodeWithSelector(SemaphoreChecker.IncorrectGroupId.selector));
         checker.check(subject, invalidGroupIdEvidence);
@@ -127,7 +127,7 @@ contract SemaphoreCheckerTest is Test {
     }
 
     function test_checker_whenInvalidProof_reverts() public {
-        vm.startPrank(target);
+        vm.startPrank(guarded);
 
         vm.expectRevert(abi.encodeWithSelector(SemaphoreChecker.InvalidProof.selector));
         checker.check(subject, invalidEvidence);
@@ -136,7 +136,7 @@ contract SemaphoreCheckerTest is Test {
     }
 
     function test_checker_whenCallerIsOwner_succeeds() public {
-        vm.startPrank(target);
+        vm.startPrank(guarded);
 
         assert(checker.check(subject, validEvidence));
 
@@ -145,8 +145,8 @@ contract SemaphoreCheckerTest is Test {
 }
 
 contract SemaphorePolicyTest is Test {
-    event TargetSet(address indexed target);
-    event Enforced(address indexed subject, address indexed target, bytes evidence);
+    event TargetSet(address indexed guarded);
+    event Enforced(address indexed subject, address indexed guarded, bytes evidence);
 
     SemaphoreMock internal semaphoreMock;
     BaseCheckerMock internal baseCheckerMock;
@@ -157,7 +157,7 @@ contract SemaphorePolicyTest is Test {
     SemaphorePolicyFactory internal policyFactory;
 
     address public deployer = vm.addr(0x1);
-    address public target = vm.addr(0x2);
+    address public guarded = vm.addr(0x2);
     address public subject = vm.addr(0x3);
     address public notOwner = vm.addr(0x4);
     address public notSubject = vm.addr(0x5);
@@ -269,9 +269,9 @@ contract SemaphorePolicyTest is Test {
     function test_policy_target_returnsExpectedAddress() public {
         vm.startPrank(deployer);
 
-        policy.setTarget(target);
+        policy.setTarget(guarded);
 
-        assertEq(policy.target(), target);
+        assertEq(policy.guarded(), guarded);
 
         vm.stopPrank();
     }
@@ -280,7 +280,7 @@ contract SemaphorePolicyTest is Test {
         vm.startPrank(notOwner);
 
         vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, notOwner));
-        policy.setTarget(target);
+        policy.setTarget(guarded);
 
         vm.stopPrank();
     }
@@ -298,9 +298,9 @@ contract SemaphorePolicyTest is Test {
         vm.startPrank(deployer);
 
         vm.expectEmit(true, true, true, true);
-        emit TargetSet(target);
+        emit TargetSet(guarded);
 
-        policy.setTarget(target);
+        policy.setTarget(guarded);
 
         vm.stopPrank();
     }
@@ -308,10 +308,10 @@ contract SemaphorePolicyTest is Test {
     function test_policy_setTarget_whenAlreadySet_reverts() public {
         vm.startPrank(deployer);
 
-        policy.setTarget(target);
+        policy.setTarget(guarded);
 
         vm.expectRevert(abi.encodeWithSelector(IPolicy.TargetAlreadySet.selector));
-        policy.setTarget(target);
+        policy.setTarget(guarded);
 
         vm.stopPrank();
     }
@@ -319,11 +319,11 @@ contract SemaphorePolicyTest is Test {
     function test_policy_enforce_whenScopeProverIncorrect_reverts() public {
         vm.startPrank(deployer);
 
-        policy.setTarget(target);
+        policy.setTarget(guarded);
 
         vm.stopPrank();
 
-        vm.startPrank(target);
+        vm.startPrank(guarded);
 
         vm.expectRevert(abi.encodeWithSelector(SemaphoreChecker.IncorrectProver.selector));
         policy.enforce(subject, invalidProverEvidence);
@@ -334,11 +334,11 @@ contract SemaphorePolicyTest is Test {
     function test_policy_enforce_whenScopeGroupIdIncorrect_reverts() public {
         vm.startPrank(deployer);
 
-        policy.setTarget(target);
+        policy.setTarget(guarded);
 
         vm.stopPrank();
 
-        vm.startPrank(target);
+        vm.startPrank(guarded);
 
         vm.expectRevert(abi.encodeWithSelector(SemaphoreChecker.IncorrectGroupId.selector));
         policy.enforce(subject, invalidGroupIdEvidence);
@@ -349,11 +349,11 @@ contract SemaphorePolicyTest is Test {
     function test_policy_enforce_whenInvalidProof_reverts() public {
         vm.startPrank(deployer);
 
-        policy.setTarget(target);
+        policy.setTarget(guarded);
 
         vm.stopPrank();
 
-        vm.startPrank(target);
+        vm.startPrank(guarded);
 
         vm.expectRevert(abi.encodeWithSelector(SemaphoreChecker.InvalidProof.selector));
         policy.enforce(subject, invalidEvidence);
@@ -364,14 +364,14 @@ contract SemaphorePolicyTest is Test {
     function test_policy_enforce_whenValid_succeeds() public {
         vm.startPrank(deployer);
 
-        policy.setTarget(target);
+        policy.setTarget(guarded);
 
         vm.stopPrank();
 
-        vm.startPrank(target);
+        vm.startPrank(guarded);
 
         vm.expectEmit(true, true, true, true);
-        emit Enforced(subject, target, validEvidence);
+        emit Enforced(subject, guarded, validEvidence);
 
         policy.enforce(subject, validEvidence);
 
@@ -381,14 +381,14 @@ contract SemaphorePolicyTest is Test {
     function test_policy_enforce_whenAlreadySpentNullifier_reverts() public {
         vm.startPrank(deployer);
 
-        policy.setTarget(target);
+        policy.setTarget(guarded);
 
         vm.stopPrank();
 
-        vm.startPrank(target);
+        vm.startPrank(guarded);
 
         vm.expectEmit(true, true, true, true);
-        emit Enforced(subject, target, validEvidence);
+        emit Enforced(subject, guarded, validEvidence);
 
         policy.enforce(subject, validEvidence);
 
@@ -401,11 +401,11 @@ contract SemaphorePolicyTest is Test {
     function test_policyCheckerMockks_enforce_whenCheckFails_reverts() public {
         vm.startPrank(deployer);
 
-        policyWithCheckerMock.setTarget(target);
+        policyWithCheckerMock.setTarget(guarded);
 
         vm.stopPrank();
 
-        vm.startPrank(target);
+        vm.startPrank(guarded);
 
         vm.expectRevert(abi.encodeWithSelector(IPolicy.UnsuccessfulCheck.selector));
         policyWithCheckerMock.enforce(subject, validEvidence);

@@ -37,7 +37,7 @@ abstract contract AdvancedPolicy is IAdvancedPolicy, Policy {
     }
 
     /// @notice Enforces a multi-stage policy check.
-    /// @dev Handles pre, main, and post validation stages. Only callable by the target contract.
+    /// @dev Handles pre, main, and post validation stages. Only callable by the guarded contract.
     /// @param subject Address to enforce the policy on.
     /// @param evidence Custom validation data.
     /// @param checkType The type of check performed (PRE, MAIN, POST).
@@ -58,6 +58,6 @@ abstract contract AdvancedPolicy is IAdvancedPolicy, Policy {
 
         if (!ADVANCED_CHECKER.check(subject, evidence, checkType)) revert UnsuccessfulCheck();
 
-        emit Enforced(subject, target, evidence, checkType);
+        emit Enforced(subject, guarded, evidence, checkType);
     }
 }

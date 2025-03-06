@@ -26,7 +26,7 @@ abstract contract BasePolicy is Policy, IBasePolicy {
     }
 
     /// @notice Enforces a policy check for a subject.
-    /// @dev Uses the BaseChecker for validation logic. Only callable by the target contract.
+    /// @dev Uses the BaseChecker for validation logic. Only callable by the guarded contract.
     /// @param subject Address to enforce the policy on.
     /// @param evidence Custom validation data.
     function enforce(address subject, bytes calldata evidence) external override onlyTarget {
@@ -39,6 +39,6 @@ abstract contract BasePolicy is Policy, IBasePolicy {
     function _enforce(address subject, bytes calldata evidence) internal virtual {
         if (!BASE_CHECKER.check(subject, evidence)) revert UnsuccessfulCheck();
 
-        emit Enforced(subject, target, evidence);
+        emit Enforced(subject, guarded, evidence);
     }
 }

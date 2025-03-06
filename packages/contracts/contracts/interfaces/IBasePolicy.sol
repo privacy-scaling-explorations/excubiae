@@ -9,9 +9,9 @@ import {IPolicy} from "./IPolicy.sol";
 interface IBasePolicy is IPolicy {
     /// @notice Emitted when a subject successfully passes a policy enforcement check.
     /// @param subject Address that passed the validation.
-    /// @param target Address of the protected contract.
+    /// @param guarded Address of the protected contract.
     /// @param evidence Custom validation data.
-    event Enforced(address indexed subject, address indexed target, bytes evidence);
+    event Enforced(address indexed subject, address indexed guarded, bytes evidence);
 
     /// @notice Enforces a validation check on a given subject.
     /// @dev This method ensures that the provided subject meets the policy's criteria.
