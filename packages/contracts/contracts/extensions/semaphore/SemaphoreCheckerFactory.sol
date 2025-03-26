@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
+import {Factory} from "../../proxy/Factory.sol";
 import {SemaphoreChecker} from "./SemaphoreChecker.sol";
-import {Factory} from "../proxy/Factory.sol";
 
 /// @title SemaphoreCheckerFactory
 /// @notice Factory contract for deploying minimal proxy instances of SemaphoreChecker.
@@ -14,11 +14,12 @@ contract SemaphoreCheckerFactory is Factory {
 
     /// @notice Deploys a new SemaphoreChecker clone with the specified Semaphore contract and group ID.
     /// @dev Encodes the Semaphore contract address and group ID as initialization data for the clone.
-    /// @param _semaphore Address of the Semaphore contract.
-    /// @param _groupId Unique identifier of the Semaphore group.
-    function deploy(address _semaphore, uint256 _groupId) public {
-        bytes memory data = abi.encode(_semaphore, _groupId);
+    /// @param semaphore Address of the Semaphore contract.
+    /// @param groupId Unique identifier of the Semaphore group.
+    function deploy(address semaphore, uint256 groupId) public {
+        bytes memory data = abi.encode(semaphore, groupId);
         address clone = super._deploy(data);
+
         SemaphoreChecker(clone).initialize();
     }
 }

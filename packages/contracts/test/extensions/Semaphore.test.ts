@@ -196,7 +196,7 @@ describe("Semaphore", () => {
 
                 await expect(
                     checker.connect(target).check(subjectAddress, invalidProverEvidence)
-                ).to.be.revertedWithCustomError(checker, "IncorrectProver")
+                ).to.be.revertedWithCustomError(checker, "InvalidProver")
             })
 
             it("reverts when scope group id is incorrect", async () => {
@@ -205,7 +205,7 @@ describe("Semaphore", () => {
 
                 await expect(
                     checker.connect(target).check(subjectAddress, invalidGroupIdEvidence)
-                ).to.be.revertedWithCustomError(checker, "IncorrectGroupId")
+                ).to.be.revertedWithCustomError(checker, "InvalidGroup")
             })
 
             it("reverts when proof is invalid", async () => {
@@ -487,7 +487,7 @@ describe("Semaphore", () => {
 
                 await expect(
                     policy.connect(target).enforce(subjectAddress, invalidProverEvidence)
-                ).to.be.revertedWithCustomError(checker, "IncorrectProver")
+                ).to.be.revertedWithCustomError(checker, "InvalidProver")
             })
 
             it("reverts when scope group id is incorrect", async () => {
@@ -498,7 +498,7 @@ describe("Semaphore", () => {
 
                 await expect(
                     policy.connect(target).enforce(subjectAddress, invalidGroupIdEvidence)
-                ).to.be.revertedWithCustomError(checker, "IncorrectGroupId")
+                ).to.be.revertedWithCustomError(checker, "InvalidGroup")
             })
 
             it("reverts when proof is invalid", async () => {
@@ -547,7 +547,7 @@ describe("Semaphore", () => {
 
                 await expect(
                     policy.connect(target).enforce(subjectAddress, validEvidence)
-                ).to.be.revertedWithCustomError(policy, "AlreadySpentNullifier")
+                ).to.be.revertedWithCustomError(policy, "AlreadyEnforced")
             })
 
             it("reverts when check fails", async () => {

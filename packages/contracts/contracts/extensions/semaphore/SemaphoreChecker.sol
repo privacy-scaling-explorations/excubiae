@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import {ISemaphore} from "@semaphore-protocol/contracts/interfaces/ISemaphore.sol";
-import {BaseChecker} from "../checker/BaseChecker.sol";
+import {BaseChecker} from "../../checker/BaseChecker.sol";
+import {ISemaphore} from "./ISemaphore.sol";
 
 /// @title SemaphoreChecker
 /// @notice Implements proof of membership validation using Semaphore.
@@ -16,13 +16,9 @@ contract SemaphoreChecker is BaseChecker {
     /// @dev Proofs are validated against this specific group ID.
     uint256 public groupId;
 
-    /// @notice Error thrown when the provided proof does not match the subject's address.
-    error IncorrectProver();
-
-    /// @notice Error thrown when the provided proof does not match the expected group ID.
-    error IncorrectGroupId();
-
-    /// @notice Error thrown when the proof is invalid or fails verification.
+    /// @notice custom errors
+    error InvalidProver();
+    error InvalidGroup();
     error InvalidProof();
 
     /// @notice Initializes the SemaphoreChecker with the provided Semaphore contract address and group ID.
@@ -56,9 +52,17 @@ contract SemaphoreChecker is BaseChecker {
         // Extract the group ID (remaining 12 bytes, 96 bits) from the scope.
         uint96 _groupId = uint96(_scope & ((1 << 96) - 1));
 
-        if (_prover != subject) revert IncorrectProver();
-        if (_groupId != groupId) revert IncorrectGroupId();
-        if (!semaphore.verifyProof(_scope, proof)) revert InvalidProof();
+        if (_groupId != groupId) {
+            revert InvalidGroup();
+        }
+
+        if (_prover != subject) {
+            revert InvalidProver();
+        }
+
+        if (!semaphore.verifyProof(_scope, proof)) {
+            revert InvalidProof();
+        }
 
         return true;
     }

@@ -207,8 +207,8 @@ function _check(address subject, bytes calldata evidence) internal view override
     address _prover = address(uint160(_scope >> 96));
     uint96 _groupId = uint96(_scope & ((1 << 96) - 1));
 
-    if (_prover != subject) revert IncorrectProver();
-    if (_groupId != groupId) revert IncorrectGroupId();
+    if (_prover != subject) revert InvalidProver();
+    if (_groupId != groupId) revert InvalidGroup();
     if (!semaphore.verifyProof(_scope, proof)) revert InvalidProof();
 
     return true;
@@ -225,7 +225,9 @@ function _enforce(address subject, bytes calldata evidence) internal override {
     ISemaphore.SemaphoreProof memory proof = abi.decode(evidence, (ISemaphore.SemaphoreProof));
     uint256 _nullifier = proof.nullifier;
 
-    if (spentNullifiers[_nullifier]) revert AlreadySpentNullifier();
+    if (spentNullifiers[_nullifier]) {
+        revert AlreadyEnforced();
+    }
 
     spentNullifiers[_nullifier] = true;
 
