@@ -11,7 +11,7 @@ contract HatsChecker is BaseChecker {
     /// @notice The Hats Protocol contract address
     IHats public hats;
 
-    /// @notice Tracks hats that users must wear to be eligible to register
+    /// @notice Tracks hats that users must wear to be eligible to enforce
     mapping(uint256 => bool) public criterionHats;
 
     /// @notice Custom errors

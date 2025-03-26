@@ -7,18 +7,18 @@ import {ISemaphore} from "./ISemaphore.sol";
 /// @title SemaphorePolicy
 /// @notice A policy contract enforcing semaphore validation.
 /// Only if they can prove they are part of a semaphore group.
-/// @dev Please note that once a identity is used to register, it cannot be used again.
+/// @dev Please note that once a identity is used to enforce, it cannot be used again.
 /// This is because we store the nullifier which is
 /// hash(secret, groupId)
 contract SemaphorePolicy is BasePolicy {
-    /// @notice The registered identities
+    /// @notice The enforced identities
     mapping(uint256 => bool) public spentNullifiers;
 
     /// @notice Create a new instance of the Policy
     // solhint-disable-next-line no-empty-blocks
     constructor() payable {}
 
-    /// @notice Register an user if they can prove they belong to a semaphore group
+    /// @notice Enforce an user if they can prove they belong to a semaphore group
     /// @dev Throw if the proof is not valid or just complete silently
     /// @param _evidence The ABI-encoded schemaId as a uint256.
     function _enforce(address _subject, bytes calldata _evidence) internal override {

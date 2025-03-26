@@ -5,17 +5,17 @@ import {ERC721} from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 
 import {BaseChecker} from "../../checker/BaseChecker.sol";
 
-/// @title SignUpTokenChecker
+/// @title TokenChecker
 /// @notice Implements proof of membership validation using ERC721 ownership.
 /// @dev Inherits from BaseChecker to extend the validation logic.
-contract SignUpTokenChecker is BaseChecker {
+contract TokenChecker is BaseChecker {
     /// @notice the reference to the SignUpToken contract
     ERC721 public token;
 
     /// @notice custom errors
     error NotTokenOwner();
 
-    /// @notice Initializes the SignUpTokenChecker with the provided ERC721 token contract address.
+    /// @notice Initializes the TokenChecker with the provided ERC721 token contract address.
     /// @dev Decodes initialization parameters from appended bytes for clone deployments.
     function _initialize() internal override {
         super._initialize();

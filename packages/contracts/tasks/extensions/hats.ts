@@ -4,7 +4,7 @@ import HatsModule from "../../ignition/modules/extensions/Hats"
 
 task("deploy:hats", "Deploys the Hats Extension Module")
     .addParam("hats", "The Hats Protocol contract address")
-    .addParam("criterionHats", "Criterion hats that users must wear to be eligible to register")
+    .addParam("criterionHats", "Criterion hats that users must wear to be eligible")
     .setAction(async (taskArgs, hre) => {
         const { checkerFactory, checker, policyFactory, policy } = await hre.ignition.deploy(HatsModule, {
             parameters: {

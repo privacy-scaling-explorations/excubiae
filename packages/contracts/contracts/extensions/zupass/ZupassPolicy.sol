@@ -8,13 +8,13 @@ import {BasePolicy} from "../../policy/BasePolicy.sol";
 /// by requiring new voters to own a certain Zupass event ticket
 contract ZupassPolicy is BasePolicy {
     /// @notice a mapping of ticket IDs to whether they have been used
-    mapping(uint256 => bool) public registeredTickets;
+    mapping(uint256 => bool) public enforcedTickets;
 
     /// @notice Create a new instance of ZupassPolicy
     // solhint-disable-next-line no-empty-blocks
     constructor() payable {}
 
-    /// @notice Registers the user only if they have the Zupass event ticket
+    /// @notice Enforces a user only if they have the Zupass event ticket
     /// @param _subject The user's Ethereum address.
     /// @param _evidence The ABI-encoded proof and public signals.
     function _enforce(address _subject, bytes calldata _evidence) internal override {
@@ -27,11 +27,11 @@ contract ZupassPolicy is BasePolicy {
         // Ticket ID is stored at index 0
         uint256 ticketId = pubSignals[0];
 
-        if (registeredTickets[ticketId]) {
+        if (enforcedTickets[ticketId]) {
             revert AlreadyEnforced();
         }
 
-        registeredTickets[ticketId] = true;
+        enforcedTickets[ticketId] = true;
 
         super._enforce(_subject, _evidence);
     }

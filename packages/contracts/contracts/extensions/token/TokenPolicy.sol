@@ -5,18 +5,18 @@ import {ERC721} from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 
 import {BasePolicy} from "../../policy/BasePolicy.sol";
 
-/// @title SignUpTokenPolicy
-/// @notice This contract allows to gatekeep MACI signups
+/// @title TokenPolicy
+/// @notice This contract allows to enforce users by token ownership
 /// by requiring new voters to own a certain ERC721 token
-contract SignUpTokenPolicy is BasePolicy {
-    /// @notice a mapping of tokenIds to whether they have been used to sign up
-    mapping(uint256 => bool) public registeredTokenIds;
+contract TokenPolicy is BasePolicy {
+    /// @notice a mapping of tokenIds to whether they have been used to enforce
+    mapping(uint256 => bool) public enforcedTokenIds;
 
-    /// @notice creates a new SignUpTokenPolicy
+    /// @notice creates a new TokenPolicy
     // solhint-disable-next-line no-empty-blocks
     constructor() payable {}
 
-    /// @notice Registers the user if they own the token with the token ID encoded in
+    /// @notice Enforces the user if they own the token with the token ID encoded in
     /// _data. Throws if the user does not own the token or if the token has
     /// already been used to sign up.
     /// @param _subject The user's Ethereum address.
@@ -26,12 +26,12 @@ contract SignUpTokenPolicy is BasePolicy {
         uint256 tokenId = abi.decode(_evidence, (uint256));
 
         // Check if the token has already been used
-        if (registeredTokenIds[tokenId]) {
+        if (enforcedTokenIds[tokenId]) {
             revert AlreadyEnforced();
         }
 
         // Mark the token as already used
-        registeredTokenIds[tokenId] = true;
+        enforcedTokenIds[tokenId] = true;
 
         super._enforce(_subject, _evidence);
     }
