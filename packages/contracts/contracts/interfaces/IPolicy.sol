@@ -9,6 +9,9 @@ interface IPolicy {
     /// @param guarded Address of the protected contract.
     event TargetSet(address indexed guarded);
 
+    /// @notice Error thrown when a user is already registered.
+    error AlreadyEnforced();
+
     /// @notice Error thrown when a zero address is provided where not allowed.
     error ZeroAddress();
 

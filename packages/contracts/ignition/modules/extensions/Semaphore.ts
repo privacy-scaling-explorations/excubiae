@@ -1,26 +1,21 @@
 import { buildModule } from "@nomicfoundation/hardhat-ignition/modules"
 
 export default buildModule("SemaphoreModule", (m: any) => {
-    // Module parameters.
     const semaphoreAddress = m.getParameter("semaphoreAddress", "string")
     const groupId = m.getParameter("groupId", "number")
 
-    // Deploy SemaphoreCheckerFactory.
-    const semaphoreCheckerFactory = m.contract("SemaphoreCheckerFactory", [])
+    const checkerFactory = m.contract("SemaphoreCheckerFactory", [])
 
-    // Deploy SemaphoreChecker using the factory's deploy function.
-    const checker = m.call(semaphoreCheckerFactory, "deploy", [semaphoreAddress, groupId])
+    const checker = m.call(checkerFactory, "deploy", [semaphoreAddress, groupId])
 
-    // Deploy SemaphorePolicyFactory.
-    const semaphorePolicyFactory = m.contract("SemaphorePolicyFactory", [])
+    const policyFactory = m.contract("SemaphorePolicyFactory", [])
 
-    // Deploy SemaphorePolicy using the factory's deploy function.
-    const policy = m.call(semaphorePolicyFactory, "deploy", [checker.contract])
+    const policy = m.call(policyFactory, "deploy", [checker.contract])
 
     return {
-        semaphoreCheckerFactory,
+        checkerFactory,
         checker,
-        semaphorePolicyFactory,
+        policyFactory,
         policy
     }
 })

@@ -56,7 +56,9 @@ function _enforce(address subject, bytes calldata evidence) internal override {
     uint256 _nullifier = proof.nullifier;
 
     // track to avoid double spending of the same proof.
-    if (spentNullifiers[_nullifier]) revert AlreadySpentNullifier();
+    if (spentNullifiers[_nullifier]) {
+        revert AlreadyEnforced();
+    }
 
     spentNullifiers[_nullifier] = true;
 

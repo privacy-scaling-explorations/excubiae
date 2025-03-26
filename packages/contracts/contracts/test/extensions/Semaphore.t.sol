@@ -2,10 +2,10 @@
 pragma solidity ^0.8.20;
 
 import {Test, Vm} from "forge-std/src/Test.sol";
-import {SemaphoreChecker} from "../../extensions/SemaphoreChecker.sol";
-import {SemaphoreCheckerFactory} from "../../extensions/SemaphoreCheckerFactory.sol";
-import {SemaphorePolicy} from "../../extensions/SemaphorePolicy.sol";
-import {SemaphorePolicyFactory} from "../../extensions/SemaphorePolicyFactory.sol";
+import {SemaphoreChecker} from "../../extensions/semaphore/SemaphoreChecker.sol";
+import {SemaphoreCheckerFactory} from "../../extensions/semaphore/SemaphoreCheckerFactory.sol";
+import {SemaphorePolicy} from "../../extensions/semaphore/SemaphorePolicy.sol";
+import {SemaphorePolicyFactory} from "../../extensions/semaphore/SemaphorePolicyFactory.sol";
 import {IPolicy} from "../../interfaces/IPolicy.sol";
 import {IClone} from "../../interfaces/IClone.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
@@ -111,7 +111,7 @@ contract SemaphoreCheckerTest is Test {
     function test_checker_whenScopeProverIncorrect_reverts() public {
         vm.startPrank(guarded);
 
-        vm.expectRevert(abi.encodeWithSelector(SemaphoreChecker.IncorrectProver.selector));
+        vm.expectRevert(abi.encodeWithSelector(SemaphoreChecker.InvalidProver.selector));
         checker.check(subject, invalidProverEvidence);
 
         vm.stopPrank();
@@ -120,7 +120,7 @@ contract SemaphoreCheckerTest is Test {
     function test_checker_whenScopeGroupIdIncorrect_reverts() public {
         vm.startPrank(guarded);
 
-        vm.expectRevert(abi.encodeWithSelector(SemaphoreChecker.IncorrectGroupId.selector));
+        vm.expectRevert(abi.encodeWithSelector(SemaphoreChecker.InvalidGroup.selector));
         checker.check(subject, invalidGroupIdEvidence);
 
         vm.stopPrank();
@@ -325,7 +325,7 @@ contract SemaphorePolicyTest is Test {
 
         vm.startPrank(guarded);
 
-        vm.expectRevert(abi.encodeWithSelector(SemaphoreChecker.IncorrectProver.selector));
+        vm.expectRevert(abi.encodeWithSelector(SemaphoreChecker.InvalidProver.selector));
         policy.enforce(subject, invalidProverEvidence);
 
         vm.stopPrank();
@@ -340,7 +340,7 @@ contract SemaphorePolicyTest is Test {
 
         vm.startPrank(guarded);
 
-        vm.expectRevert(abi.encodeWithSelector(SemaphoreChecker.IncorrectGroupId.selector));
+        vm.expectRevert(abi.encodeWithSelector(SemaphoreChecker.InvalidGroup.selector));
         policy.enforce(subject, invalidGroupIdEvidence);
 
         vm.stopPrank();
@@ -378,7 +378,7 @@ contract SemaphorePolicyTest is Test {
         vm.stopPrank();
     }
 
-    function test_policy_enforce_whenAlreadySpentNullifier_reverts() public {
+    function test_policy_enforce_whenAlreadyEnforced_reverts() public {
         vm.startPrank(deployer);
 
         policy.setTarget(guarded);
@@ -392,7 +392,7 @@ contract SemaphorePolicyTest is Test {
 
         policy.enforce(subject, validEvidence);
 
-        vm.expectRevert(abi.encodeWithSelector(SemaphorePolicy.AlreadySpentNullifier.selector));
+        vm.expectRevert(abi.encodeWithSelector(IPolicy.AlreadyEnforced.selector));
         policy.enforce(subject, validEvidence);
 
         vm.stopPrank();

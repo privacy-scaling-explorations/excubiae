@@ -50,11 +50,18 @@ contract SemaphoreMock is ISemaphore {
     }
 
     function updateGroupAdmin(uint256, address) external override {}
+
     function acceptGroupAdmin(uint256) external override {}
+
     function updateGroupMerkleTreeDuration(uint256, uint256) external override {}
+
     function addMember(uint256, uint256) external override {}
+
     function addMembers(uint256, uint256[] calldata) external override {}
+
     function updateMember(uint256, uint256, uint256, uint256[] calldata) external override {}
+
     function removeMember(uint256, uint256, uint256[] calldata) external override {}
+
     function validateProof(uint256, SemaphoreProof calldata) external override {}
 }
