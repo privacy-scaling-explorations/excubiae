@@ -53,11 +53,6 @@ contract ZupassChecker is BaseChecker {
         (uint256[2] memory pA, uint256[2][2] memory pB, uint256[2] memory pC, uint256[38] memory pubSignals) = abi
             .decode(evidence, (uint256[2], uint256[2][2], uint256[2], uint256[38]));
 
-        // Verify proof
-        if (!verifier.verifyProof(pA, pB, pC, pubSignals)) {
-            revert InvalidProof();
-        }
-
         // Event id is stored at index 1
         if (pubSignals[1] != validEventId) {
             revert InvalidEventId();
@@ -72,6 +67,11 @@ contract ZupassChecker is BaseChecker {
         // user address converted to bigint is used as the watermark
         if (pubSignals[37] != uint256(uint160(subject))) {
             revert InvalidWatermark();
+        }
+
+        // Verify proof
+        if (!verifier.verifyProof(pA, pB, pC, pubSignals)) {
+            revert InvalidProof();
         }
 
         return true;

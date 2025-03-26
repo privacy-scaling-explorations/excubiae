@@ -63,7 +63,7 @@ contract EASChecker is BaseChecker {
             revert AttestationRevoked();
         }
 
-        // one cannot register an attestation for another user
+        // one cannot enforce an attestation for another user
         if (attestation.recipient != subject) {
             revert NotYourAttestation();
         }

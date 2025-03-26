@@ -9,25 +9,24 @@ import {BasePolicy} from "../../policy/BasePolicy.sol";
 /// @notice A policy contract enforcing merkle proof validation.
 /// Only if they are part of the tree
 contract MerkleProofPolicy is BasePolicy {
-    // a mapping of addresses that have already registered
-    mapping(address => bool) public registeredAddresses;
+    // a mapping of addresses that have already enforced
+    mapping(address => bool) public enforcedAddresses;
 
     /// @notice Deploy an instance of MerkleProofPolicy
     // solhint-disable-next-line no-empty-blocks
     constructor() payable {}
 
-    /// @notice Register an user based on being part of the tree
-    /// @dev Throw if the proof is not valid or the user has already been registered
+    /// @notice Enforce an user based on being part of the tree
+    /// @dev Throw if the proof is not valid or the user has already been enforced
     /// @param _subject The user's Ethereum address.
     /// @param _evidence The proof that the user is part of the tree.
     function _enforce(address _subject, bytes calldata _evidence) internal override {
-        // ensure that the user has not been registered yet
-        if (registeredAddresses[_subject]) {
+        // ensure that the user has not been enforced yet
+        if (enforcedAddresses[_subject]) {
             revert AlreadyEnforced();
         }
 
-        // register the user so it cannot be called again with the same one
-        registeredAddresses[_subject] = true;
+        enforcedAddresses[_subject] = true;
 
         super._enforce(_subject, _evidence);
     }

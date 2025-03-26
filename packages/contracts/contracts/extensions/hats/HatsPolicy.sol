@@ -8,21 +8,22 @@ import {IHats} from "./IHats.sol";
 /// @notice A policy contract enforcing Hats validation.
 /// Only if they are wearing one of the specified hats
 contract HatsPolicy is BasePolicy {
-    /// @notice Tracks registered users
-    mapping(address => bool) public registered;
+    /// @notice Tracks enforced users
+    mapping(address => bool) public enforced;
 
     /// @notice Deploy an instance of HatsPolicy
     // solhint-disable-next-line no-empty-blocks
     constructor() payable {}
 
-    /// @notice Registers the user
+    /// @notice Enforces the user
     /// @param subject The address of the user
     /// @param evidence additional data
     function _enforce(address subject, bytes calldata evidence) internal override {
-        // subject must not be already registered
-        if (registered[subject]) revert AlreadyEnforced();
+        if (enforced[subject]) {
+            revert AlreadyEnforced();
+        }
 
-        registered[subject] = true;
+        enforced[subject] = true;
 
         super._enforce(subject, evidence);
     }
