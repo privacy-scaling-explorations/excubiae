@@ -11,9 +11,11 @@
     "private": true,
     "packageManager": "yarn@4.6.0",
     "workspaces": [
-        "packages/*",
-        "packages/contracts/contracts"
+        "packages/*"
     ],
+    "installConfig": {
+        "hoistingLimits": "workspaces"
+    },
     "devDependencies": {
         "@commitlint/cli": "^19.7.1",
         "@commitlint/config-conventional": "^19.7.1",
@@ -41,15 +43,15 @@
     "scripts": {
         "build": "yarn build:packages",
         "build:packages": "yarn workspaces foreach -Apt --no-private run build",
-        "compile:contracts": "yarn workspace excubiae-contracts compile",
+        "compile:contracts": "yarn workspace @excubiae/contracts compile",
         "test": "yarn test:contracts",
         "test:coverage": "yarn test:contracts-coverage",
-        "test:contracts": "yarn workspace excubiae-contracts test",
-        "test:contracts-coverage": "yarn workspace excubiae-contracts test:coverage",
-        "format": "prettier -c . && yarn workspace excubiae-contracts format:forge",
-        "format:write": "prettier -w . && yarn workspace excubiae-contracts format:forge",
-        "lint": "eslint . && yarn workspace excubiae-contracts lint",
-        "lint:fix": "eslint . --fix && yarn workspace excubiae-contracts lint:fix",
+        "test:contracts": "yarn workspace @excubiae/contracts test",
+        "test:contracts-coverage": "yarn workspace @excubiae/contracts test:coverage",
+        "format": "prettier -c . && yarn workspace @excubiae/contracts format:forge",
+        "format:write": "prettier -w . && yarn workspace @excubiae/contracts format:forge",
+        "lint": "eslint . && yarn workspace @excubiae/contracts lint",
+        "lint:fix": "eslint . --fix && yarn workspace @excubiae/contracts lint:fix",
         "version:bump": "ts-node scripts/version.ts ${0}",
         "version:publish": "ts-node scripts/publish.ts",
         "version:release": "changelogithub",

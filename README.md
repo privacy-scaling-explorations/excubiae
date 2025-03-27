@@ -77,7 +77,7 @@ yarn compile:contracts
 
 ```bash
 yarn version:bump <strategy> <package-name>
-# e.g. yarn version:bump minor excubiae-contracts
+# e.g. yarn version:bump minor @excubiae/contracts
 ```
 
 This step creates a commit and a git tag.
