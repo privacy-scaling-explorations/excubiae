@@ -49,7 +49,7 @@ jobs:
               name: Compile and lint contracts
               run: |
                   yarn compile:contracts
-                  yarn workspace excubiae-contracts lint
+                  yarn workspace @excubiae/contracts lint
 
             - if: steps.changed-files.outputs.packages_any_changed == 'true'
               name: Build packages

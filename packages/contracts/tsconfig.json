@@ -1,5 +1,6 @@
 {
     "compilerOptions": {
+        "outDir": "out",
         "target": "es2020",
         "module": "commonjs",
         "esModuleInterop": true,
@@ -8,6 +9,6 @@
         "skipLibCheck": true,
         "resolveJsonModule": true
     },
-    "include": ["scripts/**/*", "tasks/**/*", "test/**/*", "typechain-types/**/*"],
+    "include": ["scripts/**/*", "tasks/**/*", "test/**/*", "ts/**/*", "ignition/**/*", "typechain-types/**/*"],
     "files": ["hardhat.config.ts"]
 }
