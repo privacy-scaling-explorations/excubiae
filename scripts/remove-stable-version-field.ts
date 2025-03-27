@@ -6,6 +6,7 @@ const folderName = "packages"
 async function main() {
     const filePaths = readdirSync(folderName, { withFileTypes: true })
         .filter((file) => file.isDirectory())
+        .map((dir) => dir.name)
         .map((name) => `${folderName}/${name}/package.json`)
 
     for (const filePath of filePaths) {
