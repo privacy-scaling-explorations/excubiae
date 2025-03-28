@@ -3,6 +3,7 @@
     "description": "Excubiae contracts.",
     "version": "0.6.2",
     "license": "MIT",
+    "main": "out/ts/index.js",
     "exports": {
         ".": {
             "types": "./out/ts/index.d.ts",
@@ -14,9 +15,8 @@
         }
     },
     "files": [
+        "contracts",
         "out",
-        "*.sol",
-        "!test/*",
         "README.md",
         "LICENSE"
     ],
