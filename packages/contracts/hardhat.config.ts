@@ -6,7 +6,7 @@ import "@nomicfoundation/hardhat-foundry"
 import "@nomicfoundation/hardhat-verify"
 import "hardhat-gas-reporter"
 import "./tasks/accounts"
-import "./tasks/extensions/semaphore"
+import "./tasks/extensions"
 
 dotenvConfig({ path: resolve(__dirname, ".env") })
 

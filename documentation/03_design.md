@@ -2,15 +2,15 @@
 
 ## Policy
 
-A [Policy](https://github.com/privacy-scaling-explorations/excubiae/blob/main/packages/contracts/contracts/src/policy/Policy.sol) in Excubiae acts as a gatekeeper, controlling access to protected resources through well-defined enforcement mechanisms. Think of it as a security checkpoint - it doesn't determine the rules itself, but it ensures they are properly enforced.
+A [Policy](https://github.com/privacy-scaling-explorations/excubiae/blob/main/packages/contracts/src/policy/Policy.sol) in Excubiae acts as a gatekeeper, controlling access to protected resources through well-defined enforcement mechanisms. Think of it as a security checkpoint - it doesn't determine the rules itself, but it ensures they are properly enforced.
 
-Each policy maintains one critical pieces of information, the [target](https://github.com/privacy-scaling-explorations/excubiae/blob/07bf4d60353f5b044cfead856d872177f9e48aff/packages/contracts/contracts/src/policy/Policy.sol#L14) address, which represents the contract or resource being protected.
+Each policy maintains one critical pieces of information, the [target](https://github.com/privacy-scaling-explorations/excubiae/blob/07bf4d60353f5b044cfead856d872177f9e48aff/packages/contracts/src/policy/Policy.sol#L14) address, which represents the contract or resource being protected.
 
-Since the Policy is a "clonable" contract (extends the [Clone](https://github.com/privacy-scaling-explorations/excubiae/blob/main/packages/contracts/contracts/src/proxy/Clone.sol) contract), it has a specific, base implementation of the `_initialize()` internal method - where the ownership is transferred from the sender to the factory.
+Since the Policy is a "clonable" contract (extends the [Clone](https://github.com/privacy-scaling-explorations/excubiae/blob/main/packages/contracts/src/proxy/Clone.sol) contract), it has a specific, base implementation of the `_initialize()` internal method - where the ownership is transferred from the sender to the factory.
 
 The framework provides two extendable policy variants:
 
-### [BasePolicy](https://github.com/privacy-scaling-explorations/excubiae/blob/main/packages/contracts/contracts/src/policy/BasePolicy.sol)
+### [BasePolicy](https://github.com/privacy-scaling-explorations/excubiae/blob/main/packages/contracts/src/policy/BasePolicy.sol)
 
 Ideal for simple one-time validations, like token-gated access.
 
@@ -25,7 +25,7 @@ function enforce(address subject, bytes memory evidence) external {
 }
 ```
 
-### [AdvancedPolicy](https://github.com/privacy-scaling-explorations/excubiae/blob/main/packages/contracts/contracts/src/policy/AdvancedPolicy.sol)
+### [AdvancedPolicy](https://github.com/privacy-scaling-explorations/excubiae/blob/main/packages/contracts/src/policy/AdvancedPolicy.sol)
 
 Supports multi-phase validation with pre-checks, main validation (potentially repeated), and post-checks.
 
@@ -70,9 +70,9 @@ The state tracking acts as a non-cryptographically signed (dummy) nullifier, pre
 
 A Checker in Excubiae is responsible for validating access conditions. Think of it as the rulebook that defines what constitutes valid access - it receives evidence and determines whether it meets the specified criteria. The checker remains deliberately stateless, focusing solely on validation logic. This design allows checkers to be shared across different policies and enables clear, auditable validation rules.
 
-Please note that, also the Checker is a "clonable" contract (extends the [Clone](https://github.com/privacy-scaling-explorations/excubiae/blob/main/packages/contracts/contracts/src/proxy/Clone.sol) contract).
+Please note that, also the Checker is a "clonable" contract (extends the [Clone](https://github.com/privacy-scaling-explorations/excubiae/blob/main/packages/contracts/src/proxy/Clone.sol) contract).
 
-The framework offers two checker variants: - [BaseChecker](https://github.com/privacy-scaling-explorations/excubiae/blob/main/packages/contracts/contracts/src/checker/BaseChecker.sol): perfect for straightforward validations that need a single check, like verifying token ownership, and - [AdvancedChecker](https://github.com/privacy-scaling-explorations/excubiae/blob/main/packages/contracts/contracts/src/checker/AdvancedChecker.sol): enables multi-phase validation with distinct checks for different stages of access control.
+The framework offers two checker variants: - [BaseChecker](https://github.com/privacy-scaling-explorations/excubiae/blob/main/packages/contracts/src/checker/BaseChecker.sol): perfect for straightforward validations that need a single check, like verifying token ownership, and - [AdvancedChecker](https://github.com/privacy-scaling-explorations/excubiae/blob/main/packages/contracts/src/checker/AdvancedChecker.sol): enables multi-phase validation with distinct checks for different stages of access control.
 
 This pattern ensures:
 
@@ -171,14 +171,14 @@ This extensible architecture enables developers to implement custom validation l
 
 In fact, with the release v0.3.1, we provide an extension folder containing ready to use Checker, Policy and their respective, Factory contracts for providing unique features for your use case.
 
-### [Semaphore](https://github.com/privacy-scaling-explorations/excubiae/tree/main/packages/contracts/contracts/extensions)
+### [Semaphore](https://github.com/privacy-scaling-explorations/excubiae/tree/main/packages/contracts/extensions)
 
 The Semaphore extension in Excubiae enhances access control by incorporating zero-knowledge proof-based identity verification using [Semaphore](https://docs.semaphore.pse.dev). Semaphore allows users to prove membership in a group without revealing their identity, supporting privacy-preserving access control mechanisms.
 
 This extension includes two primary components:
 
-- **[SemaphoreChecker](https://github.com/privacy-scaling-explorations/excubiae/blob/main/packages/contracts/contracts/extensions/SemaphoreChecker.sol)**: Validates zero-knowledge proofs of membership.
-- **[SemaphorePolicy](https://github.com/privacy-scaling-explorations/excubiae/blob/main/packages/contracts/contracts/extensions/SemaphorePolicy.sol)**: Enforces access rules based on successful Semaphore proof verifications.
+- **[SemaphoreChecker](https://github.com/privacy-scaling-explorations/excubiae/blob/main/packages/contracts/extensions/SemaphoreChecker.sol)**: Validates zero-knowledge proofs of membership.
+- **[SemaphorePolicy](https://github.com/privacy-scaling-explorations/excubiae/blob/main/packages/contracts/extensions/SemaphorePolicy.sol)**: Enforces access rules based on successful Semaphore proof verifications.
 
 ```
 ┌────────────────────┐     enforces     ┌────────────────────┐
@@ -193,7 +193,7 @@ This extension includes two primary components:
 └─────────────┘                      └──────────────────────────┘
 ```
 
-The **[SemaphoreChecker](https://github.com/privacy-scaling-explorations/excubiae/blob/main/packages/contracts/contracts/extensions/SemaphoreChecker.sol)** contract extends the `BaseChecker` and is responsible for verifying zero-knowledge proofs provided by users. It ensures that the submitted proof corresponds to the correct user and group, using the Semaphore protocol.
+The **[SemaphoreChecker](https://github.com/privacy-scaling-explorations/excubiae/blob/main/packages/contracts/extensions/SemaphoreChecker.sol)** contract extends the `BaseChecker` and is responsible for verifying zero-knowledge proofs provided by users. It ensures that the submitted proof corresponds to the correct user and group, using the Semaphore protocol.
 
 - **Group Verification:** Validates that the proof belongs to the specified Semaphore group.
 - **Prover Validation:** Ensures the proof matches the user’s address.
@@ -215,7 +215,7 @@ function _check(address subject, bytes calldata evidence) internal view override
 }
 ```
 
-The **[SemaphorePolicy](https://github.com/privacy-scaling-explorations/excubiae/blob/main/packages/contracts/contracts/extensions/SemaphorePolicy.sol)** contract extends `BasePolicy` to enforce access control rules based on successful Semaphore proof verifications. It ensures one-time usage of proofs through nullifier tracking.
+The **[SemaphorePolicy](https://github.com/privacy-scaling-explorations/excubiae/blob/main/packages/contracts/extensions/SemaphorePolicy.sol)** contract extends `BasePolicy` to enforce access control rules based on successful Semaphore proof verifications. It ensures one-time usage of proofs through nullifier tracking.
 
 - **Nullifier Tracking:** Prevents double usage of the same proof.
 - **Proof Validation:** Calls `SemaphoreChecker` to verify proofs before granting access.
@@ -235,7 +235,7 @@ function _enforce(address subject, bytes calldata evidence) internal override {
 }
 ```
 
-The **[SemaphoreCheckerFactory](https://github.com/privacy-scaling-explorations/excubiae/blob/main/packages/contracts/contracts/extensions/SemaphoreCheckerFactory.sol)** streamlines the deployment of `SemaphoreChecker` instances, utilizing the minimal proxy pattern for efficient contract cloning.
+The **[SemaphoreCheckerFactory](https://github.com/privacy-scaling-explorations/excubiae/blob/main/packages/contracts/extensions/SemaphoreCheckerFactory.sol)** streamlines the deployment of `SemaphoreChecker` instances, utilizing the minimal proxy pattern for efficient contract cloning.
 
 **Deployment Example:**
 
@@ -247,7 +247,7 @@ function deploy(address _semaphore, uint256 _groupId) public {
 }
 ```
 
-The **[SemaphorePolicyFactory](https://github.com/privacy-scaling-explorations/excubiae/blob/main/packages/contracts/contracts/extensions/SemaphorePolicyFactory.sol)** streamlines the deployment of `SemaphorePolicy` instances, utilizing the minimal proxy pattern for efficient contract cloning.
+The **[SemaphorePolicyFactory](https://github.com/privacy-scaling-explorations/excubiae/blob/main/packages/contracts/extensions/SemaphorePolicyFactory.sol)** streamlines the deployment of `SemaphorePolicy` instances, utilizing the minimal proxy pattern for efficient contract cloning.
 
 **Deployment Example:**
 

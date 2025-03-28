@@ -1,7 +1,6 @@
 [profile.default]
 # core
 libs = ["node_modules"]
-allow_paths = ["node_modules"]
 cache_path = "cache_forge"
 test = "test"
 src = "contracts"
