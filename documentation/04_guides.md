@@ -4,19 +4,19 @@
 
 When implementing a policy, the first step is defining the criteria for passing validation. These criteria must be verifiable on-chain—such as token ownership, balance thresholds, or protocol-specific credentials.
 
-For example, in a voting system where voters must own a specific NFT to participate, the validation logic resides in a **Checker** contract, while a **Policy** enforces the validation result. You can find the complete implementation in our [base test suite](https://github.com/privacy-scaling-explorations/excubiae/tree/main/packages/contracts/contracts/test/examples/base).
+For example, in a voting system where voters must own a specific NFT to participate, the validation logic resides in a **Checker** contract, while a **Policy** enforces the validation result. You can find the complete implementation in our [base test suite](https://github.com/privacy-scaling-explorations/excubiae/tree/main/packages/contracts/test/examples/base).
 
-A checker encapsulates validation logic. The [BaseERC721Checker](https://github.com/privacy-scaling-explorations/excubiae/blob/main/packages/contracts/contracts/test/examples/base/BaseERC721Checker.sol) is a clonable contract that verifies NFT ownership. To implement a clonable checker:
+A checker encapsulates validation logic. The [BaseERC721Checker](https://github.com/privacy-scaling-explorations/excubiae/blob/main/packages/contracts/test/examples/base/BaseERC721Checker.sol) is a clonable contract that verifies NFT ownership. To implement a clonable checker:
 
 - Override `_initialize()`, which is executed only once at deployment time to store immutable arguments in the contract state.
 - Implement `_check()`, defining the validation logic.
 
-Once the checker is in place, a **Policy** references it to enforce validation. The [BaseERC721Policy](https://github.com/privacy-scaling-explorations/excubiae/blob/main/packages/contracts/contracts/test/examples/base/BaseERC721Policy.sol) demonstrates how to:
+Once the checker is in place, a **Policy** references it to enforce validation. The [BaseERC721Policy](https://github.com/privacy-scaling-explorations/excubiae/blob/main/packages/contracts/test/examples/base/BaseERC721Policy.sol) demonstrates how to:
 
 - Extend a base policy contract.
 - Provide a unique trait identifier.
 
-To deploy clones dynamically, each Checker and Policy implementation requires a corresponding **Factory** contract. Examples include [BaseERC721CheckerFactory](https://github.com/privacy-scaling-explorations/excubiae/blob/main/packages/contracts/contracts/test/examples/base/BaseERC721CheckerFactory.sol) and [BaseERC721PolicyFactory](https://github.com/privacy-scaling-explorations/excubiae/blob/main/packages/contracts/contracts/test/examples/base/BaseERC721PolicyFactory.sol).
+To deploy clones dynamically, each Checker and Policy implementation requires a corresponding **Factory** contract. Examples include [BaseERC721CheckerFactory](https://github.com/privacy-scaling-explorations/excubiae/blob/main/packages/contracts/test/examples/base/BaseERC721CheckerFactory.sol) and [BaseERC721PolicyFactory](https://github.com/privacy-scaling-explorations/excubiae/blob/main/packages/contracts/test/examples/base/BaseERC721PolicyFactory.sol).
 
 Each factory must:
 
@@ -30,7 +30,7 @@ This approach enables efficient deployments and customization at deploy time. Fo
 
 ## Integrating a Policy
 
-The [BaseVoting](https://github.com/privacy-scaling-explorations/excubiae/blob/main/packages/contracts/contracts/test/examples/base/BaseVoting.sol) contract demonstrates a complete implementation of policy integration. It shows how to:
+The [BaseVoting](https://github.com/privacy-scaling-explorations/excubiae/blob/main/packages/contracts/test/examples/base/BaseVoting.sol) contract demonstrates a complete implementation of policy integration. It shows how to:
 
 - Initialize the policy
 - Enforce checks before actions
