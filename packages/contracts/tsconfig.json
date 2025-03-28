@@ -16,7 +16,7 @@
         "incremental": true,
         "declarationMap": true,
         "stripInternal": true,
-        "outDir": "out",
+        "outDir": "build",
         "target": "es2020",
         "module": "commonjs",
         "esModuleInterop": true,

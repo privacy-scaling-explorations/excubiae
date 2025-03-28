@@ -10,6 +10,7 @@ node_modules
 /out
 /cache_forge
 /docs
+/build
 
 # TypeChain files
 /typechain

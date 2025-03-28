@@ -4,7 +4,7 @@ libs = ["node_modules"]
 cache_path = "cache_forge"
 test = "test"
 src = "contracts"
-out = "out"
+out = "build"
 script = "scripts"
 ignore_paths = ["node_modules"]
 

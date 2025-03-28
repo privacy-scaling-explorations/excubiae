@@ -12,6 +12,7 @@ const gitIgnored = [
     "cache",
     "cache_forge",
     "docs",
+    "build",
     "out",
     "coverage.json",
     "lib",

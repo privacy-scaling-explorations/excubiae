@@ -3,21 +3,21 @@
     "description": "Excubiae contracts.",
     "version": "0.6.5",
     "license": "MIT",
-    "main": "./out/ts/index.js",
-    "types": "./out/ts/index.d.ts",
+    "main": "./build/ts/index.js",
+    "types": "./build/ts/index.d.ts",
     "exports": {
         ".": {
-            "types": "./out/ts/index.d.ts",
-            "default": "./out/ts/index.js"
+            "types": "./build/ts/index.d.ts",
+            "default": "./build/ts/index.js"
         },
         "./typechain-types": {
-            "types": "./out/typechain-types/index.d.ts",
-            "default": "./out/typechain-types/index.js"
+            "types": "./build/typechain-types/index.d.ts",
+            "default": "./build/typechain-types/index.js"
         }
     },
     "files": [
         "contracts",
-        "out",
+        "build",
         "README.md",
         "LICENSE"
     ],
@@ -43,7 +43,7 @@
         "compile": "yarn compile:hardhat && yarn compile:forge",
         "compile:hardhat": "hardhat compile",
         "compile:forge": "forge compile",
-        "build": "yarn compile && tsc -p tsconfig.build.json && cp -r ./artifacts ./out",
+        "build": "yarn compile && tsc -p tsconfig.build.json && cp -r ./artifacts ./build",
         "types": "tsc -p tsconfig.json --noEmit",
         "docs:forge": "forge doc",
         "deploy:semaphore-ignition": "hardhat ignition deploy ignition/modules/extensions/Semaphore.ts",
