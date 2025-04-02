@@ -50,7 +50,7 @@ contract BaseChecker is Test {
         checker.initialize();
     }
 
-    function test_checker_getAppendedBytes() public {
+    function test_checker_getAppendedBytes() public view {
         assertEq(checker.getAppendedBytes(), abi.encode(address(nft)));
     }
 
@@ -133,7 +133,7 @@ contract BasePolicy is Test {
         policy.initialize();
     }
 
-    function test_policy_getAppendedBytes() public {
+    function test_policy_getAppendedBytes() public view {
         assertEq(policy.getAppendedBytes(), abi.encode(address(deployer), address(checker)));
     }
 

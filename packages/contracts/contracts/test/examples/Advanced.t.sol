@@ -67,7 +67,7 @@ contract AdvancedChecker is Test {
         advancedChecker.initialize();
     }
 
-    function test_checker_getAppendedBytes() public {
+    function test_checker_getAppendedBytes() public view {
         assertEq(
             advancedChecker.getAppendedBytes(),
             abi.encode(address(signupNft), address(rewardNft), address(baseChecker), 1, 0, 10)
@@ -217,7 +217,7 @@ contract AdvancedPolicy is Test {
         policySkipped.initialize();
     }
 
-    function test_policy_getAppendedBytes() public {
+    function test_policy_getAppendedBytes() public view {
         assertEq(policy.getAppendedBytes(), abi.encode(address(deployer), address(advancedChecker), false, false));
         assertEq(policySkipped.getAppendedBytes(), abi.encode(address(deployer), address(advancedChecker), true, true));
     }
