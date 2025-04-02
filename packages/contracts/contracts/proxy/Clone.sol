@@ -22,7 +22,7 @@ abstract contract Clone is IClone {
     /// @notice Retrieves appended arguments from the clone.
     /// @dev Leverages `LibClone` to extract arguments from the clone's runtime bytecode.
     /// @return appendedBytes The appended bytes extracted from the clone.
-    function getAppendedBytes() external returns (bytes memory appendedBytes) {
+    function getAppendedBytes() external view returns (bytes memory appendedBytes) {
         return _getAppendedBytes();
     }
 
@@ -37,7 +37,7 @@ abstract contract Clone is IClone {
     /// @notice Internal function to retrieve appended arguments from the clone.
     /// @dev Uses `LibClone` utility to extract the arguments.
     /// @return appendedBytes The appended bytes extracted from the clone.
-    function _getAppendedBytes() internal virtual returns (bytes memory appendedBytes) {
+    function _getAppendedBytes() internal view virtual returns (bytes memory appendedBytes) {
         return LibClone.argsOnClone(address(this));
     }
 }

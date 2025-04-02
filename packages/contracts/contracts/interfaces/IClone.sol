@@ -14,5 +14,5 @@ interface IClone {
 
     /// @notice Retrieves appended bytes from the clone's runtime bytecode.
     /// @return Appended bytes passed during the clone's creation.
-    function getAppendedBytes() external returns (bytes memory);
+    function getAppendedBytes() external view returns (bytes memory);
 }

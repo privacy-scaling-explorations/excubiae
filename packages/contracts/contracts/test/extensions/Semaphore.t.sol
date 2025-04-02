@@ -104,7 +104,7 @@ contract SemaphoreCheckerTest is Test {
         checker.initialize();
     }
 
-    function test_checker_getAppendedBytes() public {
+    function test_checker_getAppendedBytes() public view {
         assertEq(checker.getAppendedBytes(), abi.encode(address(semaphoreMock), validGroupId));
     }
 
@@ -258,7 +258,7 @@ contract SemaphorePolicyTest is Test {
         policy.initialize();
     }
 
-    function test_policy_getAppendedBytes() public {
+    function test_policy_getAppendedBytes() public view {
         assertEq(policy.getAppendedBytes(), abi.encode(address(deployer), address(checker)));
     }
 
