@@ -13,11 +13,11 @@ export type IFactoryLike<P extends unknown[] = []> = Factory &
 /**
  * Interface that represents deploy clone arguments
  */
-export interface IDeployCloneArgs<T = unknown> {
+export interface IDeployCloneArgs<T = unknown[]> {
     /**
      * Arguments for clone initialization
      */
-    args: T[]
+    args: T
 
     /**
      * Proxied contract factory
