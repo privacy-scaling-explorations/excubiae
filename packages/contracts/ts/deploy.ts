@@ -36,7 +36,7 @@ export const deployProxyClone = async <C = BaseContract, T = unknown[]>({
     signer,
     args
 }: IDeployCloneArgs<T>): Promise<C> => {
-    const receipt = await proxyFactory.deploy(...args).then((tx) => tx.wait())
+    const receipt = await proxyFactory.deploy(args).then((tx) => tx.wait())
 
     return getProxyContract<C>({
         factory,
