@@ -36,6 +36,9 @@ jobs:
             - name: Install dependencies
               run: yarn
 
+            - name: Build
+              run: yarn build:packages
+
             - name: Publish packages
               run: yarn version:publish
               env:
