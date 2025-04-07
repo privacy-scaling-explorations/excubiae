@@ -17,7 +17,7 @@ describe("deploy", () => {
             queryFilter: () => Promise.resolve([{ args: [ZeroAddress] }]),
             filters: { CloneDeployed: "CloneDeployed" },
             deploy: () => Promise.resolve({ wait: () => Promise.resolve(receipt) })
-        } as unknown as IFactoryLike<unknown[]>,
+        } as unknown as IFactoryLike,
         signer: {} as Signer,
         args: []
     }
