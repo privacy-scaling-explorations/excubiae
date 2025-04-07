@@ -10,6 +10,10 @@
             "types": "./build/ts/index.d.ts",
             "default": "./build/ts/index.js"
         },
+        "./sdk": {
+            "types": "./build/ts/sdk.d.ts",
+            "default": "./build/ts/sdk.js"
+        },
         "./typechain-types": {
             "types": "./build/typechain-types/index.d.ts",
             "default": "./build/typechain-types/index.js"
