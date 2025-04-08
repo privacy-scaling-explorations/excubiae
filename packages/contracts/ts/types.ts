@@ -5,15 +5,15 @@ import type { TypedContractMethod } from "../typechain-types/common"
 /**
  * Type for the factory like contract
  */
-export type IFactoryLike<P extends unknown[] = []> = Factory &
+export type IFactoryLike = Factory &
     BaseContract & {
-        deploy: TypedContractMethod<P, [], "nonpayable">
+        deploy: TypedContractMethod<unknown[], unknown, "nonpayable">
     }
 
 /**
  * Interface that represents deploy clone arguments
  */
-export interface IDeployCloneArgs<T = unknown[]> {
+export interface IDeployCloneArgs<T extends unknown[] = unknown[]> {
     /**
      * Arguments for clone initialization
      */
@@ -27,7 +27,7 @@ export interface IDeployCloneArgs<T = unknown[]> {
     /**
      * Proxy contract factory
      */
-    proxyFactory: IFactoryLike<T[]>
+    proxyFactory: IFactoryLike
 
     /**
      * Ethereum signer
