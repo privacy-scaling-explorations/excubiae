@@ -15,9 +15,10 @@ contract TokenCheckerFactory is Factory {
     /// @notice Deploys a new TokenChecker clone with the specified ERC721 token contract.
     /// @dev Encodes the ERC721 token contract address as initialization data for the clone.
     /// @param token Address of the ERC721 token contract.
-    function deploy(address token) public {
+    /// @return clone The address of the newly deployed TokenChecker clone.
+    function deploy(address token) public returns (address clone) {
         bytes memory data = abi.encode(token);
-        address clone = super._deploy(data);
+        clone = super._deploy(data);
 
         TokenChecker(clone).initialize();
     }

@@ -12,9 +12,11 @@ contract FreeForAllCheckerFactory is Factory {
     constructor() Factory(address(new FreeForAllChecker())) {}
 
     /// @notice Deploys a new FreeForAllChecker clone.
-    function deploy() public {
+    /// @return clone The address of the newly deployed FreeForAllChecker clone.
+    function deploy() public returns (address clone) {
         bytes memory data = abi.encode();
-        address clone = super._deploy(data);
+
+        clone = super._deploy(data);
 
         FreeForAllChecker(clone).initialize();
     }

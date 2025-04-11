@@ -14,10 +14,11 @@ contract ERC20VotesPolicyFactory is Factory {
     /// @notice Deploys a new ERC20VotesPolicy clone with the specified checker address.
     /// @dev Encodes the checker address and caller as configuration data for the clone.
     /// @param _checkerAddress Address of the checker to use for validation.
-    function deploy(address _checkerAddress) public {
+    /// @return clone The address of the newly deployed ERC20VotesPolicy clone.
+    function deploy(address _checkerAddress) public returns (address clone) {
         bytes memory data = abi.encode(msg.sender, _checkerAddress);
 
-        address clone = super._deploy(data);
+        clone = super._deploy(data);
 
         ERC20VotesPolicy(clone).initialize();
     }

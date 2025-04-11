@@ -14,10 +14,11 @@ contract MerkleProofPolicyFactory is Factory {
     /// @notice Deploys a new MerkleProofPolicy clone with the specified checker address.
     /// @dev Encodes the checker address and caller as configuration data for the clone.
     /// @param checkerAddress Address of the checker to use for validation.
-    function deploy(address checkerAddress) public {
+    /// @return clone The address of the newly deployed MerkleProofPolicy clone.
+    function deploy(address checkerAddress) public returns (address clone) {
         bytes memory data = abi.encode(msg.sender, checkerAddress);
 
-        address clone = super._deploy(data);
+        clone = super._deploy(data);
 
         MerkleProofPolicy(clone).initialize();
     }
