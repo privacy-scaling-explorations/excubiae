@@ -14,9 +14,11 @@ contract HatsCheckerFactory is Factory {
     /// @notice Deploys a new HatsChecker clone.
     /// @param hats The Hats Protocol contract
     /// @param criterionHats Array of accepted criterion hats
-    function deploy(address hats, uint256[] calldata criterionHats) public {
+    /// @return clone The address of the newly deployed HatsChecker clone.
+    function deploy(address hats, uint256[] calldata criterionHats) public returns (address clone) {
         bytes memory data = abi.encode(hats, criterionHats);
-        address clone = super._deploy(data);
+
+        clone = super._deploy(data);
 
         HatsChecker(clone).initialize();
     }

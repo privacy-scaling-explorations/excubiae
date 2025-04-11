@@ -13,9 +13,11 @@ contract MerkleProofCheckerFactory is Factory {
 
     /// @notice Deploys a new MerkleProofChecker clone.
     /// @param root The tree root
-    function deploy(bytes32 root) public {
+    /// @return clone The address of the newly deployed MerkleProofChecker clone.
+    function deploy(bytes32 root) public returns (address clone) {
         bytes memory data = abi.encode(root);
-        address clone = super._deploy(data);
+
+        clone = super._deploy(data);
 
         MerkleProofChecker(clone).initialize();
     }

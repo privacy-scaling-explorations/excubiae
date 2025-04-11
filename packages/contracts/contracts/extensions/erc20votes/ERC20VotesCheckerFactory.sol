@@ -12,9 +12,11 @@ contract ERC20VotesCheckerFactory is Factory {
     constructor() Factory(address(new ERC20VotesChecker())) {}
 
     /// @notice Deploys a new ERC20VotesChecker clone.
-    function deploy(address _token, uint256 _snapshotBlock, uint256 _threshold) public {
+    /// @return clone The address of the newly deployed ERC20VotesChecker clone.
+    function deploy(address _token, uint256 _snapshotBlock, uint256 _threshold) public returns (address clone) {
         bytes memory data = abi.encode(_token, _snapshotBlock, _threshold);
-        address clone = super._deploy(data);
+
+        clone = super._deploy(data);
 
         ERC20VotesChecker(clone).initialize();
     }

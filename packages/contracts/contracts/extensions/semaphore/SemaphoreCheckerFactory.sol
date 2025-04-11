@@ -16,9 +16,11 @@ contract SemaphoreCheckerFactory is Factory {
     /// @dev Encodes the Semaphore contract address and group ID as initialization data for the clone.
     /// @param semaphore Address of the Semaphore contract.
     /// @param groupId Unique identifier of the Semaphore group.
-    function deploy(address semaphore, uint256 groupId) public {
+    /// @return clone The address of the newly deployed SemaphoreChecker clone.
+    function deploy(address semaphore, uint256 groupId) public returns (address clone) {
         bytes memory data = abi.encode(semaphore, groupId);
-        address clone = super._deploy(data);
+
+        clone = super._deploy(data);
 
         SemaphoreChecker(clone).initialize();
     }

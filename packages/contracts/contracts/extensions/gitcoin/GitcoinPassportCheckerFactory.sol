@@ -14,9 +14,11 @@ contract GitcoinPassportCheckerFactory is Factory {
     /// @notice Deploys a new GitcoinPassportChecker clone.
     /// @param passportDecoder The GitcoinPassportDecoder contract
     /// @param thresholdScore The threshold score to be considered human
-    function deploy(address passportDecoder, uint256 thresholdScore) public {
+    /// @return clone The address of the newly deployed GitcoinPassportChecker clone.
+    function deploy(address passportDecoder, uint256 thresholdScore) public returns (address clone) {
         bytes memory data = abi.encode(passportDecoder, thresholdScore);
-        address clone = super._deploy(data);
+
+        clone = super._deploy(data);
 
         GitcoinPassportChecker(clone).initialize();
     }

@@ -14,9 +14,11 @@ contract AnonAadhaarCheckerFactory is Factory {
     /// @notice Deploys a new AnonAadhaarChecker clone.
     /// @param anonAadhaarVerifier The address of the anonAadhaar contract
     /// @param nullifierSeed The nullifier seed specific to the app
-    function deploy(address anonAadhaarVerifier, uint256 nullifierSeed) public {
+    /// @return clone The address of the newly deployed AnonAadhaarChecker clone.
+    function deploy(address anonAadhaarVerifier, uint256 nullifierSeed) public returns (address clone) {
         bytes memory data = abi.encode(anonAadhaarVerifier, nullifierSeed);
-        address clone = super._deploy(data);
+
+        clone = super._deploy(data);
 
         AnonAadhaarChecker(clone).initialize();
     }

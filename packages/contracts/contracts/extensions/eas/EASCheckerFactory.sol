@@ -15,9 +15,11 @@ contract EASCheckerFactory is Factory {
     /// @param eas The EAS contract
     /// @param attester The trusted attester
     /// @param schema The schema UID
-    function deploy(address eas, address attester, bytes32 schema) public {
+    /// @return clone The address of the newly deployed EASChecker clone.
+    function deploy(address eas, address attester, bytes32 schema) public returns (address clone) {
         bytes memory data = abi.encode(eas, attester, schema);
-        address clone = super._deploy(data);
+
+        clone = super._deploy(data);
 
         EASChecker(clone).initialize();
     }
